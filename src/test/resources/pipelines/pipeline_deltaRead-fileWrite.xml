@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+        <variable name="delta_dir" value="/tmp/delta" />
+    </variables>
+
+    <aliases>
+        <alias name="delta-reader" type="com.it21learning.etl.source.DeltaReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load features">
+            <actor type="delta-reader">
+                <property name="options">
+                    <option name="versionAsOf" value="0" />
+                </property>
+                <property name="source">
+                    <definition name="path">${delta_dir}</definition>
+                </property>
+            </actor>
+            <output-view name="features" global="true" />
+        </action>
+        <action name="write features">
+            <actor type="file-writer">
+                <property name="format">csv</property>
+                <property name="options">
+                    <option name="header" value="true" />
+                    <option name="maxRecordsPerFile" value="30000" />
+                </property>
+                <property name="mode">overwrite</property>
+                <property name="path">${export_dir}</property>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+</etl-pipeline>

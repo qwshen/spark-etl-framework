@@ -1,0 +1,55 @@
+{
+  "name": "transform-user-events",
+  "actions": [
+    {
+      "name": "load users",
+      "actor": {
+        "type": "file",
+        "properties": {
+          "format": "csv",
+          "options": {
+            "header": false,
+            "delimiter": ",",
+            "quote": "\"",
+            "timestampFormat": "yyyy/MM/dd HH:mm:ss"
+          },
+          "ddlSchemaString": "user_id long, birth_year int, gender string, location string",
+          "fileUri": "${event.recommendation.data.users.file}"
+        }
+      },
+      "output-view": {
+        "name": "users",
+        "global": "true"
+      }
+    },
+    {
+      "name": "load events",
+      "actor": {
+        "type": "flat",
+        "properties": {
+          "fileUri": "${event.recommendation.data.events.file}"
+        }
+      },
+      "output-view": {
+        "name": "events_raw",
+        "global": false
+      }
+    },
+    {
+      "name": "transform-events"
+      "actor": {
+        "type": "sql",
+        "properties": {
+          "sqlString": "select substr(row_value, 1, 12) as event_id, substr(row_value, 13, 16) as event_time, substr(row_value, 29, 12) as event_host, substr(row_value, 41, 64) as event_location from events_raw where row_no not in (1, 2) and substr(row_value, 6, 5) != 'TFYKR'"
+        }
+      },
+      "input-views": [
+        "events_raw"
+      ],
+      "output-view": {
+        "name": "events",
+        "global": true
+      }
+    }
+  ]
+}

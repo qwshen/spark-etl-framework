@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+    </variables>
+
+    <aliases>
+        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="hbase-writer" type="com.it21learning.etl.sink.HBaseWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                </property>
+                <property name="path">${events.users_input}</property>
+            </actor>
+            <output-view name="users" />
+        </action>
+        <action name="load train">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                </property>
+                <property name="path">${events.train_input}</property>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="write train">
+            <actor type="hbase-writer">
+                <property name="hbase">
+                    <definition name="hbase.zookeeper.quorum">127.0.0.1</definition>
+                    <definition name="hbase.zookeeper.property.clientPort">2181</definition>
+                    <definition name="zookeeper.znode.parent">/hbase-unsecure</definition>
+                </property>
+                <property name="data">
+                    <table name="events_db:train">
+                        <field name="user" to="eu:user_id" key="true" />
+                        <field name="event" to="eu:event_id" key="true" />
+                        <field name="invited" to="eu:invited" />
+                        <field name="timestamp" to="eu:timestamp" />
+                        <field name="interested" to="eu:interested" />
+                    </table>
+                </property>
+                <property name="dbOptions">
+                    <definition name="numPartitions">16</definition>
+                    <definition name="batchSize">1600</definition>
+                </property>
+                <property name="mode">merge</property>
+                <property name="view">train</property>
+            </actor>
+            <input-views>
+                <view name="train" />
+            </input-views>
+        </action>
+        <action name="write users">
+            <actor type="hbase-writer">
+                <property name="hbase">
+                    <definition name="hbase.zookeeper.quorum">127.0.0.1</definition>
+                    <definition name="hbase.zookeeper.property.clientPort">2181</definition>
+                    <definition name="zookeeper.znode.parent">/hbase-unsecure</definition>
+                </property>
+                <property name="data">
+                    <table name="events_db:users">
+                        <field name="user_id" key="true" />
+                        <field name="birthyear" to="profile:birth_year" />
+                        <field name="gender" to="profile:gender" />
+                        <field name="location" to="region:location" />
+                        <field name="timezone" to="region:time_zone" />
+                        <field name="joinedAt" to="registration:joined_at" />
+                    </table>
+                </property>
+                <property name="dbOptions">
+                    <definition name="numPartitions">1</definition>
+                    <definition name="batchSize">1600</definition>
+                </property>
+                <property name="mode">overwrite</property>
+                <property name="view">users</property>
+            </actor>
+            <input-views>
+                <view name="users" />
+            </input-views>
+        </action>
+    </job>
+</etl-pipeline>

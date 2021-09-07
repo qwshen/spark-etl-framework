@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+    </variables>
+
+    <aliases>
+        <alias name="kafka-stream-reader" type="com.it21learning.etl.source.KafkaStreamReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="delta-stream-writer" type="com.it21learning.etl.sink.DeltaStreamWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load train">
+            <actor type="kafka-stream-reader">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topics">train</property>
+                <property name="options">
+                    <option name="startingOffsets" value="earliest" />"
+                </property>
+                <property name="valueSchema">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                </property>
+                <property name="waterMark">
+                    <definition name="timeField">__timestamp</definition>
+                    <definition name="delayThreshold">5 minutes</definition>
+                </property>
+                <property name="addTimestamp">true</property>
+            </actor>
+            <output-view name="train" global="true" />
+        </action>
+        <action name="load users">
+            <actor type="kafka-stream-reader">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topics">users</property>
+                <property name="options">
+                    <option name="startingOffsets" value="earliest" />"
+                </property>
+                <property name="valueSchema">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                </property>
+                <property name="waterMark">
+                    <definition name="timeField">__timestamp</definition>
+                    <definition name="delayThreshold">60 seconds</definition>
+                </property>
+                <property name="addTimestamp">true</property>
+            </actor>
+            <output-view name="users" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="scriptFile">${application.scripts_uri}/stream-user-train.sql</property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="stream_features" />
+        </action>
+        <action name="write stream-features">
+            <actor type="delta-stream-writer">
+                <property name="options">
+                    <option name="checkpointLocation" value="/tmp/checkpoint/delta_stream_join_features" />"
+                </property>
+                <property name="partitionBy">interested</property>
+                <property name="trigger">
+                    <definition name="mode">processingTime</definition>
+                    <definition name="interval">60 seconds</definition>
+                </property>
+                <property name="outputMode">append</property>
+                <property name="waitTimeInMs">9000</property>
+                <property name="sink">
+                    <definition name="path">/tmp/delta_features</definition>
+                </property>
+                <property name="view">stream_features</property>
+            </actor>
+            <input-views>
+                <view name="stream_features" />
+            </input-views>
+        </action>
+    </job>
+
+    <staging>
+        <uri>${staging_uri}</uri>
+        <actions all="false" />
+    </staging>
+</etl-pipeline>

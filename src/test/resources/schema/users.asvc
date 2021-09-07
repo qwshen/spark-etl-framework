@@ -1,0 +1,36 @@
+{
+    "namespace": "com.it21learning.streaming.model",
+    "name": "User",
+    "type": "record",
+    "fields":
+    [
+        {
+            "name": "user_id",
+            "type": "string"
+        },
+        {
+            "name": "locale",
+            "type": ["null", "string"]
+        },
+        {
+            "name": "birthyear",
+            "type": ["null", "string"]
+        },
+        {
+            "name": "gender",
+            "type": ["null", "string"]
+        },
+        {
+            "name": "joinedAt",
+            "type": ["null", "string"]
+        },
+        {
+            "name": "location",
+            "type": ["null", "string"]
+        },
+        {
+            "name": "timezone",
+            "type": ["null", "string"]
+        }
+    ]
+}

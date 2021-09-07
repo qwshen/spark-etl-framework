@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+    </variables>
+
+    <aliases>
+        <alias name="kafka-reader" type="com.it21learning.etl.source.KafkaReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load train">
+            <actor type="kafka-reader">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topics">train</property>
+                <property name="options">
+                    <definition name="startingOffsets">earliest</definition>
+                </property>
+                <property name="valueSchema">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                    <definition name="options">
+                        <definition name="timestampFormat">yyyy-MM-dd'T'HH:mm:ss.sss'Z'</definition>
+                    </definition>
+                </property>
+            </actor>
+            <output-view name="train" global="true" />
+        </action>
+        <action name="load users">
+            <actor type="kafka-reader">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topics">users</property>
+                <property name="options">
+                    <definition name="startingOffsets">earliest</definition>
+                </property>
+                <property name="valueSchema">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                </property>
+            </actor>
+            <output-view name="users" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="scriptFile">${application.scripts_uri}/transform-user-train.sql</property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="write features">
+            <actor type="file-writer">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                    <definition name="maxRecordsPerFile">30000</definition>
+                </property>
+                <property name="partitionBy">gender</property>
+                <property name="mode">overwrite</property>
+                <property name="path">${export_dir}</property>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+</etl-pipeline>

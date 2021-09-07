@@ -1,0 +1,36 @@
+{
+    "type":"struct",
+    "fields":
+    [
+        {"
+            name":"user",
+            "type":"string",
+            "nullable":true
+        },
+        {
+            "name":"event",
+            "type":"string",
+            "nullable":true
+        },
+        {
+            "name":"invited",
+            "type":"string",
+            "nullable":true
+        },
+        {
+            "name":"timestamp",
+            "type":"string",
+            "nullable":true
+        },
+        {
+            "name":"interested",
+            "type":"string",
+            "nullable":true
+        },
+        {
+            "name":"not_interested",
+            "type":"string",
+            "nullable":true
+        }
+    ]
+}

@@ -1,0 +1,111 @@
+{
+  "pipeline-def": {
+    "name": "event-consolidation",
+    "description": "This is the process for etl'ing event data",
+    "version": "1.0.0",
+    "settings": {
+      "singleSparkSession": true,
+      "globalViewAsLocal": true
+    },
+    "variables": [
+      {
+        "name": "iam_password",
+        "value": "${events.db.password}",
+        "decryptionKeyString": "${application.security.decryption.key}"
+      },
+      {
+        "name": "process_date",
+        "value": "${application.process_date}"
+      },
+      {
+        "name": "staging_uri",
+        "value": "file:///c:/temp/staging"
+      }
+    ],
+    "aliases": [
+      {
+        "name": "file",
+        "type": "com.it21learning.etl.source.FileReader"
+      },
+      {
+        "name": "flat",
+        "type": "com.it21learning.etl.source.FlatReader"
+      },
+      {
+        "name": "setting",
+        "type": "com.it21learning.etl.setting.SparkConfSetter"
+      },
+      {
+        "name": "sql",
+        "type": "com.it21learning.etl.transform.SqlTransformer"
+      }
+    ],
+    "jobs": [
+      {
+        "name": "transform-user-events",
+        "actions": [
+          {
+            "name": "load users",
+            "actor": {
+              "type": "file",
+              "properties": {
+                "format": "csv",
+                "options": {
+                  "header": false,
+                  "delimiter": ",",
+                  "quote": "\"",
+                  "timestampFormat": "yyyy/MM/dd HH:mm:ss"
+                },
+                "ddlSchemaString": "user_id long, birth_year int, gender string, location string",
+                "fileUri": "${events.users_input}"
+              }
+            },
+            "output-view": {
+              "name": "users",
+              "global": "true"
+            }
+          },
+          {
+            "name": "load events",
+            "actor": {
+              "type": "flat",
+              "properties": {
+                "fileUri": "${events.events_input}"
+              }
+            },
+            "output-view": {
+              "name": "events_raw",
+              "global": false
+            }
+          },
+          {
+            "name": "transform-events",
+            "actor": {
+              "type": "sql",
+              "properties": {
+                "sqlString": "select substr(row_value, 1, 12) as event_id, substr(row_value, 13, 16) as event_time, substr(row_value, 29, 12) as event_host, substr(row_value, 41, 64) as event_location from events_raw where row_no not in (1, 2) and substr(row_value, 6, 5) != 'TFYKR'"
+              }
+            },
+            "input-views": [
+              "events_raw"
+            ],
+            "output-view": {
+              "name": "events",
+              "global": true
+            }
+          }
+        ]
+      },
+      {
+        "include": "./src/test/resources/pipelines/jobs/job.json"
+      }
+    ],
+    "debug-staging": {
+      "uri": "${staging_uri}",
+      "actions": [
+        "transform-events",
+        "load-events"
+      ]
+    }
+  }
+}

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="db.password" value="${events.db.password}" decryptionKeyString="${application.security.decryption.key}" />
+    </variables>
+
+    <aliases>
+        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
+        <alias name="file-stream-reader" type="com.it21learning.etl.source.FileStreamReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="state-transformer" type="com.it21learning.etl.transform.StreamStatefulTransformer" />
+        <alias name="stream-writer" type="com.it21learning.etl.sink.common.StreamWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                </property>
+                <property name="path">${events.users_input}</property>
+            </actor>
+            <output-view name="users" global="true" />
+        </action>
+        <action name="load train">
+            <actor type="file-stream-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                    <definition name="delimiter">,</definition>
+                    <definition name="maxFileAge">9h</definition>
+                </property>
+                <property name="ddlSchema">
+                    <definition name="string">user string, event string, invited string, timestamp string, interested string, not_interested string</definition>
+                </property>
+                <property name="waterMark">
+                    <definition name="timeField">__timestamp</definition>
+                    <definition name="delayThreshold">30 seconds</definition>
+                </property>
+                <property name="addTimestamp">true</property>
+                <property name="path">${events.train_input}</property>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="sqlStatement">
+                    <definition name="file">${application.scripts_uri}/window-user-train.sql</definition>
+                </property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="transform user-state">
+            <actor type="state-transformer">
+                <processor type="com.it21learning.etl.test.stream.UserStatefulProcessor">
+                  <property name="timeoutType">ProcessingTimeTimeout</property>
+                  <property name="timeoutDuration">30 seconds</property>
+                </processor>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+            <output-view name="user_states" />
+        </action>
+        <action name="write states">
+            <actor type="stream-writer">
+                <writer type="com.it21learning.etl.sink.process.JdbcContinuousWriter">
+                    <property name="db">
+                        <definition name="driver">com.mysql.cj.jdbc.Driver</definition>
+                        <definition name="url">jdbc:mysql://localhost:3306/events</definition>
+                        <definition name="tableName">user_states</definition>
+                        <definition name="user">root</definition>
+                        <definition name="password">${db.password}</definition>
+                    </property>
+                    <property name="dbOptions">
+                        <definition name="numPartitions">9</definition>
+                        <definition name="batchSize">1600</definition>
+                        <definition name="isolationlevel">READ_UNCOMMITTED</definition>
+                    </property>
+                </writer>
+                <property name="options">
+                    <definition name="checkpointLocation">/tmp/window_streaming_checkpoint</definition>
+                </property>
+                <property name="trigger">
+                    <definition name="mode">processingTime</definition>
+                    <definition name="interval">30 seconds</definition>
+                </property>
+                <property name="outputMode">update</property>
+                <property name="waitTimeInMs">60000</property>
+                <property name="view">user_states</property>
+            </actor>
+            <input-views>
+                <view name="user_states" />
+            </input-views>
+        </action>
+    </job>
+
+    <staging>
+        <uri>${staging_uri}</uri>
+        <actions all="false">
+            <action name="transform users-train" />
+        </actions>
+    </staging>
+</etl-pipeline>

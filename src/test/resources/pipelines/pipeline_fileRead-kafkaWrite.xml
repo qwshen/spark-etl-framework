@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+    </variables>
+
+    <aliases>
+        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+        <alias name="kafka-writer" type="com.it21learning.etl.sink.KafkaWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <option name="header" value="true" />
+                </property>
+                <property name="path">${events.users_input}</property>
+            </actor>
+            <output-view name="users" global="true" />
+        </action>
+        <action name="load train">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <option name="header" value="true" />
+                </property>
+                <property name="path">${events.train_input}</property>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="write users">
+            <actor type="kafka-writer">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topic">users</property>
+                <property name="key">
+                    <definition name="field">user_id</definition>
+                </property>
+                <property name="value">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                </property>
+                <property name="view">users</property>
+            </actor>
+            <input-views>
+                <view name="users" />
+            </input-views>
+        </action>
+        <action name="write train">
+            <actor type="kafka-writer">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topic">train</property>
+                <property name="value">
+                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
+                </property>
+                <property name="view">train</property>
+            </actor>
+            <input-views>
+                <view name="train" />
+            </input-views>
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="scriptFile">${application.scripts_uri}/transform-user-train.sql</property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="write features">
+            <actor type="kafka-writer">
+                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
+                <property name="topic">features</property>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+
+    <staging>
+        <uri>${staging_uri}</uri>
+        <actions all="false">
+            <action name="transform users-train" />
+        </actions>
+    </staging>
+</etl-pipeline>

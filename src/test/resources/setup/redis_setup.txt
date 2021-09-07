@@ -1,0 +1,10 @@
+In redis.conf (/etc/redis/redis.conf):
+
+1. comment
+  bind 127.0.0.1
+
+2. turn off protection mode
+  protection-mode no
+
+3 if auto required, add
+  requirepass XXXXXX

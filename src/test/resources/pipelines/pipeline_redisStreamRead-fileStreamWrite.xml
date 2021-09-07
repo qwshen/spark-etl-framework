@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="file_stream_dir" value="file:///tmp/file_streaming_result" />
+    </variables>
+
+    <aliases>
+        <alias name="redis-stream-reader" type="com.it21learning.etl.source.RedisStreamReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-stream-writer" type="com.it21learning.etl.sink.FileStreamWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="redis-stream-reader">
+                <property name="redis">
+                    <definition name="host">localhost</definition>
+                    <definition name="port">6379</definition>
+                    <definition name="dbNum">3</definition>
+                    <definition name="table">users</definition>
+                </property>
+                <property name="options">
+                    <definition name="key.column">user_id</definition>
+                    <definition name="key.pattern">users:*</definition>
+                    <definition name="partitions.number">3</definition>
+                    <definition name="max.pipeline.size">160</definition>
+                    <definition name="scan.count">240</definition>
+                    <definition name="iterator.grouping.size">1600</definition>
+                    <definition name="timeout">1600</definition>
+                    <definition name="stream.keys">user-1,users-2</definition>
+                    <definition name="stream.parallelism">2</definition>
+                    <definition name="stream.group.name">users-source</definition>
+                    <definition name="stream.consumer.prefix">users-consumer</definition>
+                    <definition name="stream.offsets">
+                        {
+                          "offsets":
+                          {
+                             "user-1":
+                             {
+                                "groupName": "users-source",
+                                "offset": "0-0"
+                             },
+                             "user-2":
+                             {
+                                "groupName": "users-source",
+                                "offset": "0-0"
+                            }
+                          }
+                        }
+                    </definition>
+                    <definition name="stream.read.batch.size">300</definition>
+                    <definition name="stream.read.block">1600</definition>
+                </property>
+                <property name="ddlSchema">
+                    <definition name="string">user_id string, locale string, birthyear string, gender string, joinedAt string, location string, timezone string</definition>
+                </property>
+                <property name="addTimestamp">true</property>
+                <property name="waterMark">
+                    <definition name="timeField">__timestamp</definition>
+                    <definition name="delayThreshold">5 minutes</definition>
+                </property>
+            </actor>
+            <output-view name="users" />
+        </action>
+        <action name="load train">
+            <actor type="redis-stream-reader">
+                <property name="redis">
+                    <definition name="host">localhost</definition>
+                    <definition name="port">6379</definition>
+                    <definition name="dbNum">3</definition>
+                    <definition name="table">train</definition>
+                </property>
+                <property name="options">
+                    <definition name="key.pattern">train:*</definition>
+                    <definition name="partitions.number">3</definition>
+                    <definition name="max.pipeline.size">160</definition>
+                    <definition name="scan.count">240</definition>
+                    <definition name="iterator.grouping.size">1600</definition>
+                    <definition name="timeout">1600</definition>
+                    <definition name="stream.keys">train</definition>
+                    <definition name="stream.parallelism">3</definition>
+                    <definition name="stream.group.name">train-source</definition>
+                    <definition name="stream.consumer.prefix">train-consumer</definition>
+                    <definition name="stream.offsets">
+                        {
+                           "offsets":
+                           {
+                              "train":
+                              {
+                                 "groupName": "train-source",
+                                 "offset": "0-0"
+                              }
+                           }
+                        }
+                    </definition>
+                    <definition name="stream.read.batch.size">200</definition>
+                    <definition name="stream.read.block">1600</definition>
+                </property>
+                <property name="ddlSchema">
+                    <definition name="string">user string, event string, invited string, timestamp string, interested string, not_interested string</definition>
+                </property>
+                <property name="addTimestamp">true</property>
+                <property name="waterMark">
+                    <definition name="timeField">__timestamp</definition>
+                    <definition name="delayThreshold">5 minutes</definition>
+                </property>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="sqlStatement">
+                    <definition name="file">${application.scripts_uri}/stream-user-train.sql</definition>
+                </property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="write features">
+            <actor type="file-stream-writer">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                    <definition name="maxRecordsPerFile">30000</definition>
+                    <definition name="checkpointLocation">/tmp/redis_streaming_checkpoint</definition>
+                </property>
+                <property name="trigger">
+                    <definition name="mode">processingTime</definition>
+                    <definition name="interval">60 seconds</definition>
+                </property>
+                <property name="partitionBy">invited</property>
+                <property name="outputMode">append</property>
+                <property name="waitTimeInMs">16000</property>
+                <property name="path">${file_stream_dir}</property>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+</etl-pipeline>

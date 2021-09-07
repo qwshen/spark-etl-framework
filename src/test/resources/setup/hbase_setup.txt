@@ -1,0 +1,6 @@
+create_namespace 'events_db'
+
+create 'events_db:users', 'profile', 'region', 'registration'
+create 'events_db:train', 'eu'
+
+create 'events_db:features', 'profile', 'data'

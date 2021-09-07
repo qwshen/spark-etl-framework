@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="process_date" value="${events.process_date}" />
+        <variable name="staging_uri" value="file:///tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+    </variables>
+
+    <aliases>
+        <alias name="hbase-reader" type="com.it21learning.etl.source.HBaseReader" />
+        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="hbase-reader">
+                <property name="hbase">
+                    <definition name="hbase.zookeeper.quorum">127.0.0.1</definition>
+                    <definition name="hbase.zookeeper.property.clientPort">2181</definition>
+                    <definition name="zookeeper.znode.parent">/hbase-unsecure</definition>
+                </property>
+                <property name="data">
+                    <table name="events_db:users">
+                        <field name="user_id" from="__:rowKey" />
+                        <field name="birthyear" from="profile:birth_year" />
+                        <field name="gender" from="profile:gender" />
+                        <field name="location" from="region:location" />
+                        <field name="timezone" from="region:time_zone" />
+                        <field name="joinedAt" from="registration:joined_at" />
+                    </table>
+                </property>
+                <property name="options">
+                    <definition name="isolationLevel">READ_COMMITTED</definition>
+                    <definition name="maxResultSize">-1</definition>
+                    <definition name="numPartitions">16</definition>
+                    <definition name="batchSize">1600</definition>
+                </property>
+            </actor>
+            <output-view name="users" global="true" />
+        </action>
+        <action name="load train">
+            <actor type="file-reader">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                </property>
+                <property name="path">${events.train_input}</property>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <property name="sqlStatement">
+                    <definition name="file">${application.scripts_uri}/transform-user-train.sql</definition>
+                </property>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="write features">
+            <actor type="file-writer">
+                <property name="format">csv</property>
+                <property name="options">
+                    <definition name="header">true</definition>
+                    <definition name="maxRecordsPerFile">30000</definition>
+                </property>
+                <property name="mode">overwrite</property>
+                <property name="path">${export_dir}</property>
+                <property name="view">features</property>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+
+    <staging>
+        <uri>${staging_uri}</uri>
+        <actions all="false">
+            <action name="transform users-train" />
+        </actions>
+    </staging>
+</etl-pipeline>
