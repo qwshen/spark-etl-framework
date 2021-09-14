@@ -2,33 +2,33 @@
     "type":"struct",
     "fields":
     [
-        {"
-            name":"user",
+        {
+            "name":"user_id",
+            "type":"string",
+            "nullable":false
+        },
+        {
+            "name":"event_id",
+            "type":"string",
+            "nullable":false
+        },
+        {
+            "name":"start_time",
             "type":"string",
             "nullable":true
         },
         {
-            "name":"event",
+            "name":"city",
             "type":"string",
             "nullable":true
         },
         {
-            "name":"invited",
+            "name":"province",
             "type":"string",
             "nullable":true
         },
         {
-            "name":"timestamp",
-            "type":"string",
-            "nullable":true
-        },
-        {
-            "name":"interested",
-            "type":"string",
-            "nullable":true
-        },
-        {
-            "name":"not_interested",
+            "name":"country",
             "type":"string",
             "nullable":true
         }

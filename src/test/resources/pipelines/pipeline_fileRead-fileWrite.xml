@@ -7,7 +7,7 @@
 
     <variables>
         <variable name="process_date" value="${events.process_date}" />
-        <variable name="staging_uri" value="file:///c:/temp/staging/events" />
+        <variable name="staging_uri" value="/tmp/staging/events" />
         <variable name="export_dir" value="${events.output_dir}" />
     </variables>
 

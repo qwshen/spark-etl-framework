@@ -23,18 +23,20 @@ The definition of the FileWriter:
 
 - In JSON format
 ```json
-  "actor": {
-    "type": "file-writer",
-    "properties": {
-      "format": "csv",
-      "options": {
-        "header": true,
-        "maxRecordsPerFile": 16
-      },
-      "partitionBy": "gender,birthyear",
-      "mode": "overwrite",
-      "fileUri": "${export_dir}",
-      "view": "features"        
+  {
+    "actor": {
+      "type": "file-writer",
+      "properties": {
+        "format": "csv",
+        "options": {
+          "header": true,
+          "maxRecordsPerFile": 16
+        },
+        "partitionBy": "gender,birthyear",
+        "mode": "overwrite",
+        "fileUri": "${export_dir}",
+        "view": "features"
+      }
     }
   }
 ```

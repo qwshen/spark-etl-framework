@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 class XmlBuilderTest extends SparkApp {
   test("xml pipeline parser") {
     implicit val config: Config = loadConfig()
-    val definition = loadContent(clsLoader.getResource("pipelines/template_pipeline.xml"))
+    val definition = loadContent(s"${resourceRoot}pipelines/template_pipeline.xml")
     val pipeline = new XmlPipelineBuilder().build(definition)
     assert(pipeline.nonEmpty)
     pipeline.foreach(pl => {

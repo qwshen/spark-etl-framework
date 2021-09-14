@@ -9,10 +9,6 @@
             "type": "string"
         },
         {
-            "name": "locale",
-            "type": ["null", "string"]
-        },
-        {
             "name": "birthyear",
             "type": ["null", "string"]
         },
@@ -22,14 +18,6 @@
         },
         {
             "name": "joinedAt",
-            "type": ["null", "string"]
-        },
-        {
-            "name": "location",
-            "type": ["null", "string"]
-        },
-        {
-            "name": "timezone",
             "type": ["null", "string"]
         }
     ]

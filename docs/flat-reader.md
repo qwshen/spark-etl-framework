@@ -41,21 +41,25 @@ or
 
 - In JSON format
 ```json
-  "actor": {
-    "type": "flat-reader",
-    "properties": {
-      "ddlFieldsString": "user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int",
-      "fileUri": "${events.train_input}"
+  {
+    "actor": {
+      "type": "flat-reader",
+      "properties": {
+        "ddlFieldsString": "user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int",
+        "fileUri": "${events.train_input}"
+      }
     }
   }
 ```
 or
 ```json
-  "actor": {
-    "type": "flat-reader",
-    "properties": {
-      "ddlFieldsFile": "schema/train.txt",
-      "fileUri": "${events.train_input}"
+  {
+    "actor": {
+      "type": "flat-reader",
+      "properties": {
+        "ddlFieldsFile": "schema/train.txt",
+        "fileUri": "${events.train_input}"
+      }
     }
   }
 ```
@@ -63,18 +67,18 @@ or
 - In XML format
 ```xml
   <actor type="flat-reader">
-  <properties>
-  <ddlFieldsString>user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int</ddlFieldsString>
-  <fileUri>${events.train_input}</fileUri>
-  </properties>
+    <properties>
+      <ddlFieldsString>user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int</ddlFieldsString>
+      <fileUri>${events.train_input}</fileUri>
+    </properties>
   </actor>
 ```
 or 
 ```xml
   <actor type="flat-reader">
-  <properties>
-  <ddlFieldsFile>schema/train.txt</ddlFieldsFile>
-  <fileUri>${events.train_input}</fileUri>
-  </properties>
+    <properties>
+      <ddlFieldsFile>schema/train.txt</ddlFieldsFile>
+      <fileUri>${events.train_input}</fileUri>
+    </properties>
   </actor>
 ```

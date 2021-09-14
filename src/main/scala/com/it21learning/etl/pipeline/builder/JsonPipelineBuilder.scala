@@ -7,7 +7,6 @@ import com.it21learning.etl.configuration.ConfigurationManager
 import com.it21learning.etl.pipeline.definition._
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
-
 import scala.collection.breakOut
 import scala.util.parsing.json.JSON
 import scala.collection.mutable.{Map => mMap}

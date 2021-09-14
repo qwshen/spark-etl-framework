@@ -1,12 +1,10 @@
 package com.it21learning.etl.test.Pipeline
 
-import java.net.URL
 import com.it21learning.etl.ApplicationContext
 import com.it21learning.etl.pipeline.PipelineRunner
-import com.it21learning.etl.pipeline.builder.{PipelineFactory, XmlPipelineBuilder}
+import com.it21learning.etl.pipeline.builder.PipelineFactory
 import com.it21learning.etl.test.{SparkApp, TestApp}
 import com.typesafe.config.{Config, ConfigFactory}
-
 import scala.io.Source
 import scala.util.Properties
 
@@ -15,26 +13,22 @@ class PipelineTest extends SparkApp {
   val runner = new PipelineRunner(new ApplicationContext())
 
   test("Pipeline test - file read / file write") {
-    for (pipeline <- PipelineFactory.fromXml(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-fileWrite.xml")))) {
+    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-fileWrite.xml"))) {
       runner.run(pipeline)
     }
   }
 
-//  test("Pipeline test - file read / kafka write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-kafkaWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
-//  }
+  test("Pipeline test - file read / kafka write") {
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-kafkaWrite.yaml"))) {
+      runner.run(pipeline)
+    }
+  }
 
-//  test("Pipeline test - kafka read / file write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlPipelineBuilder.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_kafkaRead-fileWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
-//  }
+  test("Pipeline test - kafka read / file write") {
+    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaRead-fileWrite.json"))) {
+      runner.run(pipeline)
+    }
+  }
 
 //  test("Pipeline test - kafka stream-read / kafka stream-write") {
 //    implicit val config: Config = loadConfig()

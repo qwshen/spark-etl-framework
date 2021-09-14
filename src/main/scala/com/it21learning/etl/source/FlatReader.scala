@@ -44,7 +44,7 @@ final class FlatReader() extends Actor {
   /**
    * Load the flat-file
    *
-   * @param ctx     - the execution context
+   * @param ctx - the execution context
    * @param session - the spark-session
    */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
@@ -66,10 +66,10 @@ final class FlatReader() extends Actor {
   }
 
   /**
-   * Initialize the file reader from the xml definition
+   * Initialize the flat reader
    *
-   * @param config     - the configuration object
-   * @param session    - the spark-session object
+   * @param config - the configuration object
+   * @param session - the spark-session object
    */
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)

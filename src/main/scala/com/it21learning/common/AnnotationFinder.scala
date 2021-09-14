@@ -19,7 +19,7 @@ object AnnotationFinder extends Serializable {
     val cls = any.getClass
     val members = runtimeMirror(cls.getClassLoader).staticClass(cls.getName).selfType.members
       .collect { case s: TermSymbol => s }
-      .filter(s => s.isVal || s.isVar).filter(_.annotations.exists(a => a.tree.tpe <:< typeOf[A]))
+      .filter(s => s.isGetter).map(s => s.accessed).filter(_.annotations.exists(a => a.tree.tpe <:< typeOf[A]))
 
     var constructor: Option[MethodMirror] = None
     members.flatMap(m => m.annotations.find(_.tree.tpe =:= typeOf[A]).map((m, _))).map(x => {

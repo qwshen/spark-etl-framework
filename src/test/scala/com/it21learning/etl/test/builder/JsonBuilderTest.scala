@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 class JsonBuilderTest extends SparkApp {
   test("json pipeline parser") {
     implicit val config: Config = loadConfig()
-    val definition = loadContent(clsLoader.getResource("pipelines/template_pipeline.json"))
+    val definition = loadContent(s"${resourceRoot}pipelines/template_pipeline.json")
     val pipeline = new JsonPipelineBuilder().build(definition)
     assert(pipeline.nonEmpty)
     pipeline.foreach(pl => {

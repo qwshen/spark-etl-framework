@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 class YamlBuilderTest extends SparkApp {
   test("yaml pipeline parser") {
     implicit val config: Config = loadConfig()
-    val definition = loadContent(clsLoader.getResource("pipelines/template_pipeline.yaml"))
+    val definition = loadContent(s"${resourceRoot}pipelines/template_pipeline.yaml")
     val pipeline = new YamlPipelineBuilder().build(definition)
     assert(pipeline.nonEmpty)
     pipeline.foreach(pl => {

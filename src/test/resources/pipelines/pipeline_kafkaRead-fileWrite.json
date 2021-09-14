@@ -1,0 +1,138 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the processing for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${application.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "/tmp/staging"
+            },
+            {
+                "name": "export_dir",
+                "value": "${events.output_dir}"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "kafka-reader",
+                "type": "com.it21learning.etl.source.KafkaReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.it21learning.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-writer",
+                "type": "com.it21learning.etl.sink.FileWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load users",
+                        "actor": {
+                            "type": "kafka-reader",
+                            "properties": {
+                                "bootstrapServers": "${kafka.bootstrap.servers}",
+                                "topic": "users",
+                                "options": {
+                                    "startingOffsets": "earliest"
+                                },
+                                "valueSchema": {
+                                    "avroSchemaUri": "${kafka.schema.registry.url}"
+                                }
+                            }
+                        },
+                        "output-view": {
+                            "name": "users",
+                            "global": "true"
+                        }
+                    },
+                    {
+                        "name": "load train",
+                        "actor": {
+                            "type": "kafka-reader",
+                            "properties": {
+                                "bootstrapServers": "${kafka.bootstrap.servers}",
+                                "topic": "train",
+                                "options": {
+                                    "startingOffsets": "earliest"
+                                }
+                            }
+                        },
+                        "output-view": {
+                            "name": "raw_train",
+                            "global": "true"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "transform user-train",
+                "actions": [
+                    {
+                        "name": "refine train",
+                        "actor": {
+                            "type": "sql",
+                            "properties": {
+                                "sqlString": "select substr(value, 1, 9) as user, substr(value, 10, 10) as event, substr(value, 20, 32) as timestamp, substr(value, 52, 1) as interested from raw_train"
+                            }
+                        },
+                        "input-views": ["raw_train"],
+                        "output-view": {
+                            "name": "train",
+                            "global": "true"
+                        }
+                    },
+                    {
+                        "name": "transform user-train",
+                        "actor": {
+                            "type": "sql",
+                            "properties": {
+                                "sqlFile": "${application.scripts_uri}/transform-user-train.sql"
+                            }
+                        },
+                        "input-views": ["users", "train"],
+                        "output-view": {
+                            "name": "features",
+                            "global": "true"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "write features",
+                "actions": [
+                    {
+                        "name": "write features",
+                        "actor": {
+                            "type": "file-writer",
+                            "properties": {
+                                "format": "csv",
+                                "optioins": {
+                                    "header": "true",
+                                    "maxRecordsPerFile": "30000"
+                                },
+                                "mode": "overwrite",
+                                "fileUri": "${export_dir}",
+                                "view": "features"
+                            }
+                        },
+                        "input-views": ["features"]
+                    }
+                ]
+            }
+        ]
+    }
+}

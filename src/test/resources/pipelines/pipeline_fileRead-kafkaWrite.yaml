@@ -1,0 +1,89 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: ${application.process_date}
+    - name: staging_uri
+      value: "/tmp/staging"
+    - name: export_dir
+      value: ${events.output_dir}
+  jobs:
+    - name: publish-users
+      actions:
+        - name: load users
+          actor:
+            type: com.it21learning.etl.source.FileReader
+            properties:
+              format: csv
+              options:
+                header: true
+                delimiter: ","
+              ddlSchemaString: "user_id string, birthyear string, gender string, joinedAt string"
+              fileUri: "${events.users_input}"
+          output-view:
+            name: users
+            global: false
+        - name: write users
+          actor:
+            type: com.it21learning.etl.sink.KafkaWriter
+            properties:
+              bootstrapServers: ${kafka.bootstrap.servers}
+              topic: users
+              keyField: user_id
+              valueSchema:
+                avroSchemaUri: ${kafka.schema.registry.url}
+              view: users
+          input-views:
+            - users
+    - name: publish-train
+      actions:
+        - name: load train
+          actor:
+            type: com.it21learning.etl.source.FlatReader
+            properties:
+              fileUri: "${events.train_input}"
+          output-view:
+            name: train
+            global: false
+        - name: write train
+          actor:
+            type: com.it21learning.etl.sink.KafkaWriter
+            properties:
+              bootstrapServers: ${kafka.bootstrap.servers}
+              topic: train
+              keyField: row_no
+              valueField: row_value
+              view: train
+          input-views:
+            - train
+    - name: publish-events
+      actions:
+        - name: load events
+          actor:
+            type: com.it21learning.etl.source.FileReader
+            properties:
+              format: csv
+              options:
+                header: true
+                delimiter: ","
+              fileUri: "${events.events_input}"
+          output-view:
+            name: events
+            global: false
+        - name: write events
+          actor:
+            type: com.it21learning.etl.sink.KafkaWriter
+            properties:
+              bootstrapServers: ${kafka.bootstrap.servers}
+              topic: events
+              keyField: event_id
+              valueSchema:
+                avroSchemaUri: ${kafka.schema.registry.url}
+              view: events
+          input-views:
+            - events

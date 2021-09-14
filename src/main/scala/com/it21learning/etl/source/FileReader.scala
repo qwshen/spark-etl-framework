@@ -50,10 +50,10 @@ final class FileReader() extends Actor {
   }
 
   /**
-   * Initialize the file reader from the xml definition
+   * Initialize the file reader
    *
-   * @param config     - the configuration object
-   * @param session    - the spark-session object
+   * @param config - the configuration object
+   * @param session - the spark-session object
    */
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)

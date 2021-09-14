@@ -4,27 +4,26 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{FunSuite, BeforeAndAfterEach, Matchers}
 import scala.util.Properties
-import java.net.URL
 import scala.io.Source
 
 trait TestApp extends FunSuite with BeforeAndAfterEach with Matchers {
-  protected val clsLoader: ClassLoader = getClass.getClassLoader
+  protected val resourceRoot: String = getClass.getClassLoader.getResource("").getPath
 
   def loadConfig(): Config = {
-    val cfgString = loadContent(clsLoader.getResource("application-test.conf"))
+    val cfgString = loadContent(this.resourceRoot + "application-test.conf")
     val config = ConfigFactory.parseString(cfgString)
 
     val cfgOverride = Seq(
-      String.format("events.users_input = \"%s\"", clsLoader.getResource("data/users")),
-      String.format("events.events_input = \"%s\"", clsLoader.getResource("data/events")),
-      String.format("events.train_input = \"%s\"", clsLoader.getResource("data/train")),
-      String.format("application.scripts_uri = \"%s\"", clsLoader.getResource("scripts"))
+      String.format("events.users_input = \"%s\"", s"${resourceRoot}data/users"),
+      String.format("events.events_input = \"%s\"", s"${resourceRoot}data/events"),
+      String.format("events.train_input = \"%s\"", s"${resourceRoot}data/train"),
+      String.format("application.scripts_uri = \"%s\"", s"${resourceRoot}scripts")
     ).mkString(Properties.lineSeparator)
     ConfigFactory.parseString(cfgOverride).withFallback(config)
   }
 
-  def loadContent(url: URL): String = {
-    val source = Source.fromURL(url)
+  def loadContent(file: String): String = {
+    val source = Source.fromFile(file)
     try {
       source.getLines().mkString(Properties.lineSeparator)
     } finally {
@@ -41,6 +40,8 @@ trait SparkApp extends TestApp {
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
     .getOrCreate()
 
+  //turn off info logs
+  session.sparkContext.setLogLevel("WARN")
   //disable writing crc files
   org.apache.hadoop.fs.FileSystem.get(session.sparkContext.hadoopConfiguration).setWriteChecksum(false)
   //disable writing __SUCCESS file
