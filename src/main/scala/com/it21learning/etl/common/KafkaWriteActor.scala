@@ -42,18 +42,19 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
       df.withColumn(dstField, to_avro(struct(df.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
     }
     def getByField(srcField: String, dstField: String)(df: DataFrame): DataFrame = df.withColumn(dstField, col(srcField))
-    def getDefault(dstField: String)(df: DataFrame): DataFrame = if (!df.columns.contains(dstField)) df.withColumn(dstField, monotonically_increasing_id.cast(StringType)) else df
+    def getKeyDefault(df: DataFrame): DataFrame = if (!df.columns.contains("key")) df.withColumn("key", monotonically_increasing_id.cast(StringType)) else df
+    def getValueDefault(df: DataFrame): DataFrame = if (!df.columns.contains("value")) df.withColumn("value", to_json(struct(df.columns.map(column): _*))) else df
 
     //populate key column
     var dfWithKey = this._keyField.map(field => getByField(field, "key")(df))
-      .getOrElse(this._keySchema.map(schema => getBySchema(schema, "key")(df)).getOrElse(getDefault("key")(df)))
+      .getOrElse(this._keySchema.map(schema => getBySchema(schema, "key")(df)).getOrElse(getKeyDefault(df)))
     //make sure the key column is in the type of String or Binary
-    if (dfWithKey.schema.fields.exists(c => c.name.equals("key") && c.dataType != StringType)) {
+    if (dfWithKey.schema.fields.exists(c => c.name.equals("key") && c.dataType != StringType && c.dataType != BinaryType)) {
       dfWithKey = dfWithKey.withColumn("key", col("Key").cast(StringType))
     }
     //populate value column
     val dfWithValue = this._valueField.map(field => getByField(field, "value")(dfWithKey))
-      .getOrElse(this._valueSchema.map(schema => getBySchema(schema, "value")(dfWithKey)).getOrElse(getDefault("value")(dfWithKey)))
+      .getOrElse(this._valueSchema.map(schema => getBySchema(schema, "value")(dfWithKey)).getOrElse(getValueDefault(dfWithKey)))
 
     //headers
     val dfWithHeaders = this._headerField.map(headerField => dfWithValue.withColumn("headers", col(headerField))).getOrElse(dfWithValue)

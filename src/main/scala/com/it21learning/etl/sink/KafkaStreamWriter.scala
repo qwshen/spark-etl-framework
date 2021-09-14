@@ -46,9 +46,10 @@ final class KafkaStreamWriter extends KafkaWriteActor[KafkaStreamWriter] {
       case _ => initQuery
     }
     //with options & output-mode
+    val streamQuery = this._options.foldLeft(triggerQuery)((w, o) => w.option(o._1, o._2)).outputMode(outputMode).start()
     this._waittimeInMs match {
-      case Some(ts) => this._options.foldLeft(triggerQuery)((w, o) => w.option(o._1, o._2)).outputMode(outputMode).start().awaitTermination(ts)
-      case _ => this._options.foldLeft(triggerQuery)((w, o) => w.option(o._1, o._2)).outputMode(outputMode).start().awaitTermination()
+      case Some(ts) => streamQuery.awaitTermination(ts)
+      case _ => streamQuery.awaitTermination()
     }
   }
 

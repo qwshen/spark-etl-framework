@@ -2,3 +2,5 @@
 .DS_Store
 *.iml
 **/*.iml
+dependency-reduced-pom.xml
+target

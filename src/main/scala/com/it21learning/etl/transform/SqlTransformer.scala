@@ -7,6 +7,7 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
+import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
 
 /**
  * The following is the xml definition.
@@ -33,7 +34,6 @@ final class SqlTransformer extends Actor with VariableResolver {
    *  @return
    */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    _ <- validate(this._sqlStmt, "The sql statement in SqlTransformer cannot be empty.")
     stmt <- this._sqlStmt
   } yield {
     //log the sql statement in debug mode
@@ -50,9 +50,6 @@ final class SqlTransformer extends Actor with VariableResolver {
 
   /**
    * Initialize the actor with the properties & config
-   *
-   * @param properties
-   * @param config
    */
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
@@ -65,7 +62,21 @@ final class SqlTransformer extends Actor with VariableResolver {
 
     this._sqlStmt = this._sqlStmt.map(stmt => resolve(stmt)(config))
     //extract all tables in the sql-statement
-    this._views = this._sqlStmt.map(s => session.sessionState.sqlParser.parsePlan(s).collect { case r: UnresolvedRelation => r.tableName }).getOrElse(Nil)
+    val alias = scala.collection.mutable.Set[String]()
+    val relations = scala.collection.mutable.Set[String]()
+    for (s <- this._sqlStmt) {
+      val lp = session.sessionState.sqlParser.parsePlan(s)
+      var i = 0
+      while (lp(i) != null) {
+        lp(i) match {
+          case sa: SubqueryAlias => alias += sa.alias
+          case r: UnresolvedRelation => relations += r.tableName
+          case _ =>
+        }
+        i = i + 1
+      }
+    }
+    this._views = relations.diff(alias).toSeq
   }
 
   /**

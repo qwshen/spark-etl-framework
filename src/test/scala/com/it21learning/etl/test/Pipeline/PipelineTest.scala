@@ -3,10 +3,8 @@ package com.it21learning.etl.test.Pipeline
 import com.it21learning.etl.ApplicationContext
 import com.it21learning.etl.pipeline.PipelineRunner
 import com.it21learning.etl.pipeline.builder.PipelineFactory
-import com.it21learning.etl.test.{SparkApp, TestApp}
-import com.typesafe.config.{Config, ConfigFactory}
-import scala.io.Source
-import scala.util.Properties
+import com.it21learning.etl.test.SparkApp
+import com.typesafe.config.Config
 
 class PipelineTest extends SparkApp {
   implicit val config: Config = loadConfig()
@@ -30,13 +28,11 @@ class PipelineTest extends SparkApp {
     }
   }
 
-//  test("Pipeline test - kafka stream-read / kafka stream-write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_kafkaStreamRead-kafkaStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
-//  }
+  test("Pipeline test - kafka stream-read / kafka stream-write") {
+    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaStreamRead-kafkaStreamWrite.xml"))) {
+      runner.run(pipeline)
+    }
+  }
 
 //  test("Pipeline test - file read / delta write") {
 //    implicit val config: Config = loadConfig()

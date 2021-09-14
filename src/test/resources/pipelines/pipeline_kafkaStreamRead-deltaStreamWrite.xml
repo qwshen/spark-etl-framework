@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+<pipeline-def name="event-consolidation" description="This is the process for transforming event data" version="1.0.0">
     <settings>
         <singleSparkSession setting="false" />
         <globalViewAsLocal setting="true" />
@@ -21,7 +21,7 @@
         <action name="load train">
             <actor type="kafka-stream-reader">
                 <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
-                <property name="topics">train</property>
+                <property name="topic">train</property>
                 <property name="options">
                     <option name="startingOffsets" value="earliest" />"
                 </property>
@@ -91,4 +91,4 @@
         <uri>${staging_uri}</uri>
         <actions all="false" />
     </staging>
-</etl-pipeline>
+</pipeline-def>

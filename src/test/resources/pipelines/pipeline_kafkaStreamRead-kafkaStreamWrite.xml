@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+<pipeline-def name="event-consolidation" description="This is the process for transforming event data" version="1.0.0">
     <settings>
         <singleSparkSession setting="false" />
         <globalViewAsLocal setting="true" />
@@ -20,43 +20,46 @@
     <job name="prepare events-features">
         <action name="load train">
             <actor type="kafka-stream-reader">
-                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
-                <property name="topics">train</property>
-                <property name="options">
-                    <option name="startingOffsets" value="earliest" />"
-                </property>
-                <property name="valueSchema">
-                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
-                </property>
-                <property name="waterMark">
-                    <definition name="timeField">__timestamp</definition>
-                    <definition name="delayThreshold">5 minutes</definition>
-                </property>
-                <property name="addTimestamp">true</property>
+                <properties>
+                    <bootstrapServers>${kafka.bootstrap.servers}</bootstrapServers>
+                    <topic>train</topic>
+                    <options>
+                        <startingOffsets>earliest</startingOffsets>
+                    </options>
+                    <addTimestamp>true</addTimestamp>
+                    <watermark>
+                        <timeField>__timestamp</timeField>
+                        <delayThreshold>150 seconds</delayThreshold>
+                    </watermark>
+                </properties>
             </actor>
-            <output-view name="train" global="true" />
+            <output-view name="train" />
         </action>
         <action name="load users">
             <actor type="kafka-stream-reader">
-                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
-                <property name="topics">users</property>
-                <property name="options">
-                    <option name="startingOffsets" value="earliest" />"
-                </property>
-                <property name="valueSchema">
-                    <definition name="avroSchemaUri">${kafka.schema.registry.url}</definition>
-                </property>
-                <property name="waterMark">
-                    <definition name="timeField">__timestamp</definition>
-                    <definition name="delayThreshold">5 minutes</definition>
-                </property>
-                <property name="addTimestamp">true</property>
+                <properties>
+                    <bootstrapServers>${kafka.bootstrap.servers}</bootstrapServers>
+                    <topic>users</topic>
+                    <options>
+                        <startingOffsets>earliest</startingOffsets>
+                    </options>
+                    <addTimestamp>true</addTimestamp>
+                    <valueSchema>
+                        <avroSchemaUri>${kafka.schema.registry.url}</avroSchemaUri>
+                    </valueSchema>
+                    <watermark>
+                        <timeField>__timestamp</timeField>
+                        <delayThreshold>60 seconds</delayThreshold>
+                    </watermark>
+                </properties>
             </actor>
             <output-view name="users" />
         </action>
         <action name="transform users-train">
             <actor type="sql">
-                <property name="scriptFile">${application.scripts_uri}/stream-user-train.sql</property>
+                <properties>
+                    <sqlFile>${application.scripts_uri}/stream-user-train.sql</sqlFile>
+                </properties>
             </actor>
             <input-views>
                 <view name="users" />
@@ -66,30 +69,27 @@
         </action>
         <action name="write stream-features">
             <actor type="kafka-stream-writer">
-                <property name="bootstrapServers">${kafka.bootstrap.servers}</property>
-                <property name="topic">stream-features</property>
-                <property name="options">
-                    <option name="checkpointLocation" value="/tmp/checkpoint/stream_join_features" />"
-                </property>
-                <property name="key">
-                    <definition name="field">user_id</definition>
-                </property>
-                <property name="trigger">
-                    <definition name="mode">processingTime</definition>
-                    <definition name="interval">60 seconds</definition>
-                </property>
-                <property name="outputMode">append</property>
-                <property name="waitTimeInMs">60000</property>
-                <property name="view">stream_features</property>
+                <properties>
+                    <bootstrapServers>${kafka.bootstrap.servers}</bootstrapServers>
+                    <topic>stream-features</topic>
+                    <options>
+                        <checkpointLocation>/tmp/checkpoint/kafka_stream_join_features</checkpointLocation>
+                    </options>
+                    <keyField>user_id</keyField>
+                    <trigger>
+                        <mode>processingTime</mode>
+                        <interval>60 seconds</interval>
+                    </trigger>
+                    <outputMode>append</outputMode>
+                    <test>
+                        <waittimeMS>60000</waittimeMS>
+                    </test>
+                    <view>stream_features</view>
+                </properties>
             </actor>
             <input-views>
                 <view name="stream_features" />
             </input-views>
         </action>
     </job>
-
-    <staging>
-        <uri>${staging_uri}</uri>
-        <actions all="false" />
-    </staging>
-</etl-pipeline>
+</pipeline-def>

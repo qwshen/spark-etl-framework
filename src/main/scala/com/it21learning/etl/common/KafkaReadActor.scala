@@ -50,7 +50,7 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
             else
               from_json(col("key").cast(StringType), DataType.fromJson(s.sValue).asInstanceOf[StructType])
         }
-        case _ => col("key").cast(StringType)
+        case _ => col("key")
       })
       .withColumn("value", this._valueSchema match {
         case Some(s) if (s.sType == "avro" || s.sType == "Json") => s.sType match {
@@ -65,7 +65,7 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
             else
               from_json(col("value").cast(StringType), DataType.fromJson(s.sValue).asInstanceOf[StructType])
         }
-        case _ => col("value").cast(StringType)
+        case _ => col("value")
       })
 
     //determine the final columns

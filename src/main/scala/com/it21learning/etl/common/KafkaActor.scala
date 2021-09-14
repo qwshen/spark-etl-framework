@@ -69,7 +69,7 @@ private[etl] abstract class KafkaActor[T] extends Actor { self: T =>
    *   jsonSchemaFile
    */
   private def calculateSchema(avroSchemaString: Option[String], avroSchemaUri: Option[String], avroSchemaFile: Option[String],
-                              jsonSchemaString: Option[String], jsonSchemaFile: Option[String], id: String): Option[Schema] = this._topic.map(topic => {
+    jsonSchemaString: Option[String], jsonSchemaFile: Option[String], id: String): Option[Schema] = this._topic.map(topic => {
     avroSchemaString.map(s => Schema("avro", s))
       .getOrElse {
         avroSchemaUri.map(uri => Schema("avro", fetchSchema(uri, s"$topic-$id")))
@@ -81,7 +81,7 @@ private[etl] abstract class KafkaActor[T] extends Actor { self: T =>
               }
           }
       }
-  })
+  }).find(s => s.sType.equals("avro") || s.sType.equals("json"))
 
   /**
    * Call registry-service to retrieve the schema

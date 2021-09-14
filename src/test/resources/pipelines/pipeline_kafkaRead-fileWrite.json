@@ -86,7 +86,7 @@
                         "actor": {
                             "type": "sql",
                             "properties": {
-                                "sqlString": "select substr(value, 1, 9) as user, substr(value, 10, 10) as event, substr(value, 20, 32) as timestamp, substr(value, 52, 1) as interested from raw_train"
+                                "sqlString": "with t as (select cast(value as string) as value from raw_train) select substr(value, 1, 9) as user, substr(value, 10, 10) as event, substr(value, 20, 32) as timestamp, substr(value, 52, 1) as interested from t"
                             }
                         },
                         "input-views": ["raw_train"],
