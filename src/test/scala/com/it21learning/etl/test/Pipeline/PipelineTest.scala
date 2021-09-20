@@ -10,45 +10,41 @@ class PipelineTest extends SparkApp {
   implicit val config: Config = loadConfig()
   val runner = new PipelineRunner(new ApplicationContext())
 
-  test("Pipeline test - file read / file write") {
-    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-fileWrite.xml"))) {
-      runner.run(pipeline)
-    }
-  }
-
-  test("Pipeline test - file read / kafka write") {
-    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-kafkaWrite.yaml"))) {
-      runner.run(pipeline)
-    }
-  }
-
-  test("Pipeline test - kafka read / file write") {
-    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaRead-fileWrite.json"))) {
-      runner.run(pipeline)
-    }
-  }
-
-  test("Pipeline test - kafka stream-read / kafka stream-write") {
-    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaStreamRead-kafkaStreamWrite.xml"))) {
-      runner.run(pipeline)
-    }
-  }
-
-//  test("Pipeline test - file read / delta write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-deltaWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//  test("Pipeline test - file read / file write") {
+//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-fileWrite.xml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
-//  test("Pipeline test - delta read / file write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_deltaRead-fileWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//  test("Pipeline test - file read / kafka write") {
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-kafkaWrite.yaml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
+
+//  test("Pipeline test - kafka read / file write") {
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaRead-fileWrite.json"))) {
+//      runner.run(pipeline)
+//    }
+//  }
+
+//  test("Pipeline test - kafka stream-read / kafka stream-write") {
+//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaStreamRead-kafkaStreamWrite.xml"))) {
+//      runner.run(pipeline)
+//    }
+//  }
+
+  test("Pipeline test - file read / delta write") {
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-deltaWrite.yaml"))) {
+      runner.run(pipeline)
+    }
+  }
+
+  test("Pipeline test - delta read / file write") {
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_deltaRead-fileWrite.json"))) {
+      runner.run(pipeline)
+    }
+  }
 
 //  test("Pipeline test - delta streaming read / kafka streaming write") {
 //    implicit val config: Config = loadConfig()

@@ -58,21 +58,6 @@ final class FileWriter extends Actor {
   }
 
   /**
-   * Initialize the file writer
-   *
-   * @param config - the configuration object
-   * @param session - the spark-session object
-   */
-  override def init(definition: NodeSeq, config: Config)(implicit session: SparkSession): Unit = {
-    super.init(definition, config)
-
-    validate[String](this._format, "The format in FileWriter is mandatory.", Seq("csv", "json", "parquet", "avro"))
-    validate[String](this._mode, "The write-mode in FileWriter is mandatory.", Seq("append", "overwrite"))
-    validate[String](this._fileUri, "The path in FileWriter is mandatory.")
-    validate[String](this._view, "The view in FileWriter is mandatory.")
-  }
-
-  /**
    * The format of the source files.
    *
    * @param format

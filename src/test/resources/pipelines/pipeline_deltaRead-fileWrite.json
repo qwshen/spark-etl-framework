@@ -1,0 +1,84 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "export_dir",
+                "value": "${events.output_dir}"
+            },
+            {
+                "name": "delta_dir",
+                "value": "/tmp/delta"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "delta-reader",
+                "type": "com.it21learning.etl.source.DeltaReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.it21learning.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-writer",
+                "type": "com.it21learning.etl.sink.FileWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load features",
+                        "actor": {
+                            "type": "delta-reader",
+                            "properties": {
+                                "options": {
+                                    "versionAsOf": "0"
+                                },
+                                "sourcePath": "${delta_dir}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "features",
+                            "global": "false"
+                        }
+                    },
+                    {
+                        "name": "write features",
+                        "actor": {
+                            "type": "file-writer",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true",
+                                    "maxRecordsPerFile": "300"
+                                },
+                                "mode": "overwrite",
+                                "fileUri": "${export_dir}",
+                                "view": "features"
+                            }
+                        },
+                        "input-views": ["features"]
+                    }
+                ]
+            }
+
+        ]
+    }
+}

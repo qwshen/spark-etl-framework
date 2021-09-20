@@ -2,42 +2,33 @@ package com.it21learning.etl.common
 
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
-import scala.xml.NodeSeq
+import com.it21learning.common.PropertyKey
 
 /**
  * Common behavior for delta read
- * @tparam T
  */
 private[etl] abstract class DeltaReadActor[T] extends Actor { self: T =>
   //the options for loading the file
+  @PropertyKey("options.*", false)
   protected var _options: Map[String, String] = Map.empty[String, String]
 
-  //source type
-  protected var _sourceType: Option[String] = None
+  //source table
+  @PropertyKey("sourceTable", false)
+  protected var _sourceTable: Option[String] = None
   //source location
-  protected var _sourceLocation: Option[String] = None
+  @PropertyKey("sourcePath", false)
+  protected var _sourcePath: Option[String] = None
 
   /**
-   * Initialize the file reader from the xml definition
+   * Initialize the actor with the properties & config
    *
-   * @param config  - the configuration object
-   * @param session - the spark-session object
+   * @param properties
+   * @param config
    */
-  override def init(definition: NodeSeq, config: Config)(implicit session: SparkSession): Unit = {
-    super.init(config)
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    super.init(properties, config)
 
-    //scan bootstrap-servers & topics first
-    (definition \ "property").foreach(prop => (prop \ "@name").text match {
-      case "options" => this._options = (prop \ "option").map(o => ((o \ "@name").text, (o \ "@value").text)).toMap[String, String]
-      case "source" => (prop \ "definition").headOption.foreach(v => (v \ "@name").text match {
-        case "path" => this.sourcePath(v.text)
-        case "table" => this.sourceTable(v.text)
-      })
-      case _ =>
-    })
-
-    validate(this._sourceType, "The sourceType in DeltaReader/DeltaStreamReader is mandatory or its value is invalid.", Seq("path", "table"))
-    validate(this._sourceLocation, "The sourceLocation in DeltaReader/DeltaStreamReader is mandatory.")
+    validate(Seq(this._sourceTable, this._sourcePath), "The sourceTable & sourcePath in DeltaReader/DeltaStreamReader cannot be all empty.")
   }
 
   /**
@@ -63,11 +54,7 @@ private[etl] abstract class DeltaReadActor[T] extends Actor { self: T =>
    * @param path
    * @return
    */
-  def sourcePath(path: String): T = {
-    this._sourceType = Some("path")
-    this._sourceLocation = Some(path)
-    this
-  }
+  def sourcePath(path: String): T = { this._sourcePath = Some(path); this }
 
   /**
    * The source table
@@ -75,9 +62,5 @@ private[etl] abstract class DeltaReadActor[T] extends Actor { self: T =>
    * @param table
    * @return
    */
-  def sourceTable(table: String): T = {
-    this._sourceType = Some("table")
-    this._sourceLocation = Some(table)
-    this
-  }
+  def sourceTable(table: String): T = { this._sourceTable = Some(table); this }
 }

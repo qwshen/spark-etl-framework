@@ -1,0 +1,96 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: "${events.process_date}"
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: export_dir
+      value: "${events.output_dir}"
+    - name: delta_dir
+      value: "/tmp/delta"
+  aliases:
+    - name: file-reader
+      type: com.it21learning.etl.source.FileReader
+    - name: flat-reader
+      type: com.it21learning.etl.source.FlatReader
+    - name: sql
+      type: com.it21learning.etl.transform.SqlTransformer
+    - name: delta-writer
+      type: com.it21learning.etl.sink.DeltaWriter
+    - name: file-writer
+      type: com.it21learning.etl.sink.FileWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load users
+          actor:
+            type: file-reader
+            properties:
+              format: csv
+              options:
+                header: true
+              fileUri: "${events.users_input}"
+          output-view:
+            name: users
+            global: true
+        - name: load train
+          actor:
+            type: flat-reader
+            properties:
+              ddlFieldsString: "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int"
+              fileUri: "${events.train_input}"
+          output-view:
+            name: train
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/transform-user-train.sql"
+          input-views:
+            - users
+            - train
+          output-view:
+            name: features
+        - name: write features
+          actor:
+            type: delta-writer
+            properties:
+              options:
+                overwriteSchema: true
+              partitionBy: process_date
+              mode: overwrite
+              sinkPath: "${delta_dir}"
+              view: features
+            input-views:
+              - features
+        - name: create delta-table
+          actor:
+            type: sql
+            properties:
+              sqlString: "create table if not exists features using delta location '${delta_dir}'"
+        - name: load delta-table
+          actor:
+            type: sql
+            properties:
+              sqlString: select * from features
+          output-view:
+            name: delta_features
+        - name: write features file
+          actor:
+            type: file-writer
+            properties:
+              format: csv
+              options:
+                header: true
+                maxRecordsPerFile: "300"
+              mode: overwrite
+              fileUri: "${export_dir}"
+              view: delta_features
+            input-views:
+              - delta_features
