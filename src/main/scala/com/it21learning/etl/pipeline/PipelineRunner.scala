@@ -90,7 +90,7 @@ final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
   //scan all referenced views for the job
   private def scanReferencedViews(job: Job): Map[String, Int] = job.actions.flatMap(action => scanReferencedViews(action)).groupBy(x => x).map(x => (x._1, x._2.length))
   //scan all referenced view for the action
-  private def scanReferencedViews(action: Action): Seq[String] = action.inputViews.union(action.actor.extraViews)
+  private def scanReferencedViews(action: Action): Seq[String] = action.inputViews.union(action.actor.extraViews).distinct
 
   //to ensure all referenced views have been already created, otherwise error out.
   private def ensureViewsExist(views: Seq[String])(implicit session: SparkSession): Boolean = views.map(v => (v, session.catalog.tableExists(v)))

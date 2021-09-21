@@ -1,0 +1,82 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: "${events.process_date}"
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: export_dir
+      value: "${events.output_dir}"
+  aliases:
+    - name: kafka-stream-reader
+      type: com.it21learning.etl.source.KafkaStreamReader
+    - name: sql
+      type: com.it21learning.etl.transform.SqlTransformer
+    - name: delta-stream-writer
+      type: com.it21learning.etl.sink.DeltaStreamWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load train
+          actor:
+            type: kafka-stream-reader
+            properties:
+              bootstrapServers: "${kafka.bootstrap.servers}"
+              topic: train
+              options:
+                startingOffsets: earliest
+              watermark:
+                timeField: __timestamp
+                delayThreshold: 5 minutes
+              addTimestamp: true
+          output-view:
+            name: train
+            global: false
+        - name: load users
+          actor:
+            type: kafka-stream-reader
+            properties:
+              bootstrapServers: "${kafka.bootstrap.servers}"
+              topic: users
+              options:
+                startingOffsets: earliest
+              valueSchema:
+                avroSchemaUri: "${kafka.schema.registry.url}"
+              watermark:
+                timeField: __timestamp
+                delayThreshold: 60 seconds
+              addTimestamp: true
+          output-view:
+            name: users
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/stream-user-train.sql"
+          input-views:
+            - users
+            - train
+          output-view:
+            name: stream_features
+        - name: write stream-features
+          actor:
+            type: delta-stream-writer
+            properties:
+              options:
+                checkpointLocation: "/tmp/checkpoint/delta_stream_join_features"
+              partitionBy: interested
+              trigger:
+                mode: processingTime
+                interval: 60 seconds
+              outputMode: append
+              test:
+                waittimeMS: "9000"
+              sinkPath: /tmp/delta_features
+              view: stream_features
+          input-views:
+            - stream_features

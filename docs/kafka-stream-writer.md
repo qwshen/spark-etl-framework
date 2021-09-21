@@ -7,6 +7,8 @@ The KafkaStreamWriter is for writing data to Kafka topics in streaming mode.
     - avroSchemaFile
     - jsonSchemaString
     - jsonSchemaFile
+- If the key column with name key or keyField not provided, the KafkaStreamWriter generates a unique sequence number per micro-batch
+- If the value column with name value or valueField not provided, the KafkaStreamWriter generates json document with all columns in the source dataframe.
 - The trigger mode must be one of the following values:
   - continuous
   - processingTime
@@ -16,7 +18,7 @@ The KafkaStreamWriter is for writing data to Kafka topics in streaming mode.
   - append
   - update
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
-- The view property specifies which view is to be written to Kafaka.
+- The view property specifies which view is to be written to Kafka.
 
 The definition of the KafkaWriter:
 

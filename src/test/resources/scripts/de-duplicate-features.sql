@@ -3,7 +3,6 @@ select distinct
   gender,
   birthyear,
   timestamp,
-  invited,
   interested,
   process_date
 from features

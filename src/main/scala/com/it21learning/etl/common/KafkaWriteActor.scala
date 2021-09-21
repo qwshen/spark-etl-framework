@@ -34,16 +34,16 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
-    def getBySchema(schema: Schema, dstField: String)(df: DataFrame): DataFrame = {
+    def getBySchema(schema: Schema, dstField: String)(x: DataFrame): DataFrame = {
       val fields: Seq[String] = schema.sType match {
         case "avro" => new Parser().parse(schema.sValue).getFields.asScala.map(f => f.name)
         case _ => DataType.fromJson(schema.sValue.stripMargin).asInstanceOf[StructType].fields.map(f => f.name)
       }
-      df.withColumn(dstField, to_avro(struct(df.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
+      x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
     }
-    def getByField(srcField: String, dstField: String)(df: DataFrame): DataFrame = df.withColumn(dstField, col(srcField))
-    def getKeyDefault(df: DataFrame): DataFrame = if (!df.columns.contains("key")) df.withColumn("key", monotonically_increasing_id.cast(StringType)) else df
-    def getValueDefault(df: DataFrame): DataFrame = if (!df.columns.contains("value")) df.withColumn("value", to_json(struct(df.columns.map(column): _*))) else df
+    def getByField(srcField: String, dstField: String)(x: DataFrame): DataFrame = x.withColumn(dstField, col(srcField))
+    def getKeyDefault(x: DataFrame): DataFrame = if (!x.columns.contains("key")) x.withColumn("key", monotonically_increasing_id.cast(StringType)) else x
+    def getValueDefault(x: DataFrame): DataFrame = if (!x.columns.contains("value")) x.withColumn("value", to_json(struct(x.columns.map(column): _*))) else x
 
     //populate key column
     var dfWithKey = this._keyField.map(field => getByField(field, "key")(df))
@@ -58,7 +58,6 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
 
     //headers
     val dfWithHeaders = this._headerField.map(headerField => dfWithValue.withColumn("headers", col(headerField))).getOrElse(dfWithValue)
-
     //write to kafka
     write(dfWithHeaders)
   } match {
