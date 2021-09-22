@@ -1,41 +1,78 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<etl-pipeline name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
-    <settings>
-        <singleSparkSession setting="false" />
-        <globalViewAsLocal setting="true" />
-    </settings>
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": "false",
+            "globalViewAsLocal": "true"
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "file_stream_dir",
+                "value": "file:///tmp/file_streaming_result"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "file-stream-reader",
+                "type": "com.it21learning.etl.source.FileStreamReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.it21learning.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-stream-writer",
+                "type": "com.it21learning.etl.sink.FileStreamWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load users",
+                        "actor": {
+                            "type": "file-stream-reader",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": true,
+                                    "delimiter": ",",
+                                    "maxFileAge": "16h"
+                                },
+                                "ddlSchemaString": "user_id string, locale string, birthyear string, gender string, joinedAt string, location string, timezone string",
+                                "watermark": {
+                                    "timeField": "__timestamp",
+                                    "delayThreshold": "5 minutes"
+                                },
+                                "addTimestamp": true,
+                                "fileUri": "${events.users_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "users"
+                        }
+                    }
+                ]
+            }
+        ]
 
-    <variables>
-        <variable name="process_date" value="${events.process_date}" />
-        <variable name="staging_uri" value="file:///tmp/staging/events" />
-        <variable name="file_stream_dir" value="file:///tmp/file_streaming_result" />
-    </variables>
 
-    <aliases>
-        <alias name="file-stream-reader" type="com.it21learning.etl.source.FileStreamReader" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
-        <alias name="file-stream-writer" type="com.it21learning.etl.sink.FileStreamWriter" />
-    </aliases>
+    }
+}
+
 
     <job name="prepare events-features">
-        <action name="load users">
-            <actor type="file-stream-reader">
-                <property name="format">csv</property>
-                <property name="options">
-                    <option name="header" value="true" />
-                    <option name="delimiter" value="," />
-                    <option name="maxFileAge" value="16h" />
-                </property>
-                <property name="ddlSchemaString">user_id string, locale string, birthyear string, gender string, joinedAt string, location string, timezone string</property>
-                <property name="waterMark">
-                    <definition name="timeField">__timestamp</definition>
-                    <definition name="delayThreshold">5 minutes</definition>
-                </property>
-                <property name="addTimestamp">true</property>
-                <property name="path">${events.users_input}</property>
-            </actor>
-            <output-view name="users" />
-        </action>
         <action name="load train">
             <actor type="file-stream-reader">
                 <property name="format">csv</property>

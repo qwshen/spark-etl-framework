@@ -85,7 +85,9 @@ The definition of the KafkaStreamWriter:
         <interval>5 seconds</interval>
       </trigger>
       <outputMode>append</outputMode>
-      <test.waittimeMS>30000</test.waittimeMS>
+      <test>
+        <waittimeMS>30000</waittimeMS>
+      </test>
       <view>users</view>
     </properties>
   </actor>

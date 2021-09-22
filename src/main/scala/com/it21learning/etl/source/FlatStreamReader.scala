@@ -1,15 +1,20 @@
 package com.it21learning.etl.source
 
 import com.it21learning.common.PropertyKey
-import com.it21learning.etl.common.{ExecutionContext, FileReadActor}
-import org.apache.spark.sql.functions.current_timestamp
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import com.it21learning.etl.common.{ExecutionContext, FlatReadActor}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import scala.util.{Failure, Success, Try}
+import org.apache.spark.sql.functions.{col, current_timestamp}
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 /**
- * This loader is for loading json, avro & parquet files in streaming mode
+ * To load a text file in streaming mode.
+ *
+ * The output dataframe has the following columns:
+ *   - row_value: the content of each row
+ *   - row_no: the sequence number of each row.
  */
-final class FileStreamReader extends FileReadActor[FileStreamReader] {
+final class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
   //water-mark time field
   @PropertyKey("watermark.timeField", false)
   private var _wmTimeField: Option[String] = None
@@ -29,11 +34,18 @@ final class FileStreamReader extends FileReadActor[FileStreamReader] {
    * @return
    */
   override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    fmt <- this._format
-    schema <- this._schema
     uri <- this._fileUri
   } yield Try {
-    val df = this._options.foldLeft(session.readStream.format(fmt))((s, o) => s.option(o._1, o._2)).schema(schema).load(uri)
+    import session.implicits._
+    val rdd = session.readStream.textFile(uri).rdd
+    val df = this._format match {
+      case Seq(_, _ @ _*) =>
+        val rawRdd = rdd.map(r => this._format.map(f => r.substring(f.startPos - 1, f.startPos + f.length - 1))).map(r => Row.fromSeq(r))
+        val rawSchema = StructType(this._schema.get.fields.map(field => StructField(field.name, StringType, field.nullable)))
+        session.createDataFrame(rawRdd, rawSchema)
+          .select(this._schema.get.fields.map(field => col(field.name).cast(field.dataType)): _*)
+      case _ => rdd.zipWithIndex.toDF("row_value", "row_no")
+    }
     val dfResult = if (this._addTimestamp) df.withColumn("__timestamp", current_timestamp) else df
     //enable water-mark if required
     (this._wmTimeField, this._wmDelayThreshold) match {
@@ -42,7 +54,7 @@ final class FileStreamReader extends FileReadActor[FileStreamReader] {
     }
   } match {
     case Success(df) => df
-    case Failure(ex) => throw new RuntimeException(s"Cannot load the file into data-frame - ${_fileUri}.", ex)
+    case Failure(ex) => throw new RuntimeException(s"Cannot load the flat file - $uri", ex)
   }
 
   /**
@@ -59,7 +71,7 @@ final class FileStreamReader extends FileReadActor[FileStreamReader] {
    * @param duration
    * @return
    */
-  def watermarkDelayThreshold(duration: String): FileStreamReader = { this._wmDelayThreshold = Some(duration); this }
+  def watermarkDelayThreshold(duration: String): FlatStreamReader = { this._wmDelayThreshold = Some(duration); this }
 
   /**
    * Flag of whether or not to add __timestamp with current timestamp.
@@ -67,5 +79,5 @@ final class FileStreamReader extends FileReadActor[FileStreamReader] {
    * @param value
    * @return
    */
-  def addTimestamp(value: Boolean = false): FileStreamReader = { this._addTimestamp = value; this }
+  def addTimestamp(value: Boolean = false): FlatStreamReader = { this._addTimestamp = value; this }
 }

@@ -1,38 +1,17 @@
 package com.it21learning.etl.sink
 
 import com.it21learning.common.PropertyKey
-import com.it21learning.etl.common.{Actor, ExecutionContext}
-import com.typesafe.config.Config
+import com.it21learning.etl.common.{ExecutionContext, FileWriteActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
 
 /**
  * This writer is for writing csv, json, avro & parquet files to the target location
  */
-final class FileWriter extends Actor {
-  //the file format
-  @PropertyKey("format", true)
-  private var _format: Option[String] = None
-
-  //the options for loading the file
-  @PropertyKey("options.*", false)
-  private var _options: Map[String, String] = Map.empty[String, String]
-
-  //partition-by: the columns separated by comma(,) used to partition data when writing.
-  @PropertyKey("partitionBy", false)
-  private var _partitionBy: Option[String] = None
-
+final class FileWriter extends FileWriteActor[FileWriter] {
   //the mode for the writing
   @PropertyKey("mode", false)
   private var _mode: Option[String] = None
-  //the file location
-  @PropertyKey("fileUri", true)
-  private var _fileUri: Option[String] = None
-
-  //the view for writing out
-  @PropertyKey("view", false)
-  private var _view: Option[String] = None
 
   /**
    * Run the file-writer
@@ -58,60 +37,10 @@ final class FileWriter extends Actor {
   }
 
   /**
-   * The format of the source files.
-   *
-   * @param format
-   * @return
-   */
-  def targetFormat(format: String): FileWriter = { this._format = Some(format); this }
-
-  /**
-   * The load option
-   *
-   * @param name
-   * @param value
-   * @return
-   */
-  def writeOption(name: String, value: String): FileWriter = { this._options = this._options + (name -> value); this }
-
-  /**
-   * The load options
-   *
-   * @param options
-   * @return
-   */
-  def writeOptions(options: Map[String, String]): FileWriter = { this._options = this._options ++ options; this }
-
-  /**
-   * Partition by
-   *
-   * @param column
-   * @param columns
-   * @return
-   */
-  def partitionBy(column: String, columns: String*): FileWriter = { this._partitionBy = Some((Seq(column) ++ columns.toSeq).mkString(",")); this }
-
-  /**
-   * The source path of the files
-   *
-   * @param path
-   * @return
-   */
-  def targetPath(path: String): FileWriter = { this._fileUri = Some(path); this }
-
-  /**
    * The write mode. The valid values are: append, overwrite.
    *
    * @param value
    * @return
    */
   def mode(value: String): FileWriter = { this._mode = Some(value); this }
-
-  /**
-   * The view of its data to be written out
-   *
-   * @param view
-   * @return
-   */
-  def sourceView(view: String): FileWriter = { this._view = Some(view); this }
 }

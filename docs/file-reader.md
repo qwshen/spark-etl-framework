@@ -1,7 +1,7 @@
 The FileReader is for loading files from various locations, such as local, hdfs file-system. 
 
 - The supported formats include csv, json, avro, parquet, etc.
-- The options is optional.
+- The options are optional.
 - The schema is optional. If specified, it must be in ddl-schema format. If the schema is defined in a file, please use ddlSchemaFile with the file-name as the value.
 
 The Definition of the FileReader:

@@ -2,6 +2,7 @@
 
 ### Source Readers
 - [FileReader](docs/file-reader.md)
+- [FileStreamReader](docs/file-stream-reader.md)
 - [FlatReader](docs/flat-reader.md)
 - [KafkaReader](docs/kafka-reader.md)
 - [KafkaStreamReader](docs/kafka-stream-reader.md)
@@ -13,6 +14,7 @@
 
 ### Sink Writers
 - [FileWriter](docs/file-writer.md)
+- [FileStreamWriter](docs/file-stream-writer.md)
 - [KafkaWriter](docs/kafka-writer.md)
 - [KafkaStreamWriter](docs/kafka-stream-writer.md)
 - [DeltaWriter](docs/delta-writer.md)
