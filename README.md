@@ -1,6 +1,29 @@
-1. To pass the Kafka unit-tests, please set up a Kafka environment by following the steps in kafka_setup.sh
+Spark-etl-framework is a pipeline based data transformation framework using Spark-SQL. For one process to transform & move data from end to end, a pipeline needs to be defined,
+and as a start of a pipeline, one or more readers is/are required to load data from the source(s), then data gets transformed in the middle by using Spark-SQL (extensible 
+with custom components), finally at the end (not necessarily) of the pipeline, writer(s) write(s) out the result to target storage.
 
-### Source Readers
+A pipeline consists of multiple jobs, and each job contains multiple actions (each is represented by an Actor). Each job can run under the same or separate Spark
+(sub) Session, and dataframes (as views) can be shared across jobs. Each action (except configuration update) requires one or more input views and produces one 
+output view. 
+
+To build the project
+```
+  mvn clean install -DskipTests
+```
+[Go through unit tests](docs/unit-tests.md)
+
+### Pipeline definition
+The following explains the definition of each section in a pipeline:
+
+Pipeline Examples
+
+### Configuration
+
+### Submitting spark-job
+
+
+
+### Source readers
 - [FileReader](docs/file-reader.md)
 - [FileStreamReader](docs/file-stream-reader.md)
 - [FlatReader](docs/flat-reader.md)
@@ -12,7 +35,7 @@
 ### Transformers
 - [SqlTransformer](docs/sql-transformer.md)
 
-### Sink Writers
+### Sink writers
 - [FileWriter](docs/file-writer.md)
 - [FileStreamWriter](docs/file-stream-writer.md)
 - [KafkaWriter](docs/kafka-writer.md)
@@ -20,15 +43,6 @@
 - [DeltaWriter](docs/delta-writer.md)
 - [DeltaStreamWriter](docs/delta-stream-writer.md)
 
+### Writing custom Actor
 
-
-
-TODO:
-- check if ObjectCreator is required.
-- delete propertyParser.scala
-- in PropertyComponent, remove method - init(definition: NodeSeq, config: Config)(implicit session: SparkSession): Unit
-
-Note:
-
-HiveWriter supports bucket-by, please see
-https://stackoverflow.com/questions/52799025/error-using-spark-save-does-not-support-bucketing-right-now
+### Spark-SQL practices
