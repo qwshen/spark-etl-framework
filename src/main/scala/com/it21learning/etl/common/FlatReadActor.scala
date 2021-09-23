@@ -14,10 +14,17 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
   //the schema for flat-rows
   protected case class FlatField(name: String, startPos: Int, length: Int, typ: String)
 
+  //the options for loading the file
+  @PropertyKey("options.*", false)
+  protected var _options: Map[String, String] = Map.empty[String, String]
+
   @PropertyKey("ddlFieldsString", false)
   protected var _ddlFieldsString: Option[String] = None
   @PropertyKey("ddlFieldsFile", false)
   protected var _ddlFieldsFile: Option[String] = None
+
+  @PropertyKey("row.valueField", false)
+  protected var _valueField: Option[String] = None
 
   //the source path
   @PropertyKey("fileUri", true)
@@ -64,7 +71,6 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
 
   /**
    * The fields definition
-   *
    * @param ddlString
    * @return
    */
@@ -75,7 +81,14 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
    * @param ddlFile
    * @return
    */
-  def ddlFieldsFile(ddlFile: String): T = { this._ddlFieldsFile = Some(ddlFile): this }
+  def ddlFieldsFile(ddlFile: String): T = { this._ddlFieldsFile = Some(ddlFile); this }
+
+  /**
+   * The custom value field name
+   * @param fiel
+   * @return
+   */
+  def valueField(field: String): T = { this._valueField = Some(field); this }
 
   /**
    * The source path of the files

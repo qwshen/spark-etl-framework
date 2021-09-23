@@ -19,7 +19,7 @@ Pipeline Examples
 
 ### Configuration
 
-### Submitting spark-job
+### Submitting a spark-job
 
 
 
@@ -27,6 +27,7 @@ Pipeline Examples
 - [FileReader](docs/file-reader.md)
 - [FileStreamReader](docs/file-stream-reader.md)
 - [FlatReader](docs/flat-reader.md)
+- [FlatStreamReader](docs/flat-stream-reader.md)
 - [KafkaReader](docs/kafka-reader.md)
 - [KafkaStreamReader](docs/kafka-stream-reader.md)
 - [DeltaReader](docs/delta-reader.md)

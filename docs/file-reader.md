@@ -47,9 +47,9 @@ The Definition of the FileReader:
       <format>csv</format>
       <options>
         <header>false</header>
-          <delimiter>,</delimiter>
-          <quote>"</quote>
-          <timestampFormat>yyyy/MM/dd HH:mm:ss</timestampFormat>
+        <delimiter>,</delimiter>
+        <quote>"</quote>
+        <timestampFormat>yyyy/MM/dd HH:mm:ss</timestampFormat>
       </options>
       <ddlSchemaString>user_id long, birth_year int, gender string, location string</ddlSchemaString>
       <fileUri>${event.recommendation.data.users.file}</fileUri>

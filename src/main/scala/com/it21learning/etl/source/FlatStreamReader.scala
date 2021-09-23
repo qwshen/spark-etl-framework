@@ -37,15 +37,19 @@ final class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
     uri <- this._fileUri
   } yield Try {
     import session.implicits._
-    val rdd = session.readStream.textFile(uri).rdd
+    val dfInit = this._options.foldLeft(session.readStream.format("text"))((r, o) => r.option(o._1, o._2)).load(uri).as[String]
+
+    val getType = (name: String) => this._schema.flatMap(_.fields.find(_.name.equals(name)).map(x => x.dataType)).getOrElse(
+      throw new RuntimeException(s"The data type is unknown for column - $name")
+    )
     val df = this._format match {
-      case Seq(_, _ @ _*) =>
-        val rawRdd = rdd.map(r => this._format.map(f => r.substring(f.startPos - 1, f.startPos + f.length - 1))).map(r => Row.fromSeq(r))
-        val rawSchema = StructType(this._schema.get.fields.map(field => StructField(field.name, StringType, field.nullable)))
-        session.createDataFrame(rawRdd, rawSchema)
-          .select(this._schema.get.fields.map(field => col(field.name).cast(field.dataType)): _*)
-      case _ => rdd.zipWithIndex.toDF("row_value", "row_no")
+      case Seq(_, _ @ _*) => dfInit.select(this._format.map(f => $"value".substr(f.startPos, f.length).as(f.name).cast(getType(f.name))): _*)
+      case _ => this._valueField match {
+          case Some(value) => dfInit.withColumnRenamed("value", value)
+          case _ => dfInit.withColumnRenamed("value", "row_value")
+        }
     }
+
     val dfResult = if (this._addTimestamp) df.withColumn("__timestamp", current_timestamp) else df
     //enable water-mark if required
     (this._wmTimeField, this._wmDelayThreshold) match {
@@ -63,7 +67,7 @@ final class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
    * @param field
    * @return
    */
-  def watermarkTimeField(field: String): FileStreamReader = { this._wmTimeField = Some(field); this }
+  def watermarkTimeField(field: String): FlatStreamReader = { this._wmTimeField = Some(field); this }
 
   /**
    * Specify teh water-mark delay threshold

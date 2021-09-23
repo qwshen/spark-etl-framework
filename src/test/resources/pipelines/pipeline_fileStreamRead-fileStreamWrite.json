@@ -27,6 +27,10 @@
                 "type": "com.it21learning.etl.source.FileStreamReader"
             },
             {
+                "name": "flat-stream-reader",
+                "type": "com.it21learning.etl.source.FlatStreamReader"
+            },
+            {
                 "name": "sql",
                 "type": "com.it21learning.etl.transform.SqlTransformer"
             },
@@ -62,73 +66,71 @@
                         "output-view": {
                             "name": "users"
                         }
+                    },
+                    {
+                        "name": "load train",
+                        "actor": {
+                            "type": "flat-stream-reader",
+                            "properties": {
+                                "options": {
+                                    "maxFilesPerTrigger": "9"
+                                },
+                                "row": {
+                                    "valueField": "value"
+                                },
+                                "watermark": {
+                                    "timeField": "__timestamp",
+                                    "delayThreshold": "5 minutes"
+                                },
+                                "addTimestamp": "true",
+                                "fileUri": "${events.train_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "train"
+                        }
+                    },
+                    {
+                        "name": "transform users-train",
+                        "actor": {
+                            "type": "sql",
+                            "properties": {
+                                "sqlFile": "${application.scripts_uri}/stream-user-train.sql"
+                            }
+                        },
+                        "input-views": ["users", "train"],
+                        "output-view": {
+                            "name": "features"
+                        }
+                    },
+                    {
+                        "name": "write features",
+                        "actor": {
+                            "type": "file-stream-writer",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true",
+                                    "maxRecordsPerFile": "3000",
+                                    "checkpointLocation": "/tmp/file_streaming_checkpoint"
+                                },
+                                "partitionBy": "interested,gender",
+                                "trigger": {
+                                    "mode": "processingTime",
+                                    "interval": "60 seconds"
+                                },
+                                "outputMode": "append",
+                                "test": {
+                                    "waittimeMS": "16000"
+                                },
+                                "fileUri": "${file_stream_dir}",
+                                "view": "features"
+                            }
+                        },
+                        "input-views": ["features"]
                     }
                 ]
             }
         ]
-
-
     }
 }
-
-
-    <job name="prepare events-features">
-        <action name="load train">
-            <actor type="file-stream-reader">
-                <property name="format">csv</property>
-                <property name="options">
-                    <option name="header" value="true" />
-                    <option name="delimiter" value="," />
-                    <option name="maxFileAge" value="9h" />
-                </property>
-                <property name="ddlSchemaString">user string, event string, invited string, timestamp string, interested string, not_interested string</property>
-                <property name="waterMark">
-                    <definition name="timeField">__timestamp</definition>
-                    <definition name="delayThreshold">5 minutes</definition>
-                </property>
-                <property name="addTimestamp">true</property>
-                <property name="path">${events.train_input}</property>
-            </actor>
-            <output-view name="train" />
-        </action>
-        <action name="transform users-train">
-            <actor type="sql">
-                <property name="scriptFile">${application.scripts_uri}/stream-user-train.sql</property>
-            </actor>
-            <input-views>
-                <view name="users" />
-                <view name="train" />
-            </input-views>
-            <output-view name="features" />
-        </action>
-        <action name="write features">
-            <actor type="file-stream-writer">
-                <property name="format">csv</property>
-                <property name="options">
-                    <option name="header" value="true" />
-                    <option name="maxRecordsPerFile" value="30000" />
-                    <option name="checkpointLocation" value="/tmp/file_streaming_checkpoint" />
-                </property>
-                <property name="trigger">
-                    <definition name="mode">processingTime</definition>
-                    <definition name="interval">60 seconds</definition>
-                </property>
-                <property name="partitionBy">invited</property>
-                <property name="outputMode">append</property>
-                <property name="waitTimeInMs">16000</property>
-                <property name="path">${file_stream_dir}</property>
-                <property name="view">features</property>
-            </actor>
-            <input-views>
-                <view name="features" />
-            </input-views>
-        </action>
-    </job>
-
-    <staging>
-        <uri>${staging_uri}</uri>
-        <actions all="false">
-            <action name="transform users-train" />
-        </actions>
-    </staging>
-</etl-pipeline>

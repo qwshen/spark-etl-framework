@@ -59,11 +59,9 @@ class PipelineTest extends SparkApp {
 //  }
 
   test("Pipeline test - file streaming read / file streaming write") {
-    implicit val config: Config = loadConfig()
-    val ctx = new ApplicationContext(config)
-
-    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-fileStreamWrite.xml")))
-    new PipelineRunner(ctx).run(pipeline)
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-fileStreamWrite.json"))) {
+      runner.run(pipeline)
+    }
   }
 
 //  test("Pipeline test - jdbc read / file write") {

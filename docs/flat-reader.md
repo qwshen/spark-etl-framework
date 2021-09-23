@@ -17,8 +17,9 @@ Example:
 
 If the field-schema information is not provided, the resulted dataframe has the following schema:
 ```dtd
-   row_no int, row_value string
+   row_no int, row_value string, input_file string
 ```
+To give a custom column name for row_no and/or row_value, please use row.noField and/or row.valueField properties in the definition.
 
 The definition of the FlatReader:
 
@@ -27,6 +28,8 @@ The definition of the FlatReader:
   actor:
     type: flat-reader
     properties:
+      options:
+        header: true
       ddlFieldsString: "user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int" 
       fileUri: "${events.train_input}" 
 ```
@@ -45,7 +48,10 @@ or
     "actor": {
       "type": "flat-reader",
       "properties": {
-        "ddlFieldsString": "user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int",
+        "row": {
+          "noField": "key",
+          "valueField": "value"
+        },
         "fileUri": "${events.train_input}"
       }
     }
