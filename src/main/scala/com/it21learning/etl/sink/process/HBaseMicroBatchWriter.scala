@@ -2,14 +2,16 @@ package com.it21learning.etl.sink.process
 
 import com.it21learning.etl.common.stream.MicroBatchWriter
 import org.apache.spark.sql.DataFrame
+
 import java.io.File
-import com.it21learning.common.PropertyKey
+import com.it21learning.common.{PropertyInitializer, PropertyKey, PropertyValidater}
+
 import scala.util.{Failure, Success, Try}
 
 /**
  * Write the rows into HBase.
  */
-private[etl] final class HBaseMicroBatchWriter() extends MicroBatchWriter {
+private[etl] final class HBaseMicroBatchWriter() extends MicroBatchWriter with PropertyInitializer with PropertyValidater {
   //the connection properties
   @PropertyKey("hbase", true)
   private var _hbaseProperties: Map[String, String] = Map.empty[String, String]

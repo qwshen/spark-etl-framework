@@ -129,7 +129,7 @@ final class StreamWriter extends Actor {
         case Success(writer: ContinuousWriter) => { this._writer = Some(Right(writer)); writer }
         case _ => throw new RuntimeException("The initWriter type is not valid. It must be either MicroBatchWriter or ContinuousWriter.")
       }
-      writer.init(config)
+      //writer.init(config)
       //writer.init(this.parse(w, Nil))
     })
     validate(this._writer, "The writer (either MicroBatchWriter or ContinuousWriter) is mandatory in StreamWriter.")

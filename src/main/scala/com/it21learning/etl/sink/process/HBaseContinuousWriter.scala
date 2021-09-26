@@ -1,6 +1,6 @@
 package com.it21learning.etl.sink.process
 
-import com.it21learning.common.PropertyKey
+import com.it21learning.common.{PropertyInitializer, PropertyKey, PropertyValidater}
 import com.it21learning.common.io.HBaseChannel
 import com.it21learning.etl.common.stream.ContinuousWriter
 import org.apache.spark.sql.Row
@@ -9,13 +9,14 @@ import org.apache.hadoop.security.UserGroupInformation
 import org.apache.hadoop.security.token.Token
 import org.apache.spark.SparkFiles
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
+
 import scala.util.{Failure, Success, Try}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 
 /**
  * Stream Write rows into HBase in continuous mode.
  */
-final class HBaseContinuousWriter() extends ContinuousWriter {
+final class HBaseContinuousWriter() extends ContinuousWriter with PropertyInitializer with PropertyValidater {
   //the connection properties
   @PropertyKey("hbase", true)
   private var _hbaseProperties: Map[String, String] = Map.empty[String, String]

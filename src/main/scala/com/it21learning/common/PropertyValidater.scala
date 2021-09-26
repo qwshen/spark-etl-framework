@@ -26,4 +26,18 @@ trait PropertyValidater {
   } else {
     throw new RuntimeException(errorMsg)
   }
+
+  /**
+   * Validate if variables contains all key in keys
+   * @param variables
+   * @param keys
+   * @param errorMsg
+   * @tparam T
+   * @return
+   */
+  def validate[T](variables: Map[String, T], keys: Seq[String], errorMsg: String): Option[Boolean] = if (keys.forall(k => variables.contains(k))) {
+    Some(true)
+  } else {
+    throw new RuntimeException(errorMsg)
+  }
 }

@@ -58,27 +58,24 @@ class PipelineTest extends SparkApp {
 //    }
 //  }
 
-  test("Pipeline test - file streaming read / file streaming write") {
-    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-fileStreamWrite.json"))) {
+//  test("Pipeline test - file streaming read / file streaming write") {
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-fileStreamWrite.json"))) {
+//      runner.run(pipeline)
+//    }
+//  }
+
+  test("Pipeline test - jdbc read / file write") {
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_jdbcRead-fileWrite.json"))) {
       runner.run(pipeline)
     }
   }
 
-//  test("Pipeline test - jdbc read / file write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_jdbcRead-fileWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
-//  }
-
-//  test("Pipeline test - file read / jdbc write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-jdbcWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
-//  }
+  test("Pipeline test - file read / jdbc write") {
+    //Note: please create the train table first by using create-train.sql before running this test cast.
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-jdbcWrite.yaml"))) {
+      runner.run(pipeline)
+    }
+  }
 
 //  test("Pipeline test - file stream read / jdbc stream write") {
 //    implicit val config: Config = loadConfig()

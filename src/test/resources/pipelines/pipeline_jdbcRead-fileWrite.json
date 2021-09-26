@@ -1,0 +1,89 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "export_dir",
+                "value": "${events.output_dir}"
+            },
+            {
+                "name": "db.password",
+                "value": "${events.db.password}",
+                "decryptionKeyString": "${application.security.decryption.key}"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "jdbc-reader",
+                "type": "com.it21learning.etl.source.JdbcReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.it21learning.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-writer",
+                "type": "com.it21learning.etl.sink.FileWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load users",
+                        "actor": {
+                            "type": "jdbc-reader",
+                            "properties": {
+                                "connection": {
+                                    "driver": "com.mysql.jdbc.Driver",
+                                    "url": "jdbc:mysql://localhost:3306/mysql",
+                                    "dbtable": "user",
+                                    "user": "root",
+                                    "password": "${db.password}"
+                                },
+                                "options": {
+                                    "numPartitions": "16",
+                                    "fetchSize": "600"
+                                }
+                            }
+                        },
+                        "output-view": {
+                            "name": "users"
+                        }
+                    },
+                    {
+                        "name": "write users",
+                        "actor": {
+                            "type": "file-writer",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true"
+                                },
+                                "mode": "overwrite",
+                                "fileUri": "${export_dir}",
+                                "view": "users"
+                            }
+                        },
+                        "input-views": ["users"]
+                    }
+                ]
+            }
+        ]
+    }
+}
