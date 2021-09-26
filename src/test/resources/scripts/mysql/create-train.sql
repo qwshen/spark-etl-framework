@@ -3,5 +3,5 @@ create table train(
   event bigint(8),
   timestamp varchar(36),
   interested int,
-  primary key (user, event)
+  primary key (user, event, interested)
 )

@@ -22,7 +22,8 @@ private[etl] final class JdbcMicroBatchWriter(options: Map[String, String], sink
     val bcSinkStmt = batchDf.sparkSession.sparkContext.broadcast(this.sinkStmt)
     val bcBatchId = batchDf.sparkSession.sparkContext.broadcast(batchId)
     //write the batch data-frame
-    batchDf.coalesce(numPartitions).rdd.foreachPartition(rows => {
+    import com.it21learning.etl.utils.DataframeSplitter._
+    batchDf.split(numPartitions).foreach(df => df.rdd.foreachPartition(rows => {
       //create the writer
       val writer = new JdbcContinuousWriter(bcDbOptions.value, bcSinkStmt.value)
       //open connection
@@ -33,6 +34,6 @@ private[etl] final class JdbcMicroBatchWriter(options: Map[String, String], sink
         case Success(_) => writer.close(null)
         case Failure(t) => writer.close(t)
       }
-    })
+    }))
   }
 }

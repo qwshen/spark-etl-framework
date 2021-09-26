@@ -11,7 +11,7 @@ The JdbcWriter is for writing a Spark dataframe into a table in a relational dat
     - batchSize: defines the number of rows for each batch when writing
     - isolationLevel: defines the isolation level of transactions
 - The mode defines how rows are written into database. It must be one of the following values:
-    - overwrite: overwrite the target table with the new data
+    - overwrite: overwrite the target table with the new data. __When using this mode and also requiring to keep the existing schema of the table, please set truncate option to true. By default, the overwrite mode also overwrite the schema of the target table.__ 
     - append: append the new data into the target table
     - merge: insert or update the new data into the target table. When this option is used, the sink.SqlString or sink.SqlFile is required.
 - The sink.SqlString or sink.SqlFile defines how the new data is merged into the target table. It normally is a merge into statement.
@@ -36,7 +36,7 @@ The definition of JdbcWriter
       sink:
         sqlString: >
           insert into products(id, name, description, price, batch_id) values(@id, @name, @description, @price, @batch_id)
-            on duplicate key update set
+            on duplicate key update
               name = @name,
               description = @description,
               price = @price
@@ -83,6 +83,7 @@ The definition of JdbcWriter
         <options>
           <numPartitions>9</numPartitions>
           <batchSize>1024</batchSize>
+          <truncate>true</truncate>
         </options>
         <mode>overwrite</mode>
         <view>users</view>

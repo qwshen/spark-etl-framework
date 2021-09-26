@@ -49,7 +49,8 @@ final class JdbcWriter extends JdbcActor[JdbcWriter] {
       case "merge" => new JdbcMicroBatchWriter(this._connection ++ this._options, this._sinkSqlString).write(df, 0L)
       case _ => for (numPartitions <- this._options.get("numPartitions").map(_.toInt)) {
         //write
-        df.coalesce(numPartitions).write.format("jdbc").options(this._connection ++ this._options.filter(!_._1.equals("numPartitions"))).mode(mode).save()
+        import com.it21learning.etl.utils.DataframeSplitter._
+        df.split(numPartitions).foreach(x => x.write.format("jdbc").options(this._connection ++ this._options).mode(mode).save())
       }
     }
   } match {

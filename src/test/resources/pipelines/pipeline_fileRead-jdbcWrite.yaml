@@ -44,6 +44,52 @@ pipeline-def:
                 dbtable: train
                 user: root
                 password: ${db.password}
+              options:
+                truncate: true
               mode: overwrite
               view: train
           input-view: [train]
+        - name: transform train
+          actor:
+            type: sql
+            properties:
+              sqlString: select user, event, timestamp, case when interested = 1 then 0 else 1 end as interested from train
+          output-view:
+            name: r_train
+        - name: write transformed train
+          actor:
+            type: jdbc-writer
+            properties:
+              connection:
+                driver: com.mysql.jdbc.Driver
+                url: jdbc:mysql://localhost:3306/mysql
+                dbtable: train
+                user: root
+                password: ${db.password}
+              mode: append
+              view: r_train
+          input-view: [r_train]
+        - name: update interested
+          actor:
+            type: sql
+            properties:
+              sqlString: select user, event, '2021-09-26 11:11:11' as timestamp, interested from r_train
+          output-view:
+            name: tr_train
+        - name: write updated train
+          actor:
+            type: jdbc-writer
+            properties:
+              connection:
+                driver: com.mysql.jdbc.Driver
+                url: jdbc:mysql://localhost:3306/mysql
+                dbtable: train
+                user: root
+                password: ${db.password}
+              mode: merge
+              sink:
+                sqlString: >
+                  insert into train(user, event, timestamp, interested) values(@user, @event, @timestamp, @interested) on duplicate key update timestamp = @timestamp
+              view: tr_train
+          input-view: [tr_train]
+
