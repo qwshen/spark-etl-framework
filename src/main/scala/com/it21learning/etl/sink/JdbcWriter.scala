@@ -66,7 +66,6 @@ final class JdbcWriter extends JdbcActor[JdbcWriter] {
 
     this._mode match {
       case Some(s) if s.equals("merge") =>
-        //check if driver & url are specified
         (this._sinkSqlString, this._sinkSqlFile) match {
           case (None, Some(_)) => this._sinkSqlString = this._sinkSqlFile.map(file => FileChannel.loadAsString(file))
           case _ =>

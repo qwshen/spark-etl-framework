@@ -64,26 +64,25 @@ class PipelineTest extends SparkApp {
 //    }
 //  }
 
-  test("Pipeline test - jdbc read / file write") {
-    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_jdbcRead-fileWrite.json"))) {
-      runner.run(pipeline)
-    }
-  }
-
-  test("Pipeline test - file read / jdbc write") {
-    //Note: please create the train table first by using create-train.sql before running this test cast.
-    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-jdbcWrite.yaml"))) {
-      runner.run(pipeline)
-    }
-  }
-
-//  test("Pipeline test - file stream read / jdbc stream write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-jdbcStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//  test("Pipeline test - jdbc read / file write") {
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_jdbcRead-fileWrite.json"))) {
+//      runner.run(pipeline)
+//    }
 //  }
+
+//  test("Pipeline test - file read / jdbc write") {
+//    // ***Note: please create the train table first by using create-train.sql in a MySQL instance before running this test cast.
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-jdbcWrite.yaml"))) {
+//      runner.run(pipeline)
+//    }
+//  }
+
+  test("Pipeline test - file stream read / jdbc stream write") {
+    // ***Note: please create the features table first by using create-features.sql in a MySQL instance before running this test cast.
+    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-jdbcStreamWrite.json"))) {
+      runner.run(pipeline)
+    }
+  }
 
 //  test("Pipeline test - file stream read / arbitrary state / jdbc stream write") {
 //    implicit val config: Config = loadConfig()

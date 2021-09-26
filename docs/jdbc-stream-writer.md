@@ -1,26 +1,31 @@
-The JdbcWriter is for writing a Spark dataframe into a table in a relational database in batch mode.
+The JdbcStreamWriter is for writing a Spark dataframe into a table in a relational database in streaming mode.
 
 - The connection property may contain the following entries:
     - driver: the database base driver, such as com.mysql.jdbc.Driver.
     - url: the jdbc url for connecting to target database.
     - dbtable: the name of the table from which to read data.
     - user & password: the username and password for the connection.
-
-- The following read options may be applied when writing to a relational database:
+- The following write options may be applied when writing to a relational database:
     - numPartitions: defines the number of partitions used to control the concurrency of writing.
     - batchSize: defines the number of rows for each batch when writing
     - isolationLevel: defines the isolation level of transactions
-- The mode defines how rows are written into database. It must be one of the following values:
-    - overwrite: overwrite the target table with the new data. __When using this mode and also requiring to keep the existing schema of the table, please set truncate option to true. By default, the overwrite mode also overwrite the schema of the target table.__ 
-    - append: append the new data into the target table
-    - merge: insert or update the new data into the target table. When this option is used, the sink.SqlString or sink.SqlFile is required.
+- The checkpointLocation can be specified as one write-option.
+- The trigger mode must be one of the following values:
+  - continuous
+  - processingTime
+  - once
+- The output mode must be one of the following values:
+  - complete
+  - append
+  - update
+- The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The sink.SqlString or sink.SqlFile defines how the new data is merged into the target table. It normally is a merge into statement.
 
-The definition of JdbcWriter
+The definition of JdbcStreamWriter
 - In YAML format
 ```yaml
   actor:
-    type: jdbc-writer
+    type: jdbc-stream-writer
     properties:
       connection:
         driver: com.mysql.jdbc.Driver
@@ -32,7 +37,12 @@ The definition of JdbcWriter
         numPartitions: 9
         batchSize: 1024
         isolationLevel: READ_UNCOMMITTED
-      mode: merge
+        checkpointLocation: "/tmp/jdbc/writing"
+      trigger:
+        mode: continuous
+        interval: 3 seconds
+      outputMode: append
+      test.waittimeMS: 30000
       sink:
         sqlString: >
           insert into products(id, name, description, price, batch_id) values(@id, @name, @description, @price, @batch_id)
@@ -60,7 +70,14 @@ The definition of JdbcWriter
           "batchSize": "1024",
           "isolationLevel": "READ_COMMITTED"
         },
-        "mode": "merge",
+        "trigger": {
+          "mode": "processingTime",
+          "interval": "3 seconds"
+        },
+        "outputMode": "append",
+        "test": {
+          "waittimeMS": "3000"
+        },
         "sink": {
           "sqlFile": "@{events.users.mergeStmt}"
         },
@@ -85,7 +102,14 @@ The definition of JdbcWriter
           <batchSize>1024</batchSize>
           <truncate>true</truncate>
         </options>
-        <mode>overwrite</mode>
+        <trigger>
+          <mode>continuous</mode>
+          <interval>5 seconds</interval>
+        </trigger>
+        <outputMode>append</outputMode>
+        <test>
+          <waittimeMS>30000</waittimeMS>
+        </test>
         <view>users</view>
       </properties>
     </actor>

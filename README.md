@@ -45,6 +45,7 @@ Pipeline Examples
 - [DeltaWriter](docs/delta-writer.md)
 - [DeltaStreamWriter](docs/delta-stream-writer.md)
 - [JdbcWriter](docs/jdbc-writer.md)
+- [JdbcStreamWriter](docs/jdbc-stream-writer.md)
 
 ### Writing custom Actor
 

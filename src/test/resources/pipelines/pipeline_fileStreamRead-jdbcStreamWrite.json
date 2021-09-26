@@ -4,8 +4,8 @@
         "description": "This is the process for transforming event data",
         "version": "1.0.0",
         "settings": {
-            "singleSparkSession": "false",
-            "globalViewAsLocal": "true"
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
         },
         "variables": [
             {
@@ -17,8 +17,9 @@
                 "value": "file:///tmp/staging/events"
             },
             {
-                "name": "file_stream_dir",
-                "value": "file:///tmp/file_streaming_result"
+                "name": "db.password",
+                "value": "${events.db.password}",
+                "decryptionKeyString": "${application.security.decryption.key}"
             }
         ],
         "aliases": [
@@ -35,8 +36,8 @@
                 "type": "com.it21learning.etl.transform.SqlTransformer"
             },
             {
-                "name": "file-stream-writer",
-                "type": "com.it21learning.etl.sink.FileStreamWriter"
+                "name": "jdbc-stream-writer",
+                "type": "com.it21learning.etl.sink.JdbcStreamWriter"
             }
         ],
         "jobs": [
@@ -50,7 +51,7 @@
                             "properties": {
                                 "format": "csv",
                                 "options": {
-                                    "header": true,
+                                    "header": "true",
                                     "delimiter": ",",
                                     "maxFileAge": "16h"
                                 },
@@ -59,7 +60,7 @@
                                     "timeField": "__timestamp",
                                     "delayThreshold": "5 minutes"
                                 },
-                                "addTimestamp": true,
+                                "addTimestamp": "true",
                                 "fileUri": "${events.users_input}"
                             }
                         },
@@ -106,24 +107,32 @@
                     {
                         "name": "write features",
                         "actor": {
-                            "type": "file-stream-writer",
+                            "type": "jdbc-stream-writer",
                             "properties": {
-                                "format": "csv",
-                                "options": {
-                                    "header": "true",
-                                    "maxRecordsPerFile": "3000",
-                                    "checkpointLocation": "/tmp/file_streaming_checkpoint"
+                                "connection": {
+                                    "driver": "com.mysql.jdbc.Driver",
+                                    "url": "jdbc:mysql://localhost:3306/mysql",
+                                    "dbtable": "features",
+                                    "user": "root",
+                                    "password": "${db.password}"
                                 },
-                                "partitionBy": "interested,gender",
+                                "options": {
+                                    "numPartitions": "9",
+                                    "batchSize": "1600",
+                                    "isolationlevel": "READ_UNCOMMITTED",
+                                    "checkpointLocation": "/tmp/jdbc/writing"
+                                },
+                                "sink": {
+                                    "sqlFile": "${application.scripts_uri}/jdbc-write-features.sql"
+                                },
                                 "trigger": {
-                                    "mode": "processingTime",
-                                    "interval": "60 seconds"
+                                    "mode": "continuous",
+                                    "interval": "30 seconds"
                                 },
                                 "outputMode": "append",
                                 "test": {
-                                    "waittimeMS": "16000"
+                                    "waittimeMS": "60000"
                                 },
-                                "fileUri": "${file_stream_dir}",
                                 "view": "features"
                             }
                         },

@@ -27,6 +27,8 @@ To give a custom column name for the row_value, please use row.valueField proper
 
 To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
 
+To clean up processed files, please enable cleanSource option.
+
 The definition of the FlatReader:
 
 - In YAML format

@@ -4,7 +4,8 @@ The FileStreamReader is for reading files in streaming mode.
 - The options are optional.
 - The schema is optional. If specified, it must be in ddl-schema format. If the schema is defined in a file, please use ddlSchemaFile with the file-name as the value.
 
-* To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
+- To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
+- To clean up processed files, please enable cleanSource option.
 
 The Definition of the FileStreamReader:
 
