@@ -6,15 +6,15 @@ import org.apache.hadoop.conf.Configuration
 import com.it21learning.common.logging.Loggable
 import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, IsolationLevel, Put, Result, Scan}
-import org.apache.hadoop.hbase.filter.{CompareFilter, SingleColumnValueFilter}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.{TableInputFormat, TableMapReduceUtil}
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types._
-
+import scala.collection.breakOut
 import scala.util.{Failure, Success, Try}
+import java.sql.Timestamp
 
 /**
  * Implements the basic IO for HBase.
@@ -43,46 +43,54 @@ object HBaseChannel extends Loggable {
    * @param session
    * @return
    */
-  def read(tblName: String, fieldsMap: Seq[(String, String)])
-    (props: Map[String, String], dbOptions: Map[String, String])(implicit session: SparkSession): DataFrame = {
+  def read(connProps: Map[String, String], table: String)
+    (fieldsMap: Map[String, String], options: Map[String, String], filter: Map[String, String])(implicit session: SparkSession): DataFrame = {
     //key & field columns
-    val keyColumn: Option[String] = fieldsMap.find { case(_, from) => from == HBaseChannel.rowkeyName }.map(x => x._1)
-    val fieldColumns: Seq[(String, String, String)] = fieldsMap.filter { case(field, from) => from != HBaseChannel.rowkeyName }
-      .map(kv => (kv._1, kv._2.split(":", -1))).map(kv => (kv._1, kv._2(0), kv._2(1)))
+    val keyColumn: Option[String] = fieldsMap.find { case(_, from) => from.equals(HBaseChannel.rowkeyName) }.map(x => x._1)
+    val fieldColumns: Seq[(String, String, String)] = fieldsMap.filter { case(_, from) => !from.equals(HBaseChannel.rowkeyName) }
+      .map(kv => (kv._1, kv._2.split(":", -1))).map(kv => (kv._1, kv._2(0), kv._2(1)))(breakOut)
 
     val scan = new Scan()
     //set the columns to be scanned
     fieldColumns.foreach { x => scan.addColumn(Bytes.toBytes(x._2), Bytes.toBytes(x._3)) }
 
     //key-start
-    dbOptions.get("keyStart").foreach(keyStart => scan.setStartRow(Bytes.toBytes(keyStart)))
+    filter.get("keyStart").foreach(keyStart => scan.withStartRow(Bytes.toBytes(keyStart)))
     //key-stop
-    dbOptions.get("keyStop").foreach(keyStop => scan.setStopRow(Bytes.toBytes(keyStop)))
+    filter.get("keyStop").foreach(keyStop => scan.withStopRow(Bytes.toBytes(keyStop)))
     //key-prefix
-    dbOptions.get("keyPrefix").foreach(keyPrefix => scan.setRowPrefixFilter(Bytes.toBytes(keyPrefix)))
+    filter.get("keyPrefix").foreach(keyPrefix => scan.setRowPrefixFilter(Bytes.toBytes(keyPrefix)))
+    //start & end time-stamp
+    (filter.get("tsStart"), filter.get("tsEnd")) match {
+      case (Some(tsStart), Some(tsEnd)) => (Try(Timestamp.valueOf(tsStart)).toOption, Try(Timestamp.valueOf(tsEnd)).toOption) match {
+        case (Some(dtStart), Some(dtEnd)) => scan.setTimeRange(dtStart.getTime, dtEnd.getTime)
+        case _ =>
+      }
+      case _ =>
+    }
 
     //isolation level
-    dbOptions.get("isolationLevel").foreach {
+    options.get("isolationLevel").foreach {
       case "READ_COMMITTED" => scan.setIsolationLevel(IsolationLevel.READ_COMMITTED)
       case "READ_UNCOMMITTED" => scan.setIsolationLevel(IsolationLevel.READ_UNCOMMITTED)
-      case isoLevel => throw new RuntimeException(s"Unsupported isolation level - $isoLevel")
+      case _ =>
     }
     //max result sie
-    dbOptions.get("maxResultSize").foreach(size => scan.setMaxResultSize(Try(size.toLong).getOrElse(-1)))
+    options.get("maxResultSize").foreach(size => scan.setMaxResultSize(Try(size.toLong).getOrElse(-1)))
     //batch size
-    dbOptions.get("batchSize").foreach(size => Try(size.toInt).toOption match {
+    options.get("batchSize").foreach(size => Try(size.toInt).toOption match {
       case Some(batchSize) => scan.setBatch(batchSize)
-      case _ => throw new RuntimeException(s"Invalid batch size - $size")
+      case _ =>
     })
 
-    val config = connectionConfiguration(props)
-    config.set(TableInputFormat.INPUT_TABLE, tblName)
+    val config = connectionConfiguration(connProps)
+    config.set(TableInputFormat.INPUT_TABLE, table)
     config.set(TableInputFormat.SCAN, convertScanToString(scan))
     import session.implicits._
     val dfHBase = session.sparkContext.newAPIHadoopRDD(config, classOf[TableInputFormat], classOf[ImmutableBytesWritable], classOf[Result])
       .map(r => (Bytes.toString(r._2.getRow), fieldColumns.map(fc => Bytes.toString(r._2.getValue(Bytes.toBytes(fc._2), Bytes.toBytes(fc._3))))))
       .toDF("key", "value")
-    val df = dbOptions.get("numPartitions") match {
+    val df = options.get("numPartitions") match {
       case Some(n) => Try(n.toInt) match {
         case Success(numPartitions) => dfHBase.repartition(numPartitions)
         case _ => dfHBase

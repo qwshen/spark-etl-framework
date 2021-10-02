@@ -33,6 +33,7 @@ Pipeline Examples
 - [DeltaReader](docs/delta-reader.md)
 - [DeltaStreamReader](docs/delta-stream-reader.md)
 - [JdbcReader](docs/jdbs-reader.md)
+- [HBaseReader](docs/hbase-reader.md)
 
 ### Transformers
 - [SqlTransformer](docs/sql-transformer.md)
@@ -46,7 +47,9 @@ Pipeline Examples
 - [DeltaStreamWriter](docs/delta-stream-writer.md)
 - [JdbcWriter](docs/jdbc-writer.md)
 - [JdbcStreamWriter](docs/jdbc-stream-writer.md)
-
+- [HBaseWriter](docs/hbase-writer.md)
+- [HBaseStremWriter](docs/hbase-stream-writer.md)
+- 
 ### Writing custom Actor
 
 ### Spark-SQL practices

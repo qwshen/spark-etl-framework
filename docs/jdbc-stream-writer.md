@@ -100,7 +100,6 @@ The definition of JdbcStreamWriter
         <options>
           <numPartitions>9</numPartitions>
           <batchSize>1024</batchSize>
-          <truncate>true</truncate>
         </options>
         <trigger>
           <mode>continuous</mode>

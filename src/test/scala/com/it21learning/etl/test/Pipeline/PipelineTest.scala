@@ -71,42 +71,34 @@ class PipelineTest extends SparkApp {
 //  }
 
 //  test("Pipeline test - file read / jdbc write") {
-//    // ***Note: please create the train table first by using create-train.sql in a MySQL instance before running this test cast.
+//    // ***Note: please create the train table first by using create-train.sql in a MySQL instance before running this test case.
 //    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-jdbcWrite.yaml"))) {
 //      runner.run(pipeline)
 //    }
 //  }
 
-  test("Pipeline test - file stream read / jdbc stream write") {
-    // ***Note: please create the features table first by using create-features.sql in a MySQL instance before running this test cast.
-    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-jdbcStreamWrite.json"))) {
-      runner.run(pipeline)
-    }
-  }
-
-//  test("Pipeline test - file stream read / arbitrary state / jdbc stream write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-arbitraryState-jdbcStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//  test("Pipeline test - file stream read / jdbc stream write") {
+//    // ***Note: please create the features table first by using create-features.sql in a MySQL instance before running this test case.
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-jdbcStreamWrite.json"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - file read / hbase write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-hbaseWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    // ***Note: please create the users table first by using hbase_setup.txt in a HBase instance before running this test case.
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-hbaseWrite.yaml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - file streaming read / hbase streaming write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-hbaseStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    // ***Note: please create the users table first by using hbase_setup.txt in a HBase instance before running this test case.
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-hbaseStreamWrite.xml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
+
+
 
 //  test("Pipeline test - hbase read / file write") {
 //    implicit val config: Config = loadConfig()
@@ -148,4 +140,11 @@ class PipelineTest extends SparkApp {
 //    new PipelineRunner(ctx).run(pipeline)
 //  }
 
+  //  test("Pipeline test - file stream read / arbitrary state / jdbc stream write") {
+  //    implicit val config: Config = loadConfig()
+  //    val ctx = new ApplicationContext(config)
+  //
+  //    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-arbitraryState-jdbcStreamWrite.xml")))
+  //    new PipelineRunner(ctx).run(pipeline)
+  //  }
 }

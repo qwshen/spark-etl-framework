@@ -1,0 +1,55 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: "${events.process_date}"
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+  aliases:
+    - name: file-reader
+      type: com.it21learning.etl.source.FileReader
+    - name: sql
+      type: com.it21learning.etl.transform.SqlTransformer
+    - name: hbase-writer
+      type: com.it21learning.etl.sink.HBaseWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load users
+          actor:
+            type: file-reader
+            properties:
+              format: csv
+              options:
+                header: true
+              ddlSchemaString: "user_id string, birthyear int, gender string, joined_at string"
+              fileUri: ${events.users_input}
+          output-view:
+            name: users
+        - name: write-users
+          actor:
+            type: hbase-writer
+            properties:
+              connection:
+                hbase.zookeeper.quorum: 127.0.0.1
+                hbase.zookeeper.property.clientPort: 2181
+                zookeeper.znode.parent: "/hbase-unsecure"
+              table: "events_db:users"
+              rowKey:
+                concatenator: "-"
+                from: user_id
+              fieldsMapping:
+                birthyear: "profile:birth_year"
+                gender: "profile:gender"
+                joined_at: "registration:joined-at"
+              options:
+                numPartitions: "16"
+                batchSize: "1600"
+              mode: merge
+              view: users
+          input-view: [users]
