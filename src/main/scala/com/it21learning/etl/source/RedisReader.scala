@@ -124,56 +124,6 @@ final class RedisReader extends Actor {
     case Failure(ex) => throw new RuntimeException(s"Cannot load from source - ${this._table}.", ex)
   }
 
-  /**
-   * The host name of the redis
-   * @param hostName
-   * @return
-   */
-  def host(hostName: String): RedisReader = { this._host = Some(hostName); this }
-
-  /**
-   * The port @ othe redis
-   * @param portNum
-   * @return
-   */
-  def port(portNum: Int): RedisReader = { this._port = Some(portNum.toString); this }
-
-  /**
-   * The db # of the redis
-   * @param num
-   * @return
-   */
-  def dbNum(num: Int): RedisReader = { this._dbNum = Some(num.toString); this }
-
-  /**
-   * The table name to be written
-   * @param tableName
-   * @return
-   */
-  def table(tableName: String): RedisReader = { this._table = Some(tableName); this }
-
-  /**
-   * The password for authentication
-   *
-   * @param password
-   * @return
-   */
-  def authPassword(password: String): RedisReader = { this._authPassword = Some(password); this }
-
-  /**
-   * Add one dbOption
-   * @param name
-   * @param value
-   * @return
-   */
-  def option(name: String, value: String): RedisReader = { this._options = this._options + (name -> value); this}
-
-  /**
-   * Add multiple dbOptions
-   * @param opts
-   * @return
-   */
-  def options(opts: Map[String, String]): RedisReader = { this._options = this._options ++ opts; this }
 
   /**
    * The schema of the target data-frame
