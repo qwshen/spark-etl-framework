@@ -36,7 +36,7 @@ final class RedisWriter extends RedisActor[RedisWriter] {
       case Some(pwd) => options = options + ("auth" -> pwd)
       case _ =>
     }
-    (options ++ this._options).foldLeft(df.write.format("org.apache.spark.sql.redis"))((w, o) => w.option(o._1, o._2.toString)).mode(mode).save
+    (options ++ this._options).foldLeft(df.write.format("org.apache.spark.sql.redis"))((w, o) => w.option(o._1, o._2)).mode(mode).save
   } match {
     case Success(_) => df
     case Failure(ex) => throw new RuntimeException(s"Cannot load from source - ${this._table}.", ex)

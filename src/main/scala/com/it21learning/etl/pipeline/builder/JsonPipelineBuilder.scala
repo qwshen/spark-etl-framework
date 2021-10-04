@@ -19,7 +19,7 @@ import scala.util.control.Breaks._
  */
 class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   /**
-   * Build an etl-pipeline from the xml definition
+   * Build an etl-pipeline from the Json definition
    *
    * @param config
    * @return

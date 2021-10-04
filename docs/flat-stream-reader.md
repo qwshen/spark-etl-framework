@@ -25,6 +25,7 @@ If the field-schema information is not provided, the output dataframe has the fo
 ```
 To give a custom column name for the row_value, please use row.valueField properties in the definition.
 
+For watermark configuration, the timeField is one field in the dataframe to be used for the delay calculation.
 To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
 
 To clean up processed files, please enable cleanSource option.

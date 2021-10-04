@@ -1,0 +1,86 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: ${events.process_date}
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: export_dir
+      value: "${events.output_dir}"
+    - name: redis.password
+      value: ${events.db.password}
+      decryptionKeyString: "${application.security.decryption.key}"
+  aliases:
+    - name: redis-reader
+      type: com.it21learning.etl.source.RedisReader
+    - name: sql
+      type: com.it21learning.etl.transform.SqlTransformer
+    - name: file-writer
+      type: com.it21learning.etl.sink.FileWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load users
+          actor:
+            type: redis-reader
+            properties:
+              host: localhost
+              port: "6379"
+              authPassword: ${redis.password}
+              dbNum: "3"
+              dbTable: users
+              options:
+                key.column: user_id
+                key.pattern: users:*
+                partitions.number: "3"
+                max.pipeline.size: "160"
+                scan.count: "240"
+                iterator.grouping.size: "1600"
+                timeout: "1600"
+              ddlSchemaString: "user_id string, birthyear string, gender string, joinedAt string"
+          output-view:
+            name: users
+            global: true
+        - name: load train
+          actor:
+            type: redis-reader
+            properties:
+              host: localhost
+              port: "6379"
+              authPassword: ${redis.password}
+              dbNum: "2"
+              dbTable: train
+              options:
+                key.pattern: train:*
+                partitions.number: "3"
+                max.pipeline.size: "160"
+                scan.count: "240"
+                iterator.grouping.size: "1600"
+                timeout: "1600"
+          output-view:
+            name: train
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/transform-user-train.sql"
+          input-views: [users, train]
+          output-view:
+            name: features
+        - name: write features
+          actor:
+            type: file-writer
+            properties:
+              format: csv
+              options:
+                header: true
+                maxRecordsPerFile: "30000"
+              mode: overwrite
+              fileUri: "${export_dir}"
+              view: features
+          input-views: [features]

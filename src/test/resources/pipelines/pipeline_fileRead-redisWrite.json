@@ -1,0 +1,118 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "redis_password",
+                "value": "${events.db.password}",
+                "decryptionKeyString": "${application.security.decryption.key}"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "file-reader",
+                "type": "com.it21learning.etl.source.FileReader"
+            },
+            {
+                "name": "flat-reader",
+                "type": "com.it21learning.etl.source.FlatReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.it21learning.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "redis-writer",
+                "type": "com.it21learning.etl.sink.RedisWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load users",
+                        "actor": {
+                            "type": "file-reader",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true"
+                                },
+                                "fileUri": "${events.users_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "users",
+                            "global": "false"
+                        }
+                    },
+                    {
+                        "name": "write users",
+                        "actor": {
+                            "type": "redis-writer",
+                            "properties": {
+                                "host": "localhost",
+                                "port": "6379",
+                                "authPassword": "${redis_password}",
+                                "dbNum": "3",
+                                "dbTable": "users",
+                                "options": {
+                                    "key.column": "user_id"
+                                },
+                                "mode": "overwrite",
+                                "view": "users"
+                            }
+                        },
+                        "input-views": ["users"]
+                    },
+                    {
+                        "name": "load train",
+                        "actor": {
+                            "type": "flat-reader",
+                            "properties": {
+                                "ddlFieldsString": "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int",
+                                "addInputFile": "false",
+                                "fileUri": "${events.train_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "train",
+                            "global": false
+                        }
+                    },
+                    {
+                        "name": "write train",
+                        "actor": {
+                            "type": "redis-writer",
+                            "properties": {
+                                "host": "localhost",
+                                "port": "6379",
+                                "authPassword": "${redis_password}",
+                                "dbNum": "2",
+                                "dbTable": "train",
+                                "mode": "append",
+                                "view": "train"
+                            }
+                        },
+                        "input-views": ["train"]
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -41,7 +41,7 @@ class PipelineTest extends SparkApp {
 //  }
 
 //  test(   "Pipeline test - delta read / file write") {
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_deltaRead-fileWrite.json"))) {
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_deltaRead-fileWrite.json"))) {
 //      runner.run(pipeline)
 //    }
 //  }
@@ -59,13 +59,13 @@ class PipelineTest extends SparkApp {
 //  }
 
 //  test("Pipeline test - file streaming read / file streaming write") {
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-fileStreamWrite.json"))) {
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-fileStreamWrite.json"))) {
 //      runner.run(pipeline)
 //    }
 //  }
 
 //  test("Pipeline test - jdbc read / file write") {
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_jdbcRead-fileWrite.json"))) {
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_jdbcRead-fileWrite.json"))) {
 //      runner.run(pipeline)
 //    }
 //  }
@@ -79,7 +79,7 @@ class PipelineTest extends SparkApp {
 
 //  test("Pipeline test - file stream read / jdbc stream write") {
 //    // ***Note: please create the features table first by using create-features.sql in a MySQL instance before running this test case.
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-jdbcStreamWrite.json"))) {
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-jdbcStreamWrite.json"))) {
 //      runner.run(pipeline)
 //    }
 //  }
@@ -93,51 +93,39 @@ class PipelineTest extends SparkApp {
 
 //  test("Pipeline test - file streaming read / hbase streaming write") {
 //    // ***Note: please create the users table first by using hbase_setup.txt in a HBase instance before running this test case.
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-hbaseStreamWrite.xml"))) {
+//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-hbaseStreamWrite.xml"))) {
 //      runner.run(pipeline)
 //    }
 //  }
 
-
-
 //  test("Pipeline test - hbase read / file write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_hbaseRead-fileWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipelines/pipeline_hbaseRead-fileWrite.yaml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - file read / redis write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileRead-redisWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-redisWrite.json"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - file stream read / redis stream write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_fileStreamRead-redisStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileStreamRead-redisStreamWrite.xml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - redis read / file write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_redisRead-fileWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_redisRead-fileWrite.yaml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
 //  test("Pipeline test - redis stream read / file stream write") {
-//    implicit val config: Config = loadConfig()
-//    val ctx = new ApplicationContext(config)
-//
-//    val pipeline = XmlTopology.fromString(loadContent(clsLoader.getResource("pipelines/pipeline_redisStreamRead-fileStreamWrite.xml")))
-//    new PipelineRunner(ctx).run(pipeline)
+//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_redisStreamRead-fileStreamWrite.xml"))) {
+//      runner.run(pipeline)
+//    }
 //  }
 
   //  test("Pipeline test - file stream read / arbitrary state / jdbc stream write") {

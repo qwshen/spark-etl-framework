@@ -38,11 +38,11 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     //check version
     "version=\"[0-9|\\.]+\"".r.findFirstIn(xmlString).map(x => x.split("=")(1).stripPrefix("\"").stripSuffix("\"")) match {
       case Some(v) if v == "1.0.0" => parse_1_0_0(xmlString)
-      case _ => throw new RuntimeException("Cannot build the etl-pipeline from the xml definition - missing version.")
+      case _ => throw new RuntimeException("Cannot build the pipeline from the xml definition - missing version.")
     }
   } match {
     case Success(pipeline) => pipeline
-    case Failure(t) => throw new RuntimeException("Cannot parse the etl-pipeline from the xml definition.", t)
+    case Failure(t) => throw new RuntimeException("Cannot parse the pipeline from the xml definition.", t)
   }
 
   //parse version 1.0.0
@@ -109,7 +109,7 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     etlPipeline
   } match {
     case Success(pipeline) => Some(pipeline)
-    case Failure(exception) => throw new RuntimeException("Cannot parse the etl-pipeline definition.", exception)
+    case Failure(exception) => throw new RuntimeException("Cannot parse the pipeline definition.", exception)
   }
 
   //parse the properties of an Actor

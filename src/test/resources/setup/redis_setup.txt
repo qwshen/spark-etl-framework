@@ -1,6 +1,6 @@
 In redis.conf (/etc/redis/redis.conf):
 
-1. comment
+1. comment out
   bind 127.0.0.1
 
 2. turn off protection mode

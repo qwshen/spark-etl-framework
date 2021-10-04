@@ -2,10 +2,9 @@ package com.it21learning.etl.source
 
 import com.it21learning.common.PropertyKey
 import com.it21learning.etl.common.{ExecutionContext, FlatReadActor}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
-import org.apache.spark.sql.functions.{col, current_timestamp}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.functions.current_timestamp
 
 /**
  * To load a text file in streaming mode.
