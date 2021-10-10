@@ -1,4 +1,4 @@
-Spark-etl-framework is a pipeline based data transformation framework using Spark-SQL. For one process to transform & move data from end to end, a pipeline needs to be defined,
+The Spark-etl-framework is a pipeline based data transformation framework using Spark-SQL. For one process to transform & move data from end to end, a pipeline needs to be defined,
 and as a start of a pipeline, one or more readers required to load data from the source(s), then the data gets transformed in the middle by using Spark-SQL (extensible 
 with custom components), finally at the end (not necessarily) of the pipeline, writer(s) write(s) out the result to target storage.
 
@@ -25,7 +25,7 @@ The following explains the definition of each section in a pipeline:
     The default value: true.  
   <br />
   
-- Variables - the variables defined in this section can be referenced any where in the definition of the current pipeline, including sql statements.  
+- Variables - the variables defined in this section can be referenced anywhere in the definition of the current pipeline, including sql statements.  
   - A variable must be given a name and value, and is referenced in the format of ${variable-name}.
   - The value can references any values defined in application configuration, as well as from job submit command. The following example shows that process_date 
     is from events.process_date which is defined in application configuration:
@@ -64,12 +64,74 @@ The following explains the definition of each section in a pipeline:
       ```
       The ${events.db.password} is the encrypted value from the encryption step.  
     <br />
-    
-- Aliases
-- Jobs
-- Staging
+
+- Aliases - the aliases section defines the short name for referencing various actors. However the alias for each actor must be global unique.
+  ```yaml
+  aliases:
+    - name: file-reader
+      type: com.it21learning.etl.source.FileReader
+    - name: sql
+      type: com.it21learning.etl.transform.SqlTransformer
+    - name: hbase-writer
+      type: com.it21learning.etl.sink.HBaseWriter
+    ```
+- Jobs - a pipeline may contain multiple jobs while easy job may have multiple actions. A job provides a container for resource isolation
+  (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action
+  in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
+  ```json
+  {
+      "name": "load features",
+      "actor": {
+          "type": "delta-reader",
+          "properties": {
+              "options": {
+                  "versionAsOf": "0"
+              },
+              "sourcePath": "${delta_dir}"
+          }
+      },
+      "output-view": {
+          "name": "features",
+          "global": "false"
+      }
+  }
+  ```
+  Each Actor has at most one output (as a view). To make the view sharable across jobs, please mark the global flag as true. The view can be 
+  referenced as table in a sql statement:
+  ```sql
+  select * from features
+  ```
+  if the view is global and globalViewAsLocal = true, and global view can be referenced as a local view like the above query. Otherwise:
+  ```sql
+  select * from global_temp.features
+  ```  
+
+  **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is used in multiple jobs, 
+  which may across pipelines. Instead the job may be included as follows**
+  ```yaml
+  jobs:
+    - include: jobs/job.yaml
+  ```
+  where the definition of the job is in a separate file called job.yaml.  
+  <br />
+ 
+- Staging - in situation where the results of one or more actions need to be checked for troubleshooting or data verification. This can be 
+  achieved by adding the following section in the definition of a pipeline:
+  ```yaml
+  debug-staging:
+    uri: "${staging_uri}"
+    actions:
+      - transform-events
+      - load-events, transform-user-train
+  ```
+  In above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}.  
+  The more the staging involves, the more impact on performance. Thus normally it happens in dev environments.  
+  <br />
 
 Pipeline Examples
+- [template_pipeline.yaml](src/test/resources/pipelines/template_pipeline.yaml) with included [job.yaml](src/test/resources/pipelines/jobs/job.yaml) 
+- [template_pipeline.json](src/test/resources/pipelines/template_pipeline.json) with included [job.json](src/test/resources/pipelines/jobs/job.json)
+- [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
 
 ### Configuration
 

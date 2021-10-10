@@ -51,7 +51,6 @@ object Launcher {
       }
     }
     finally {
-      //stop the session
       session.stop()
     }
   }
