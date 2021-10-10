@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<pipeline-def name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+<pipeline-def name="event-consolidation" description="This is the process for transforming event data" version="1.0.0">
     <settings>
         <singleSparkSession setting="false" />
         <globalViewAsLocal setting="true" />

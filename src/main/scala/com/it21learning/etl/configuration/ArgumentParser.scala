@@ -11,26 +11,20 @@ import scopt.OptionParser
  */
 object ArgumentParser extends Loggable {
   //to describe what are in the arguments
-  private case class Configuration(appConf: String, topologyClass: String, definitionFile: Option[String] = None,
-    variables: Map[String, String] = Map.empty[String, String], stagingUri: Option[String] = None, stagingActions: Seq[String] = Nil,
-    appName: Option[String] = None
-  )
+  private case class Configuration(pipelineDef: String, applicationConf: String,
+    variables: Map[String, String] = Map.empty[String, String], stagingUri: Option[String] = None, stagingActions: Seq[String] = Nil)
 
   //the parser
   private val scoptParser: OptionParser[Configuration] = new OptionParser[Configuration]("spark-etl-framework") {
     head("spark-etl-framework")
-    opt[String]("app-conf")
+    opt[String]("pipeline-def")
       .required()
-      .action((x, c) => c.copy(appConf = x))
-      .text("The application config-file")
-    opt[String]("topology-class")
+      .action((x, c) => c.copy(pipelineDef = x))
+      .text("The pipeline definition file")
+    opt[String]("application-conf")
       .required()
-      .action((x, c) => c.copy(topologyClass = x))
-      .text("The Topology class")
-    opt[String]("definition")
-      .optional()
-      .action((x, c) => c.copy(definitionFile = Option(x)))
-      .text("The topology definition file")
+      .action((x, c) => c.copy(applicationConf = x))
+      .text("The application configuration file")
     opt[String]("var")
       .optional()
       .unbounded()
@@ -52,10 +46,6 @@ object ArgumentParser extends Loggable {
       .unbounded()
       .action((x, c) => c.copy(stagingActions = c.stagingActions ++ x.split(",")))
       .text("The staging actions")
-    opt[String]("app-name")
-      .optional()
-      .action((x, c) => c.copy(appName = Option(x)))
-      .text("The application name")
   }
 
   /**
@@ -67,15 +57,16 @@ object ArgumentParser extends Loggable {
   def parse(args: Array[String]): Arguments = scoptParser.parse(args, Configuration("", "")) match {
     case Some(cfg) => {
       //merge the variables into the config object
-      val config: Config = ConfigurationManager.mergeVariables(ConfigFactory.parseFile(new File(cfg.appConf)), cfg.variables)
+      val config: Config = ConfigurationManager.mergeVariables(ConfigFactory.parseFile(new File(cfg.applicationConf)), cfg.variables)
 
       //staging behavior
-      val stagingBehavior: Option[StagingBehavior] = if (cfg.stagingUri.nonEmpty || cfg.stagingActions.nonEmpty) {
-        Some(StagingBehavior(cfg.stagingUri, cfg.stagingActions))
-      } else None
+      val stagingBehavior: Option[StagingBehavior] = (cfg.stagingUri, cfg.stagingActions) match {
+        case (Some(_), Seq(_, _ @ _*)) => Some(StagingBehavior(cfg.stagingUri, cfg.stagingActions))
+        case _ => None
+      }
 
       //arguments
-      Arguments(config, cfg.topologyClass, cfg.definitionFile, stagingBehavior, cfg.appName)
+      Arguments(config, cfg.pipelineDef, stagingBehavior)
     }
     case _ => throw new RuntimeException("Cannot parse the arguments or load the config-file.")
   }
