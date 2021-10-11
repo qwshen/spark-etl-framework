@@ -186,7 +186,7 @@ The following is one example of how to submit a spark job. Also it demonstrates 
    --conf spark.executor.memory=24g --conf spark.driver.memory=16g \
    --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
-   --class com.qwshen,Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
+   --class com.qwshen.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def ./test.yaml --application-conf ./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
