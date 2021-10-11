@@ -30,7 +30,7 @@ cd ~/workspace
   spark-submit --master local --deploy-mode client \
   --name user-train --conf spark.executor.memory=8g --conf spark.driver.memory=4g \
   --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
-  --class com.qwshenauncher spark-etl-framework-xxx.jar \
+  --class com.qwshen.Launcher spark-etl-framework-xxx.jar \
   --pipeline-def ./pipeline_fileRead-fileWrite.xml --application-conf ./application.conf \
   --var application.process_date=20200921
   ```
