@@ -241,11 +241,6 @@
             <version>${typesafe.config.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.cronutils</groupId>
-            <artifactId>cron-utils</artifactId>
-            <version>9.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.scopt</groupId>
             <artifactId>scopt_${scala.compact.version}</artifactId>
             <version>3.7.1</version>
