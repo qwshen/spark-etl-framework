@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<pipeline-def name="event-consolidation" description="This is the process for transforming event data" version="1.0.0">
+    <settings>
+        <singleSparkSession setting="false" />
+        <globalViewAsLocal setting="true" />
+    </settings>
+
+    <variables>
+        <variable name="staging_uri" value="/tmp/staging/events" />
+        <variable name="export_dir" value="${events.output_dir}" />
+    </variables>
+
+    <aliases>
+        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
+        <alias name="flat-reader" type="com.it21learning.etl.source.FlatReader" />
+        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+    </aliases>
+
+    <job name="prepare events-features">
+        <action name="load users">
+            <actor type="file-reader">
+                <properties>
+                    <format>csv</format>
+                    <options>
+                        <header>true</header>
+                        <delimiter>,</delimiter>
+                    </options>
+                    <fileUri>${events.users_input}</fileUri>
+                </properties>
+            </actor>
+            <output-view name="users" global="false" />
+        </action>
+        <action name="load train">
+            <actor type="flat-reader">
+                <properties>
+                    <ddlFieldsString>user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int</ddlFieldsString>
+                    <fileUri>${events.train_input}</fileUri>
+                </properties>
+            </actor>
+            <output-view name="train" />
+        </action>
+        <action name="transform users-train">
+            <actor type="sql">
+                <properties>
+                    <sqlFile>${application.scripts_uri}/transform-user-train.sql</sqlFile>
+                </properties>
+            </actor>
+            <input-views>
+                <view name="users" />
+                <view name="train" />
+            </input-views>
+            <output-view name="features" />
+        </action>
+        <action name="write features">
+            <actor type="file-writer">
+                <properties>
+                    <format>csv</format>
+                    <options>
+                        <header>true</header>
+                        <maxRecordsPerFile>30000</maxRecordsPerFile>
+                    </options>
+                    <partitionBy>gender,interested</partitionBy>
+                    <mode>overwrite</mode>
+                    <fileUri>${export_dir}</fileUri>
+                    <view>features</view>
+                </properties>
+            </actor>
+            <input-views>
+                <view name="features" />
+            </input-views>
+        </action>
+    </job>
+
+    <staging>
+        <uri>${staging_uri}</uri>
+        <actions>
+            <action name="transform users-train" />
+        </actions>
+    </staging>
+</pipeline-def>

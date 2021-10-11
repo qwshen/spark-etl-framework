@@ -96,18 +96,18 @@ The following explains the definition of each section in a pipeline:
       }
   }
   ```
-  Each Actor has at most one output (as a view). To make the view sharable across jobs, please mark the global flag as true. The view can be 
+  Each Actor has at most one output (as a view). To make the view sharable across jobs, mark the global flag as true. The view can be 
   referenced as table in a sql statement:
   ```sql
   select * from features
   ```
-  if the view is global and globalViewAsLocal = true, and global view can be referenced as a local view like the above query. Otherwise:
+  if the view is global and globalViewAsLocal = true, and global view can be referenced as a local view like in the above query. Otherwise:
   ```sql
   select * from global_temp.features
   ```  
 
-  **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is used in multiple jobs, 
-  which may across pipelines. Instead the job may be included as follows**
+  **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is used across multiple 
+  pipelines. Instead the job may be included as follows**
   ```yaml
   jobs:
     - include: jobs/job.yaml
@@ -125,7 +125,7 @@ The following explains the definition of each section in a pipeline:
       - load-events, transform-user-train
   ```
   In above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}.  
-  The more the staging involves, the more impact on performance. Thus normally it happens in dev environments.  
+  The more actions for staging, the more impact on the performance. Thus normally it happens in dev environments.  
   <br />
 
 Pipeline Examples
@@ -134,20 +134,66 @@ Pipeline Examples
 - [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
 
 ### Configuration
+  One custom application configuration can be provided when submitting a Spark job. Normally common variables used across jobs and actions are 
+  defined in the application configuration, and they are most environment related. The following is one example:
+  ```
+  source.events {
+    users_input = "data/users"
+  }
+
+  kafka {
+    bootstrap.servers = "localhost:9092"
+    schema.registry.url = "http://localhost:8081"
+  }
+
+  application {
+    security.decryption.key = "my_secret_123"
+    scripts_uri = "./scripts"
+  }
+  ```
+  There are two approaches to provide the runtime configuration:
+  - Specify runtime variables when submitting a Spark job. See below the "Submitting a spark-job"
+  - Configure runtime in application configuration. See the following example:
+  ```
+  application.runtime {
+    spark {
+      driver.memory = 16g
+      executor.memory = 16g
+      serializer = org.apache.spark.serializer.KryoSerializer
+      sql {
+        extensions = io.delta.sql.DeltaSparkSessionExtension
+        catalog.spark_catalog = org.apache.spark.sql.delta.catalog.DeltaCatalog
+      }
+    }
+  
+    hadoopConfiguration {
+      # skip writing __SUCCESS
+      mapreduce.fileoutputcommitter.marksuccessfuljobs = false
+    }
+  
+    # skip writing crc files
+    filesystem.skip.write.checksum = true
+    # support hive integration
+    hiveSupport = true
+  }
+  ```
+  **Note: spark configs from application configuration takes highest precedence.**
 
 ### Submitting a spark-job
+The following is one example of how to submit a spark job. Also it demonstrates how to provide the runtime configs, as well as pass variables.  
 ```shell
  spark-submit --master yarn|local --deploy-mode client|cluster \
    --name test \
    --conf spark.executor.memory=24g --conf spark.driver.memory=16g \
    --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
-   --jars ./mysql-connector-jar.jar,./mongo-jara-driver-3.9.1.jar \
+   --jars ./mysql-connector-jar.jar \
    --class com.it21learning.etl.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def ./test.yaml --application-conf ./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
    --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
 ```
+[Run a live example](docs/submit-job.md)
 
 ### Source readers
 - [FileReader](docs/file-reader.md)
@@ -181,15 +227,11 @@ Pipeline Examples
 - [RedisStreamWriter](docs/redis-stream-writer.md)
 
 ### Writing custom Actor
+Indeed in situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor 
+can be created by following this [guide](docs/custom-actor.md)
 
 ### Spark-SQL practices
 
 
 
 
-spark-submit --master local --deploy-mode client \
---name user-train --conf spark.executor.memory=8g --conf spark.driver.memory=4g \
---conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
---class com.it21learning.etl.Launcher spark-etl-framework-1.0-SNAPSHOT.jar \
---pipeline-def ./pipeline_fileRead-fileWrite.xml --application-conf ./application.conf \
---var application.process_date=20200921 
