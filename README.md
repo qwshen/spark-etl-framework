@@ -5,7 +5,7 @@ with custom components), finally at the end (not necessarily) of the pipeline, w
 ![pipeline flow](docs/images/pipeline.png?raw=true "Pipeline Data Flow")
 
 A pipeline consists of multiple jobs, and each job contains multiple actions (each is represented by an Actor). Each job can run under the same or separate Spark
-(sub) Session, and dataframes (as views) can be shared across jobs. Each action (except configuration update) requires one or more input views and produces one 
+(sub) Session, and dataframes (as views) can be shared across jobs. Each action (except configuration update) requires one or more input views and produces at most one 
 output view. 
 
 To build the project
@@ -127,7 +127,7 @@ The following explains the definition of each section in a pipeline:
   The more actions for staging, the more impact on the performance. Thus normally it happens in dev environments.  
   <br />
 
-Pipeline examples
+Pipeline examples:
 - [template_pipeline.yaml](src/test/resources/pipelines/template_pipeline.yaml) with included [job.yaml](src/test/resources/pipelines/jobs/job.yaml) 
 - [template_pipeline.json](src/test/resources/pipelines/template_pipeline.json) with included [job.json](src/test/resources/pipelines/jobs/job.json)
 - [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
@@ -186,7 +186,7 @@ The following is one example of how to submit a spark job. Also it demonstrates 
    --conf spark.executor.memory=24g --conf spark.driver.memory=16g \
    --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
-   --class com.qwshenauncher spark-etl-framework-0.1-SNAPSHOT.jar \
+   --class com.qwshen,Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def ./test.yaml --application-conf ./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
