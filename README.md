@@ -128,7 +128,7 @@ The following explains the definition of each section in a pipeline:
   The more actions for staging, the more impact on the performance. Thus normally it happens in dev environments.  
   <br />
 
-Pipeline Examples
+Pipeline examples
 - [template_pipeline.yaml](src/test/resources/pipelines/template_pipeline.yaml) with included [job.yaml](src/test/resources/pipelines/jobs/job.yaml) 
 - [template_pipeline.json](src/test/resources/pipelines/template_pipeline.json) with included [job.json](src/test/resources/pipelines/jobs/job.json)
 - [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
@@ -152,8 +152,8 @@ Pipeline Examples
   }
   ```
   There are two approaches to provide the runtime configuration:
-  - Specify runtime variables when submitting a Spark job. See below the "Submitting a spark-job"
-  - Configure runtime in application configuration. See the following example:
+  - Specify runtime variables when submitting a Spark job. See below the **"Submitting a spark-job"**
+  - Configure runtime variables in application configuration. See the following example:
   ```
   application.runtime {
     spark {

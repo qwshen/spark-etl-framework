@@ -42,9 +42,22 @@ If custom logic needs to be handled during the initialization, override the foll
 ```
 Make sure the **super.init(properties, config)** is call at the beginning of the custom implementation.
 
-- implement the data read/write/transformation logic:
+- Implement the data read/write/transformation logic:
 ```scala
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = {
+    //custom implementation here
+  }
+```
+The following code is to retrieve an existing view by name:
+```scala
+  @PropertyKey("sourcePath", true)
+  private var _view: Option[String] = None
+
+  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+    //...
+    df <- this._view.flatMap(name => ctx.getView(name))
+    //...
+  } yield {
     //custom implementation here
   }
 ```
