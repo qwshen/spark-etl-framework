@@ -51,7 +51,7 @@ curl -X GET "http://localhost:8081/subjects" | grep "users-value"
 if [ $? == 0 ]; then
   curl -X DELETE "http://localhost:8081/subjects/users-value"
 fi
-curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"namespace\": \"com.it21learning.streaming.model\", \"name\": \"User\", \"type\": \"record\", \"fields\": [{\"name\": \"user_id\", \"type\": \"string\"}, {\"name\": \"birthyear\", \"type\": [\"null\", \"string\"]}, {\"name\": \"gender\", \"type\": [\"null\", \"string\"]}, {\"name\": \"joinedAt\", \"type\": [\"null\", \"string\"]}]}"}' "http://localhost:8081/subjects/users-value/versions"
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"namespace\": \"com.qwshen.streaming.model\", \"name\": \"User\", \"type\": \"record\", \"fields\": [{\"name\": \"user_id\", \"type\": \"string\"}, {\"name\": \"birthyear\", \"type\": [\"null\", \"string\"]}, {\"name\": \"gender\", \"type\": [\"null\", \"string\"]}, {\"name\": \"joinedAt\", \"type\": [\"null\", \"string\"]}]}"}' "http://localhost:8081/subjects/users-value/versions"
 
 # register events-key schema
 curl -X GET "http://localhost:8081/subjects" | grep "events-key"
@@ -65,4 +65,4 @@ curl -X GET "http://localhost:8081/subjects" | grep "events-value"
 if [ $? == 0 ]; then
   curl -X DELETE "http://localhost:8081/subjects/events-value"
 fi
-curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"namespace\": \"com.it21learning.streaming.model\", \"name\": \"Events\", \"type\": \"record\", \"fields\": [{\"name\": \"event_id\", \"type\": [\"null\", \"string\"]}, {\"name\": \"user_id\", \"type\": [\"null\", \"string\"]}, {\"name\": \"start_time\", \"type\": [\"null\", \"string\"]}, {\"name\": \"city\", \"type\": [\"null\", \"string\"]}, {\"name\": \"province\", \"type\": [\"null\", \"string\"]}, {\"name\": \"country\", \"type\": [\"null\", \"string\"]}]}"}' "http://localhost:8081/subjects/events-value/versions"
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"schema": "{\"namespace\": \"com.qwshen.streaming.model\", \"name\": \"Events\", \"type\": \"record\", \"fields\": [{\"name\": \"event_id\", \"type\": [\"null\", \"string\"]}, {\"name\": \"user_id\", \"type\": [\"null\", \"string\"]}, {\"name\": \"start_time\", \"type\": [\"null\", \"string\"]}, {\"name\": \"city\", \"type\": [\"null\", \"string\"]}, {\"name\": \"province\", \"type\": [\"null\", \"string\"]}, {\"name\": \"country\", \"type\": [\"null\", \"string\"]}]}"}' "http://localhost:8081/subjects/events-value/versions"

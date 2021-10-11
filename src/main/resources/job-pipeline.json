@@ -25,29 +25,29 @@
     "aliases": [
       {
         "name": "file",
-        "type": "com.it21learning.etl.source.FileReader"
+        "type": "com.qwshen.etl.source.FileReader"
       },
       {
         "name": "flat",
-        "type": "com.it21learning.etl.source.FlatReader"
+        "type": "com.qwshen.etl.source.FlatReader"
       },
       {
         "name": "setting",
-        "type": "com.it21learning.etl.setting.SparkConfSetter"
+        "type": "com.qwshen.etl.setting.SparkConfSetter"
       },
       {
         "name": "sql",
-        "type": "com.it21learning.etl.transform.SqlTransformer"
+        "type": "com.qwshen.etl.transform.SqlTransformer"
       }
     ],
     "udf-registration": [
       {
         "prefix": "event_",
-        "type": "com.it21learning.etl.EventUdfRegister"
+        "type": "com.qwshen.etl.EventUdfRegister"
       },
       {
         "prefix": "user_",
-        "type": "com.it21learning.etl.UserUdfRegister"
+        "type": "com.qwshen.etl.UserUdfRegister"
       }
     ],
     "jobs": [

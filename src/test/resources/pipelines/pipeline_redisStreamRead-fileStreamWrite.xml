@@ -13,10 +13,10 @@
     </variables>
 
     <aliases>
-        <alias name="redis-stream-reader" type="com.it21learning.etl.source.RedisStreamReader" />
-        <alias name="redis-reader" type="com.it21learning.etl.source.RedisReader" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
-        <alias name="file-stream-writer" type="com.it21learning.etl.sink.FileStreamWriter" />
+        <alias name="redis-stream-reader" type="com.qwshen.etl.source.RedisStreamReader" />
+        <alias name="redis-reader" type="com.qwshen.etl.source.RedisReader" />
+        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
+        <alias name="file-stream-writer" type="com.qwshen.etl.sink.FileStreamWriter" />
     </aliases>
 
     <job name="prepare events-features">

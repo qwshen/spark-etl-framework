@@ -25,7 +25,7 @@ The definition of the KafkaStreamWriter:
 - In YAML format
 ```yaml
   actor:
-    type: com.it21learning.etl.sink.KafkaWriter
+    type: com.qwshenink.KafkaWriter
     properties:
       bootstrapServers: "localhost:9092"
       topic: users
@@ -45,7 +45,7 @@ The definition of the KafkaStreamWriter:
 ```json
   {
     "actor": {
-      "type": "com.it21learning.etl.sink.KafkaWriter",
+      "type": "com.qwshenink.KafkaWriter",
       "properties": {
         "bootstrapServers": "localhost:9092",
         "topic": "users",
@@ -69,7 +69,7 @@ The definition of the KafkaStreamWriter:
 ```
 - In XML format
 ```xml
-  <actor type="com.it21learning.etl.sink.KafkaWriter">
+  <actor type="com.qwshen.etl.sink.KafkaWriter">
     <properties>
       <bootstrapServers>localhost:9092</bootstrapServers>
       <topic>users</topic>

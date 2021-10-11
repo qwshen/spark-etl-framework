@@ -12,7 +12,6 @@ To build the project
 ```
   mvn clean install -DskipTests
 ```
-[Going through unit tests](docs/unit-tests.md)
 
 ### Pipeline definition
 The following explains the definition of each section in a pipeline:
@@ -41,11 +40,11 @@ The following explains the definition of each section in a pipeline:
     the value, and how to configure the variable:
     - encrypt the value by running the following command:
       ```shell
-      java -cp spark-etl-framework-xxx.jar com.it21learning.Encryptor --key-string ${key-value} --data ${password}
+      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-string ${key-value} --data ${password}
       ```
       If the key is stored in a file:  
       ```shell
-      java -cp spark-etl-framework-xxx.jar com.it21learning.Encryptor --key-file ${file-name} --data ${password}
+      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-file ${file-name} --data ${password}
       ```
       The above command will print the encrypted value.
     - configure the variable:
@@ -69,11 +68,11 @@ The following explains the definition of each section in a pipeline:
   ```yaml
   aliases:
     - name: file-reader
-      type: com.it21learning.etl.source.FileReader
+      type: com.qwshenource.FileReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshenransform.SqlTransformer
     - name: hbase-writer
-      type: com.it21learning.etl.sink.HBaseWriter
+      type: com.qwshenink.HBaseWriter
     ```
 - Jobs - a pipeline may contain multiple jobs while easy job may have multiple actions. A job provides a container for resource isolation
   (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action
@@ -187,7 +186,7 @@ The following is one example of how to submit a spark job. Also it demonstrates 
    --conf spark.executor.memory=24g --conf spark.driver.memory=16g \
    --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
-   --class com.it21learning.etl.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
+   --class com.qwshenauncher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def ./test.yaml --application-conf ./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
@@ -211,6 +210,8 @@ The following is one example of how to submit a spark job. Also it demonstrates 
 
 ### Transformers
 - [SqlTransformer](docs/sql-transformer.md)
+- [StreamStatefulTransformer](docs/stream-stateful-transformer.md)
+### Validations
 
 ### Sink writers
 - [FileWriter](docs/file-writer.md)
@@ -225,6 +226,11 @@ The following is one example of how to submit a spark job. Also it demonstrates 
 - [HBaseStremWriter](docs/hbase-stream-writer.md)
 - [RedisWriter](docs/redis-writer.md)
 - [RedisStreamWriter](docs/redis-stream-writer.md)
+
+### Spark-Configuration
+- [SparkConfActor](docs/spark-conf-actor.md)
+
+### Custom UDF Registration
 
 ### Writing custom Actor
 Indeed in situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor 

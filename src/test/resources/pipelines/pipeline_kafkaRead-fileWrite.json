@@ -24,15 +24,15 @@
         "aliases": [
             {
                 "name": "kafka-reader",
-                "type": "com.it21learning.etl.source.KafkaReader"
+                "type": "com.qwshen.etl.source.KafkaReader"
             },
             {
                 "name": "sql",
-                "type": "com.it21learning.etl.transform.SqlTransformer"
+                "type": "com.qwshen.etl.transform.SqlTransformer"
             },
             {
                 "name": "file-writer",
-                "type": "com.it21learning.etl.sink.FileWriter"
+                "type": "com.qwshen.etl.sink.FileWriter"
             }
         ],
         "jobs": [

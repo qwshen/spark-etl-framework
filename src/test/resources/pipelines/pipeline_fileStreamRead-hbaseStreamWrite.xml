@@ -11,10 +11,10 @@
     </variables>
 
     <aliases>
-        <alias name="file-stream-reader" type="com.it21learning.etl.source.FileStreamReader" />
-        <alias name="flat-stram-reader" type="com.it21learning.etl.source.FlatStreamReader" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
-        <alias name="hbase-stream-writer" type="com.it21learning.etl.sink.HBaseStreamWriter" />
+        <alias name="file-stream-reader" type="com.qwshen.etl.source.FileStreamReader" />
+        <alias name="flat-stram-reader" type="com.qwshen.etl.source.FlatStreamReader" />
+        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
+        <alias name="hbase-stream-writer" type="com.qwshen.etl.sink.HBaseStreamWriter" />
     </aliases>
 
     <job name="prepare events-features">

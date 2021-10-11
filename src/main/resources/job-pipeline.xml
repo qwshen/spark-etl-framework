@@ -12,15 +12,15 @@
     </variables>
 
     <aliases>
-        <alias name="file" type="com.it21learning.etl.source.FileReader" />
-        <alias name="flat" type="com.it21learning.etl.source.FlatReader" />
-        <alias name="setting" type="com.it21learning.etl.setting.SparkConfSetter" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
+        <alias name="file" type="com.qwshen.etl.source.FileReader" />
+        <alias name="flat" type="com.qwshen.etl.source.FlatReader" />
+        <alias name="setting" type="com.qwshen.etl.common.SparkConfActor" />
+        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
     </aliases>
 
     <udf-registration>
-        <register prefix="event_" type="com.it21learning.etl.EventUdfRegister" />
-        <register prefix="user_" type="com.it21learning.etl.UserUdfRegister" />
+        <register prefix="event_" type="com.qwshen.etl.EventUdfRegister" />
+        <register prefix="user_" type="com.qwshen.etl.UserUdfRegister" />
     </udf-registration>
 
     <job include="./job.xml" />

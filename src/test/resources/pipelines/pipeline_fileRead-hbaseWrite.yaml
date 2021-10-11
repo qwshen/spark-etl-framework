@@ -12,11 +12,11 @@ pipeline-def:
       value: "file:///tmp/staging/events"
   aliases:
     - name: file-reader
-      type: com.it21learning.etl.source.FileReader
+      type: com.qwshen.etl.source.FileReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
     - name: hbase-writer
-      type: com.it21learning.etl.sink.HBaseWriter
+      type: com.qwshen.etl.sink.HBaseWriter
   jobs:
     - name: prepare events-features
       actions:

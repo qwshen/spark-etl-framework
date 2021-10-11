@@ -29,15 +29,15 @@
         "aliases": [
             {
                 "name": "jdbc-reader",
-                "type": "com.it21learning.etl.source.JdbcReader"
+                "type": "com.qwshen.etl.source.JdbcReader"
             },
             {
                 "name": "sql",
-                "type": "com.it21learning.etl.transform.SqlTransformer"
+                "type": "com.qwshen.etl.transform.SqlTransformer"
             },
             {
                 "name": "file-writer",
-                "type": "com.it21learning.etl.sink.FileWriter"
+                "type": "com.qwshen.etl.sink.FileWriter"
             }
         ],
         "jobs": [

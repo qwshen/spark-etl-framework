@@ -16,15 +16,15 @@ pipeline-def:
       value: "/tmp/delta"
   aliases:
     - name: file-reader
-      type: com.it21learning.etl.source.FileReader
+      type: com.qwshen.etl.source.FileReader
     - name: flat-reader
-      type: com.it21learning.etl.source.FlatReader
+      type: com.qwshen.etl.source.FlatReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
     - name: delta-writer
-      type: com.it21learning.etl.sink.DeltaWriter
+      type: com.qwshen.etl.sink.DeltaWriter
     - name: file-writer
-      type: com.it21learning.etl.sink.FileWriter
+      type: com.qwshen.etl.sink.FileWriter
   jobs:
     - name: prepare events-features
       actions:

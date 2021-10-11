@@ -17,11 +17,11 @@ pipeline-def:
       decryptionKeyString: "${application.security.decryption.key}"
   aliases:
     - name: redis-reader
-      type: com.it21learning.etl.source.RedisReader
+      type: com.qwshen.etl.source.RedisReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
     - name: file-writer
-      type: com.it21learning.etl.sink.FileWriter
+      type: com.qwshen.etl.sink.FileWriter
   jobs:
     - name: prepare events-features
       actions:

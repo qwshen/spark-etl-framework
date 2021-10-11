@@ -12,9 +12,9 @@
     </variables>
 
     <aliases>
-        <alias name="delta-stream-reader" type="com.it21learning.etl.source.DeltaStreamReader" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
-        <alias name="kafka-stream-writer" type="com.it21learning.etl.sink.KafkaStreamWriter" />
+        <alias name="delta-stream-reader" type="com.qwshen.etl.source.DeltaStreamReader" />
+        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
+        <alias name="kafka-stream-writer" type="com.qwshen.etl.sink.KafkaStreamWriter" />
     </aliases>
 
     <job name="prepare events-features">

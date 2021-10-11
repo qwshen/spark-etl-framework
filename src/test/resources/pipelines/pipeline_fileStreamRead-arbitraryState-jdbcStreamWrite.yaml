@@ -1,0 +1,105 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: ${events.process_date}
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: db.password
+      value: "${events.db.password}"
+      decryptionKeyString: "${application.security.decryption.key}"
+  aliases:
+    - name: file-reader
+      type: com.qwshen.etl.source.FileReader
+    - name: flat-stream-reader
+      type: com.qwshen.etl.source.FlatStreamReader
+    - name: sql
+      type: com.qwshen.etl.transform.SqlTransformer
+    - name: state-transformer
+      type: com.qwshen.etl.transform.StreamStatefulTransformer
+    - name: jdbc-stream-writer
+      type: com.qwshen.etl.sink.JdbcStreamWriter
+  jobs:
+    - name: prepare users
+      actions:
+        - name: load users
+          actor:
+            type: file-reader
+            properties:
+              format: csv
+              options:
+                header: true
+              fileUri: "${events.users_input}"
+          output-view:
+            name: users
+            global: true
+    - name: prepare event-features
+      actions:
+        - name: load train
+          actor:
+            type: flat-stream-reader
+            properties:
+              options:
+                maxFilesPerTrigger: "9"
+              ddlFieldsString: "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int"
+              watermark:
+                timeField: __timestamp
+                delayThreshold: 5 minutes
+              addTimestamp: true
+              fileUri: "${events.train_input}"
+          output-view:
+            name: train
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/window-user-train.sql"
+          input-views:
+            - users
+            - train
+          output-view:
+            name: features
+        - name: transform user-state
+          actor:
+            type: state-transformer
+            properties:
+              processor:
+                type: com.qwshen.etl.test.stream.UserStatefulProcessor
+                timeoutType: ProcessingTimeTimeout
+                timeoutDuration: 30 seconds
+              view: features
+          input-views:
+            - features
+          output-view:
+            name: user_states
+        - name: write states
+          actor:
+            type: jdbc-stream-writer
+            properties:
+              connection:
+                driver: com.mysql.cj.jdbc.Driver
+                url: jdbc:mysql://localhost:3306/events
+                dbtable: features
+                user: root
+                password: "${db.password}"
+              sink:
+                sqlString: "insert into user_states(gender, interested, minage, maxage, averageage, start, end) values(@gender, @interested, @minage, @maxage, @averageage, @start, @end)"
+              options:
+                numPartitions: "9"
+                batchSize: "1600"
+                isolationlevel: READ_UNCOMMITTED
+                checkpointLocation: "/tmp/jdbc/writing"
+              trigger:
+                mode: processingTime
+                interval: 30 seconds
+              outputMode: update
+              test:
+                waittimeMS: "60000"
+              view: user_states
+          input-views:
+            - user_states

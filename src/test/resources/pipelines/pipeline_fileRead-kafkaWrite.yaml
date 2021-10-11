@@ -17,7 +17,7 @@ pipeline-def:
       actions:
         - name: load users
           actor:
-            type: com.it21learning.etl.source.FileReader
+            type: com.qwshen.etl.source.FileReader
             properties:
               format: csv
               options:
@@ -30,7 +30,7 @@ pipeline-def:
             global: false
         - name: write users
           actor:
-            type: com.it21learning.etl.sink.KafkaWriter
+            type: com.qwshen.etl.sink.KafkaWriter
             properties:
               bootstrapServers: ${kafka.bootstrap.servers}
               topic: users
@@ -44,7 +44,7 @@ pipeline-def:
       actions:
         - name: load train
           actor:
-            type: com.it21learning.etl.source.FlatReader
+            type: com.qwshen.etl.source.FlatReader
             properties:
               fileUri: "${events.train_input}"
           output-view:
@@ -52,7 +52,7 @@ pipeline-def:
             global: false
         - name: write train
           actor:
-            type: com.it21learning.etl.sink.KafkaWriter
+            type: com.qwshen.etl.sink.KafkaWriter
             properties:
               bootstrapServers: ${kafka.bootstrap.servers}
               topic: train
@@ -65,7 +65,7 @@ pipeline-def:
       actions:
         - name: load events
           actor:
-            type: com.it21learning.etl.source.FileReader
+            type: com.qwshen.etl.source.FileReader
             properties:
               format: csv
               options:
@@ -77,7 +77,7 @@ pipeline-def:
             global: false
         - name: write events
           actor:
-            type: com.it21learning.etl.sink.KafkaWriter
+            type: com.qwshen.etl.sink.KafkaWriter
             properties:
               bootstrapServers: ${kafka.bootstrap.servers}
               topic: events

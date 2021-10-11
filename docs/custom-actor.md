@@ -1,14 +1,16 @@
 - Create a class by inheriting com.qwshen.etl.common.Actor
+
 ```scala
 package com.hello.components
 
-class MyActor extends com.it21learning.etl.common.Actor {}
+class MyActor extends com.qwshen.etl.common.Actor {}
 ```
 - Define the properties
-```scala
-import com.it21learning.common.PropertyKey
 
-class MyActor extends com.it21learning.etl.common.Actor {
+```scala
+import com.qwshen.common.PropertyKey
+
+class MyActor extends com.qwshen.etl.common.Actor {
   @PropertyKey("options.*", false)
   private var _options: Map[String, String] = Map.empty[String, String]
 

@@ -17,11 +17,11 @@ pipeline-def:
       decryptionKeyString: ${application.security.decryption.key}
   aliases:
     - name: flat-reader
-      type: com.it21learning.etl.source.FlatReader
+      type: com.qwshen.etl.source.FlatReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
     - name: jdbc-writer
-      type: com.it21learning.etl.sink.JdbcWriter
+      type: com.qwshen.etl.sink.JdbcWriter
   jobs:
     - name: prepare events-features
       actions:

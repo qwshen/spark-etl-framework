@@ -1,3 +1,6 @@
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'hadoop' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
 -- create database if it doesn't exists
 CREATE DATABASE IF NOT EXISTS events;
 
@@ -57,3 +60,4 @@ CREATE TABLE IF NOT EXISTS events.user_states(
   end timestamp,
   PRIMARY KEY(state_id)
 );
+

@@ -35,7 +35,7 @@ The definition of the KafkaReader:
 - In YAML format
 ```yaml
   actor:
-    type: com.it21learning.etl.source.KafkaReader
+    type: com.qwshenource.KafkaReader
     properties:
       bootstrapServers: "localhost:9092"
       topic: users
@@ -62,7 +62,7 @@ The definition of the KafkaReader:
 ```json
   {
     "actor": {
-      "type": "com.it21learning.etl.source.KafkaReader",
+      "type": "com.qwshenource.KafkaReader",
       "properties": {
         "bootstrapServers": "localhost:9092",
         "topic": "users",
@@ -89,7 +89,7 @@ The definition of the KafkaReader:
 ```
 - In XML format
 ```xml
-  <actor type="com.it21learning.etl.source.KafkaReader">
+  <actor type="com.qwshen.etl.source.KafkaReader">
     <properties>
       <bootstrapServers>localhost:9092</bootstrapServers>
       <topic>users</topic>

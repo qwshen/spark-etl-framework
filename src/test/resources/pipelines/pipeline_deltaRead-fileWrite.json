@@ -28,15 +28,15 @@
         "aliases": [
             {
                 "name": "delta-reader",
-                "type": "com.it21learning.etl.source.DeltaReader"
+                "type": "com.qwshen.etl.source.DeltaReader"
             },
             {
                 "name": "sql",
-                "type": "com.it21learning.etl.transform.SqlTransformer"
+                "type": "com.qwshen.etl.transform.SqlTransformer"
             },
             {
                 "name": "file-writer",
-                "type": "com.it21learning.etl.sink.FileWriter"
+                "type": "com.qwshen.etl.sink.FileWriter"
             }
         ],
         "jobs": [

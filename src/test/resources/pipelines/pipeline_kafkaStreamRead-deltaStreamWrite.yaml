@@ -14,11 +14,11 @@ pipeline-def:
       value: "${events.output_dir}"
   aliases:
     - name: kafka-stream-reader
-      type: com.it21learning.etl.source.KafkaStreamReader
+      type: com.qwshen.etl.source.KafkaStreamReader
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
     - name: delta-stream-writer
-      type: com.it21learning.etl.sink.DeltaStreamWriter
+      type: com.qwshen.etl.sink.DeltaStreamWriter
   jobs:
     - name: prepare events-features
       actions:

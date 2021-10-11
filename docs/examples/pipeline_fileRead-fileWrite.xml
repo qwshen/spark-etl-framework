@@ -11,10 +11,10 @@
     </variables>
 
     <aliases>
-        <alias name="file-reader" type="com.it21learning.etl.source.FileReader" />
-        <alias name="flat-reader" type="com.it21learning.etl.source.FlatReader" />
-        <alias name="sql" type="com.it21learning.etl.transform.SqlTransformer" />
-        <alias name="file-writer" type="com.it21learning.etl.sink.FileWriter" />
+        <alias name="file-reader" type="com.qwshen.etl.source.FileReader" />
+        <alias name="flat-reader" type="com.qwshen.etl.source.FlatReader" />
+        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
+        <alias name="file-writer" type="com.qwshen.etl.sink.FileWriter" />
     </aliases>
 
     <job name="prepare events-features">

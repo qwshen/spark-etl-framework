@@ -15,13 +15,13 @@ pipeline-def:
       value: "file:///c:/temp/staging"
   aliases:
     - name: file
-      type: com.it21learning.etl.source.FileReader
+      type: com.qwshen.etl.source.FileReader
     - name: flat
-      type: com.it21learning.etl.source.FlatReader
+      type: com.qwshen.etl.source.FlatReader
     - name: setting
-      type: com.it21learning.etl.setting.SparkConfSetter
+      type: com.qwshen.etl.common.SparkConfActor
     - name: sql
-      type: com.it21learning.etl.transform.SqlTransformer
+      type: com.qwshen.etl.transform.SqlTransformer
   jobs:
     - name: transform-user-events
       actions:
