@@ -50,7 +50,7 @@ Make sure the **super.init(properties, config)** is call at the beginning of the
 ```
 The following code is to retrieve an existing view by name:
 ```scala
-  @PropertyKey("sourcePath", true)
+  @PropertyKey("view", true)
   private var _view: Option[String] = None
 
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
