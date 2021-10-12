@@ -1,14 +1,10 @@
-The Spark-etl-framework is a pipeline based data transformation framework using Spark-SQL. For one process to transform & move data from end to end, a pipeline needs to be defined,
-and as a start of a pipeline, one or more readers required to load data from the source(s), then the data gets transformed in the middle by using Spark-SQL (extensible 
-with custom components), finally at the end (not necessarily) of the pipeline, writer(s) write(s) out the result to target storage.
+The Spark-etl-framework is a pipeline-based data transformation framework using Spark-SQL. For one process to transform and move data from end to end, a pipeline needs to be defined. At the start of a pipeline, one or more readers is required to load data from the source(s). The data gets transformed in the middle using Spark-SQL (extensible with custom components). Finally, usually at the end of the pipeline, the writer(s) write out the result to the target storage.
 
 ![pipeline flow](docs/images/pipeline.png?raw=true "Pipeline Data Flow")
 
-A pipeline consists of multiple jobs, and each job contains multiple actions (each is represented by an Actor). Each job can run under the same or separate Spark
-(sub) Session, and dataframes (as views) can be shared across jobs. Each action (except configuration update) requires one or more input views and produces at most one 
-output view. 
+A pipeline consists of multiple jobs, and each job contains multiple actions (each represented by an Actor). Each job can run under the same or separate Spark Sessions or Sub-Sessions, and dataframes (as views) can be shared across jobs. Each action (except for configuration updates) requires one or more input views and produces at most one output view. 
 
-To build the project
+To build the project, run
 ```
   mvn clean install -DskipTests
 ```
@@ -16,29 +12,24 @@ To build the project
 ### Pipeline definition
 The following explains the definition of each section in a pipeline:
 - Settings
-  - singleSparkSession - when a pipeline consists of multiple jobs, each job can be executed under a separate Spark Sub-Session. This provides the resource isolation 
-    across jobs. When this flag is set to true, all jobs are executed under the same global Spark-Session.  
-    The default value: false.
-  - globalViewAsLocal - global dataframes(views) are shared across jobs (even when they are running under separate Spark Sub-Sessions). Global views are referenced 
-    as global_temp.${table}. To make the references easier as local views, set this flag to true.  
-    The default value: true.  
+  - singleSparkSession - when a pipeline consists of multiple jobs, each job can be executed under a separate Spark Sub-Session. This provides resource isolation across jobs. When this flag is set to true, all jobs are executed under the same global Spark-Session. The default value is false.
+  - globalViewAsLocal - global dataframes (views) are shared across jobs (even when they are running under separate Spark Sub-Sessions). Global views are referenced as global_temp.${table}. To make the references easier as local views, set this flag to true. The default value is true.  
   <br />
   
-- Variables - the variables defined in this section can be referenced anywhere in the definition of the current pipeline, including sql statements.  
+- Variables - the variables defined in this section can be referenced anywhere in the definition of the current pipeline, including SQL statements.  
   - A variable must be given a name and value, and is referenced in the format of ${variable-name}.
-  - The value can references any values defined in application configuration, as well as from job submit command. The following example shows that process_date 
-    is from events.process_date which is defined in application configuration:
+  - The value can reference any values defined in the application configuration, as well as from the job submit command. The following example shows that process_date is from events.process_date, which is defined in the application configuration:
       ```xml
       <variables>
           <variable name="process_date" value="${events.process_date}" />
           <variable name="staging_uri" value="/tmp/staging/events" />
       </variables>
       ```
-  - **When a variable is defined more than one time, its value from job submit command has the highest precedence, and the value from pipeline definition 
+  - **When a variable is defined more than once, its value from the job submit command has the highest precedence, and its value from the pipeline definition 
     has the lowest precedence.**
-  - When a variable contains sensitive data such as password, its value can be protected by custom key. The following describes the steps how to encrypt 
+  - When a variable contains sensitive data, such as a password, its value can be protected by a custom key. The following describes how to encrypt 
     the value, and how to configure the variable:
-    - encrypt the value by running the following command:
+    - Encrypt the value by running the following command:
       ```shell
       java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-string ${key-value} --data ${password}
       ```
@@ -47,7 +38,7 @@ The following explains the definition of each section in a pipeline:
       java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-file ${file-name} --data ${password}
       ```
       The above command will print the encrypted value.
-    - configure the variable:
+    - Configure the variable:
       ```yaml
        variables:
          - name: db.password
@@ -64,7 +55,7 @@ The following explains the definition of each section in a pipeline:
       The ${events.db.password} is the encrypted value from the encryption step.  
     <br />
 
-- Aliases - the aliases section defines the short name for referencing various actors. However the alias for each actor must be global unique.
+- Aliases - the aliases section defines the shorthand name used for referencing various actors. However, the alias for each actor must be globally unique.
   ```yaml
   aliases:
     - name: file-reader
@@ -74,9 +65,7 @@ The following explains the definition of each section in a pipeline:
     - name: hbase-writer
       type: com.qwshenink.HBaseWriter
     ```
-- Jobs - a pipeline may contain multiple jobs while easy job may have multiple actions. A job provides a container for resource isolation
-  (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action
-  in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
+- Jobs - a pipeline may contain multiple jobs while each job may have multiple actions. A job provides a container for resource isolation (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
   ```json
   {
       "name": "load features",
@@ -95,18 +84,17 @@ The following explains the definition of each section in a pipeline:
       }
   }
   ```
-  Each Actor has at most one output (as a view). To make the view sharable across jobs, mark the global flag as true. The view can be 
-  referenced as table in a sql statement:
+  Each Actor has at most one output (as a view). To make the view sharable across jobs, mark the global flag as true. The view can be referenced as table in a sql statement:
   ```sql
   select * from features
   ```
-  if the view is global and globalViewAsLocal = true, and global view can be referenced as a local view like in the above query. Otherwise:
+  if the view is global and globalViewAsLocal = true, the global view can be referenced as a local view like in the above query. Otherwise:
   ```sql
   select * from global_temp.features
   ```  
 
   **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is used across multiple 
-  pipelines. Instead the job may be included as follows**
+  pipelines. Instead the job may be included as follows:**
   ```yaml
   jobs:
     - include: jobs/job.yaml
@@ -114,8 +102,7 @@ The following explains the definition of each section in a pipeline:
   where the definition of the job is in a separate file called job.yaml.  
   <br />
  
-- Staging - in situation where the results of one or more actions need to be checked for troubleshooting or data verification. This can be 
-  achieved by adding the following section in the definition of a pipeline:
+- Staging - for situations where the results of one or more actions need to be checked for troubleshooting or data verification. This can be achieved by adding the following section in the definition of a pipeline:
   ```yaml
   debug-staging:
     uri: "${staging_uri}"
@@ -123,8 +110,7 @@ The following explains the definition of each section in a pipeline:
       - transform-events
       - load-events, transform-user-train
   ```
-  In above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}.  
-  The more actions for staging, the more impact on the performance. Thus normally it happens in dev environments.  
+  In the above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}. More actions for staging incur more impact on the performance. Therefore they should be used primarily in dev environments.  
   <br />
 
 Pipeline examples:
@@ -133,8 +119,7 @@ Pipeline examples:
 - [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
 
 ### Configuration
-  One custom application configuration can be provided when submitting a Spark job. Normally common variables used across jobs and actions are 
-  defined in the application configuration, and they are most environment related. The following is one example:
+  One custom application configuration can be provided when submitting a Spark job. Normally, common variables that are used across jobs and actions are defined in the application configuration, and they are mostly environment-related. The following is one example:
   ```
   source.events {
     users_input = "data/users"
@@ -150,8 +135,8 @@ Pipeline examples:
     scripts_uri = "./scripts"
   }
   ```
-  There are two approaches to provide the runtime configuration:
-  - Specify runtime variables when submitting a Spark job. See below the **"Submitting a spark-job"**
+  There are two approaches to providing the runtime configuration:
+  - Specify runtime variables when submitting a Spark job. See below at **"Submitting a spark-job"**
   - Configure runtime variables in application configuration. See the following example:
   ```
   application.runtime {
@@ -179,7 +164,7 @@ Pipeline examples:
   **Note: spark configs from application configuration takes highest precedence.**
 
 ### Submitting a spark-job
-The following is one example of how to submit a spark job. Also it demonstrates how to provide the runtime configs, as well as pass variables.  
+The following is one example of how to submit a Spark job. Note that it also demonstrates how to provide the runtime configs, as well as pass variables.  
 ```shell
  spark-submit --master yarn|local --deploy-mode client|cluster \
    --name test \
@@ -233,8 +218,7 @@ The following is one example of how to submit a spark job. Also it demonstrates 
 ### Custom UDF Registration
 
 ### Writing custom Actor
-Indeed in situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor 
-can be created by following this [guide](docs/custom-actor.md)
+In situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor can be created by following this [guide](docs/custom-actor.md).
 
 ### Spark-SQL practices
 
