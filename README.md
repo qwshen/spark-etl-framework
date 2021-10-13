@@ -59,11 +59,11 @@ The following explains the definition of each section in a pipeline:
   ```yaml
   aliases:
     - name: file-reader
-      type: com.qwshenource.FileReader
+      type: com.qwshen.source.FileReader
     - name: sql
-      type: com.qwshenransform.SqlTransformer
+      type: com.qwshen.transform.SqlTransformer
     - name: hbase-writer
-      type: com.qwshenink.HBaseWriter
+      type: com.qwshen.sink.HBaseWriter
     ```
 - Jobs - a pipeline may contain multiple jobs while each job may have multiple actions. A job provides a container for resource isolation (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
   ```json
@@ -88,7 +88,7 @@ The following explains the definition of each section in a pipeline:
   ```sql
   select * from features
   ```
-  if the view is global and globalViewAsLocal = true, the global view can be referenced as a local view like in the above query. Otherwise:
+  If the view is global and globalViewAsLocal = true, the global view can be referenced as a local view like in the above query. Otherwise:
   ```sql
   select * from global_temp.features
   ```  
