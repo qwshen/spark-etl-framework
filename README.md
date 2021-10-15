@@ -31,11 +31,13 @@ The following explains the definition of each section in a pipeline:
     the value, and how to configure the variable:
     - Encrypt the value by running the following command:
       ```shell
-      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-string ${key-value} --data ${password}
+      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor \
+        --key-string ${key-value} --data ${password}
       ```
       If the key is stored in a file:  
       ```shell
-      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor --key-file ${file-name} --data ${password}
+      java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor \
+        --key-file ${file-name} --data ${password}
       ```
       The above command will print the encrypted value.
     - Configure the variable:
@@ -169,7 +171,8 @@ The following is one example of how to submit a Spark job. Note that it also dem
  spark-submit --master yarn|local --deploy-mode client|cluster \
    --name test \
    --conf spark.executor.memory=24g --conf spark.driver.memory=16g \
-   --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+   --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
+   --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
    --class com.qwshen.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def ./test.yaml --application-conf ./application.conf \
