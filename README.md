@@ -195,16 +195,17 @@ The following is one example of how to submit a spark job. Also it demonstrates 
 [Run a live example](docs/submit-job.md)
 
 ### Source readers
+- [DeltaReader](docs/delta-reader.md)
+- [DeltaStreamReader](docs/delta-stream-reader.md)
 - [FileReader](docs/file-reader.md)
 - [FileStreamReader](docs/file-stream-reader.md)
 - [FlatReader](docs/flat-reader.md)
 - [FlatStreamReader](docs/flat-stream-reader.md)
+- [HBaseReader](docs/hbase-reader.md)
+- [HiveReader](docs/hive-reader.md)
+- [JdbcReader](docs/jdbc-reader.md)
 - [KafkaReader](docs/kafka-reader.md)
 - [KafkaStreamReader](docs/kafka-stream-reader.md)
-- [DeltaReader](docs/delta-reader.md)
-- [DeltaStreamReader](docs/delta-stream-reader.md)
-- [JdbcReader](docs/jdbs-reader.md)
-- [HBaseReader](docs/hbase-reader.md)
 - [RedisReader](docs/redis-reader.md)
 - [RedisStreamReader](docs/redis-stream-reader.md)
 
@@ -214,16 +215,17 @@ The following is one example of how to submit a spark job. Also it demonstrates 
 ### Validations
 
 ### Sink writers
-- [FileWriter](docs/file-writer.md)
-- [FileStreamWriter](docs/file-stream-writer.md)
-- [KafkaWriter](docs/kafka-writer.md)
-- [KafkaStreamWriter](docs/kafka-stream-writer.md)
 - [DeltaWriter](docs/delta-writer.md)
 - [DeltaStreamWriter](docs/delta-stream-writer.md)
-- [JdbcWriter](docs/jdbc-writer.md)
-- [JdbcStreamWriter](docs/jdbc-stream-writer.md)
+- [FileWriter](docs/file-writer.md)
+- [FileStreamWriter](docs/file-stream-writer.md)
 - [HBaseWriter](docs/hbase-writer.md)
 - [HBaseStremWriter](docs/hbase-stream-writer.md)
+- [HiveWriter](docs/hive-writer.md)
+- [JdbcWriter](docs/jdbc-writer.md)
+- [JdbcStreamWriter](docs/jdbc-stream-writer.md)
+- [KafkaWriter](docs/kafka-writer.md)
+- [KafkaStreamWriter](docs/kafka-stream-writer.md)
 - [RedisWriter](docs/redis-writer.md)
 - [RedisStreamWriter](docs/redis-stream-writer.md)
 

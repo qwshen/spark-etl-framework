@@ -26,21 +26,25 @@ or
 
 - In JSON format
 ```json
+  {
     "actor": {
       "type": "sql",
       "properties": {
         "sqlString": "select * from events_raw"
       }
     }
+  }
 ```
 or 
 ```json
+  {
     "actor": {
       "type": "sql",
       "properties": {
         "sqlFile": "scripts/event_raw.sql"
       }
     }
+  }
 ```
 
 - In XML format
