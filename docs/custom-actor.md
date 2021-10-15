@@ -1,4 +1,4 @@
-- Create a class by inheriting com.qwshen.etl.common.Actor
+- Create a class by inheriting from com.qwshen.etl.common.Actor
 
 ```scala
 package com.hello.components
@@ -34,7 +34,7 @@ actor:
 So, in this case, the _options property will hold a map of (prop1 -> val1, prop2 -> val2), and the _sourcePath will have the value of /tmp/data/my-customers.  
 If the _sourcePath is not provided a value in the pipeline definition, a runtime error will be thrown since this property is **required**.
 
-If custom logic needs to be handled during the initialization, override the following method with custom implementation:
+If custom logic needs to be handled during the initialization, override the following method:
 ```scala
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
@@ -42,7 +42,7 @@ If custom logic needs to be handled during the initialization, override the foll
     //custom implementation here
   }
 ```
-Make sure the **super.init(properties, config)** is call at the beginning of the custom implementation.
+Make sure the **super.init(properties, config)** is called at the beginning of the method.
 
 - Implement the data read/write/transformation logic:
 ```scala
