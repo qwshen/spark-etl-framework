@@ -11,7 +11,7 @@ The SchemaValidator is for validating the schema of the input data-frame (view) 
     - default: ignore the order of the columns from both schemas.
   - when the validation type is adapt
     - strict: all columns from the dataframe must be included in the schema from the definition.
-    - default: ignore columns from the dataframe that don't exist int he schema from the definition  
+    - default: ignore columns from the dataframe that don't exist in the schema from the definition  
       **Note: this will cause data lost**
 - The action after the validation must be either error or ignore
   - error: if the validation fails, the process exits with the validation error.
