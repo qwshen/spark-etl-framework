@@ -1,43 +1,37 @@
 package com.qwshen.etl.validation
 
+import com.qwshen.common.PropertyKey
 import com.qwshen.common.io.FileChannel
 import com.qwshen.etl.common.{Actor, ExecutionContext}
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{lit, col}
+import scala.collection.breakOut
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
 
 /**
-  * This class is for validating a data-frame with schema
-  *
-  * The following is the definition in xml format
-  *
-  * <actor type="com.qwshen.etl.validation.SchemaValidator">
-  *   <!--
-  *    One of the following options must be defined. Only the last definition is used if multiple schemas defined.
- *     This is mandatory.
-  *   -->
-  *   <property name="jsonSchemaString">{"type":"struct","fields":[{"name":"user","type":"string","nullable":true},{"name":"event","type":"string","nullable":true}]}</property>
-  *   <!-- or -->
-  *   <property name="jsonSchemaFile">schemas/users.schema</property>
-  *
-  *   <!-- The action defines how to proceed if the validation fails. This is mandatory -->
-  *   <property name="action">errorOut|logWarning</property>
-
-  *   <!-- The target view to be validated by the schema. This is mandatory -->
-  *   <property name="view">events</property>
-  * </actor>
+  * This class is for validating the schema of theinput data-frame with schema provided
   */
 final class SchemaValidator extends Actor {
-  //the schema from definition
-  private var _schema: Option[StructType] = None
-  //the action
+  @PropertyKey("ddlSchemaString", false)
+  private var _ddlSchemaString: Option[String] = None
+  @PropertyKey("ddlSchemaFile", false)
+  private var _ddlSchemaqFile: Option[String] = None
+
+  @PropertyKey("type", true)
+  private var _type: Option[String] = None
+  @PropertyKey("mode", true)
+  private var _mode: Option[String] = None
+  @PropertyKey("action", true)
   private var _action: Option[String] = None
 
   //the target view to be validated
+  @PropertyKey("view", true)
   private var _view: Option[String] = None
+
+  //the schema from definition
+  private var _schema: Option[StructType] = None
 
   /**
     * Run the file-reader
@@ -47,102 +41,100 @@ final class SchemaValidator extends Actor {
     * @return
     */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    _ <- validate(this._schema, "The schema in SchemaValidator is mandatory.")
     schema <- this._schema
-    _ <- validate(this._view, "The view in SchemaValidator is mandatory.")
-    df <- _view.flatMap(name => ctx.getView(name))
-    _ <- validate(this._action, "The action in SchemaValidator is mandatory or its value is invalid.", Seq("errorOut", "logWarning"))
+    df <- this._view.flatMap(name => ctx.getView(name))
+    vt <- this._type
+    md <- this._mode
     action <- this._action
   } yield Try {
-    //validate if the schemas are matched
-    val expectedFields: Seq[StructField] = schema.fields.sortWith((x, y) => x.name > y.name)
-    val actualFields: Seq[StructField] = df.schema.fields.sortWith((x, y) => x.name > y.name)
+    val same = (f1: StructField, f2: StructField) => f1.name.equals(f2.name) && f1.dataType == f2.dataType
+    vt match {
+      case "match" =>
+        val (s1: StructType, s2: StructType) = md match {
+          case "strict" => (schema, df.schema)
+          case _ => (schema.fields.sortWith((x, y) => x.name > y.name), df.schema.fields.sortWith((x, y) => x.name > y.name))
+        }
+        val error: Option[String] = if (s1.fields.length != s2.fields.length) {
+          Some("The number of columns from both schemas doesn't match.")
+        } else {
+          if (schema.fields.indices.forall(i => same(schema.fields(i), df.schema.fields(i)))) {
+            None
+          } else {
+            Some("Either the name or data-type from both schemas doesn't match.")
+          }
+        }
+        if (action.equals("error")) {
+          error.foreach(e => throw new RuntimeException(e))
+        } else {
+          error.foreach(e => logger.warn(e))
+        }
+        df
 
-    //check if the # of fields matches
-    if (expectedFields.length != actualFields.length) {
-      throw new RuntimeException("The # of fields from both schema is not matched.")
+      case "adapt" =>
+        val m1: Map[String, DataType] = schema.fields.sortWith((x, y) => x.name > y.name).map(x => (x.name, x.dataType))(breakOut)
+        val m2: Map[String, DataType] = df.schema.fields.sortWith((x, y) => x.name > y.name).map(x => (x.name, x.dataType))(breakOut)
+        val error: Option[String] = if (m2.forall { case (k, v) => m1.contains(k) && v == m1(k) }) {
+          None
+        } else {
+          Some("Columns(s) from the dataframe not included in the target schema.")
+        }
+        if (md.equals("strict") && action.equals("error")) {
+          error.foreach(e => throw new RuntimeException(e))
+        } else {
+          error.foreach(e => logger.warn(e))
+        }
+        df.select(schema.fields.map(f => if (m2.contains(f.name)) col(f.name) else lit(null).cast(f.dataType)): _*)
     }
-    //apply the expected schema to the data-frame
-    val dfChanged = df.select(expectedFields.map(f => col(f.name).cast(f.dataType)): _*)
-
-    //validate data - if a field is not nullable but with null value.
-    val dfResult = actualFields.filter(f => !f.nullable).foldLeft(dfChanged)((r, f) => r.filter(col(f.name).isNull))
-    //cache df if needed
-    if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
-      df.cache
-    }
-    if (dfResult.count() > 0) {
-      throw new RuntimeException("The non-nullable fields have null value.")
-    }
-    dfResult
   } match {
     case Success(dfResult) => dfResult
-    case Failure(ex) => if (action == "errorOut") {
-      //error out
-      throw new RuntimeException("The data validation failed with the specified schema.", ex)
-    }
-    else {
-      //logging
-      this.logger.warn(s"The data validation failed with the specified schema. - ${ex.getStackTrace.mkString("Array(", ", ", ")")}")
-      df
-    }
+    case Failure(ex) => throw new RuntimeException("The data validation failed with the specified schema.", ex)
   }
 
   /**
-    * Initialize the file reader from the xml definition
-    *
-    * @param config     - the configuration object
-    * @param session    - the spark-session object
-    */
-//  override def init(definition: NodeSeq, config: Config)(implicit session: SparkSession): Unit = {
-//    super.init(config)
-//
-//    (definition \ "property").foreach(prop => (prop \ "@name").text match {
-//      case "jsonSchemaString" => jsonSchemaString(prop.text)
-//      case "jsonSchemaFile" => jsonSchemaFile(prop.text)
-//      case "action" => this._action = Some(prop.text)
-//      case "view" => this._view = Some(prop.text)
-//      case _ =>
-//    })
-//
-//    validate(this._schema, "The schema in SchemaValidator is mandatory.")
-//    validate(this._action, "The action in SchemaValidator is mandatory or its value is invalid.", Seq("errorOut", "logWarning"))
-//    validate(this._view, "The view in SchemaValidator is mandatory.")
-//  }
+   * Initialize the kafka reader
+   */
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    super.init(properties, config)
+
+    (this._ddlSchemaString, this._ddlSchemaqFile) match {
+      case (Some(s), _) => this._schema = Some(StructType.fromDDL(s))
+      case (_, Some(f)) => this._schema = Some(StructType.fromDDL(FileChannel.loadAsString(f)))
+      case _ => throw new RuntimeException("The schema must be provided by either ddlSchemaString or ddlSchemaFile.")
+    }
+
+    validate(this._type, "The validation type in SchemaValidator must be either match or adapt", Seq("match", "adapt"))
+    validate(this._mode, "The validation mode in SchemaValidator must be either strict or default.", Seq("strict", "default"))
+    validate(this._action, "The action for the validation must be either error or ignore", Seq("error", "ignore"))
+  }
 
   /**
    * The json schema in string
    * @param value
    * @return
    */
-  def jsonSchemaString(value: String): SchemaValidator = {
-    Try(DataType.fromJson(value).asInstanceOf[StructType]) match {
-      case Success(s) => Some(s)
-      case Failure(t) => throw new RuntimeException(s"The schema [${value}] is not in valid DDL format.", t)
-    }
-    this
-  }
+  def schema(value: StructType): SchemaValidator = { this._schema = Some(value); this }
 
   /**
-   * The json schema file
-   * @param file
+   * The type of validation
+   *
+   * @param value
    * @return
    */
-  def jsonSchemaFile(file: String): SchemaValidator = {
-    Try(DataType.fromJson(FileChannel.loadAsString(file)).asInstanceOf[StructType]) match {
-      case Success(s) => Some(s)
-      case Failure(t) => throw new RuntimeException(s"The schema is not in valid the DDL format - ${file}", t)
-    }
-    this
-  }
-
+  def validationType(value: String): SchemaValidator = { this._action = Some(value); this }
+  /**
+   * The mode for how to compare schema
+   *
+   * @param value
+   * @return
+   */
+  def validationMode(value: String): SchemaValidator = { this._mode = Some(value); this }
   /**
    * The action will be taken if errors
    *
    * @param value
    * @return
    */
-  def action(value: String): SchemaValidator = { this._action = Some(value); this }
+  def validationAction(value: String): SchemaValidator = { this._action = Some(value); this }
 
   /**
    * The view to be validated.

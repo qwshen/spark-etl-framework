@@ -201,6 +201,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [SqlTransformer](docs/sql-transformer.md)
 - [StreamStatefulTransformer](docs/stream-stateful-transformer.md)
 ### Validations
+- [SchemaValidator](docs/schema-validator.md)
 
 ### Sink writers
 - [DeltaWriter](docs/delta-writer.md)

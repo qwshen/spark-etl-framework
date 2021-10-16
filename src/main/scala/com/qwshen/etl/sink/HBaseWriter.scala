@@ -34,7 +34,7 @@ final class HBaseWriter extends HBaseWriteActor[HBaseWriter] {
   }
 
   /**
-   * Initialize the kafka reader
+   * Initialize the Hbase reader
    */
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
