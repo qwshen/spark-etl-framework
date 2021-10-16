@@ -15,7 +15,7 @@ The SchemaValidator is for validating the schema of the input data-frame (view) 
       **Note: this will cause data lost**
 - The action after the validation must be either error or ignore
   - error: if the validation fails, the process exits with the validation error.
-  - ignore: the process ignores the validation failure, but logs will written.
+  - ignore: the process ignores the validation failure, but logs will be written.
 - The view is the input dataframe that its schema is validated with the schema provided in the definition.
 
 The definition of the SchemaValidator:
