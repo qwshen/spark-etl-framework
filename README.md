@@ -178,7 +178,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
    --pipeline-def ./test.yaml --application-conf ./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
-   --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+   --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events
 ```
 [Run a live example](docs/submit-job.md)
 
