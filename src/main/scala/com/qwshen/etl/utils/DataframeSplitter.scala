@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions.{spark_partition_id, lit}
 /**
  * Implement the splitting of a data-frame by # of partitions
  */
-object DataframeSplitter {
+private[etl] object DataframeSplitter {
   implicit class SplitDecorator(df: DataFrame) {
     /**
      * Split an input dataframe into multiple dataframes as each may contain up to the numPartitions of partitions

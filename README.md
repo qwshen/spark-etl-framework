@@ -202,6 +202,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [StreamStatefulTransformer](docs/stream-stateful-transformer.md)
 ### Validations
 - [SchemaValidator](docs/schema-validator.md)
+- [SqlDataValidator](docs/sql-data-validator.md)
 
 ### Sink writers
 - [DeltaWriter](docs/delta-writer.md)
@@ -221,7 +222,34 @@ The following is one example of how to submit a Spark job. Note that it also dem
 ### Spark-Configuration
 - [SparkConfActor](docs/spark-conf-actor.md)
 
+### Other Utilities
+- [ViewPartitioner](docs/view-partitioner.md)
+
 ### Custom UDF Registration
+If custom UDFs are required in a pipeline for transforming data, a custom UDF register needs to be provided to register the related UDFs.
+
+An UDF register must extend com.qwshen.etl.common.UdfRegister, and implement the following method:
+```scala
+   def register(prefix: String)(implicit session: SparkSession): Unit
+```
+
+Then the UDF Register can be configured at pipeline level as follows:
+```json
+  {
+    "udf-registration": [
+      {
+        "prefix": "event_",
+        "type": "com.qwshen.etl.EventUdfRegister"
+      },
+      {
+        "prefix": "user_",
+        "type": "com.qwshen.etl.UserUdfRegister"
+      }
+    ]
+  }
+```
+
+Check this [UDF example](docs/udf-example.md)
 
 ### Writing custom Actor
 In situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor can be created by following this [guide](docs/custom-actor.md).
