@@ -31,5 +31,5 @@
 ```
 - Call the udf in a sql statement
 ```sql
-  select *, user_f_gender(gender) from users
+  select *, user_f_gender(gender) as gender from users
 ```
