@@ -7,7 +7,7 @@ The MongoReader is for reading data from MongoDB into a dataframe in batch mode.
     - collection: the collection name to read data from.
     - user: the user name for accessing the target mongod instance.
     - password: the password for authentication
-- The following options controls the reading behavior:
+- The following options control the reading behavior:
     - localThreshold: the time in milliseconds to choose among multiple MongoDB servers to send a request. Default: 15.
     - readPreference.name: The name of the Read Preference mode to use.
       - primary: all read operations use only the current replica set primary. This is the default read mode.

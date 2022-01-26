@@ -6,7 +6,7 @@ The RedisReader is for reading data from Redis into a dataframe in batch mode.
     - dbNum: the number of the database in Redis
     - dbTable: the table name
     - authPassword: the password for authentication
-- The following options controls the reading behavior:
+- The following options control the reading behavior:
     - key.column: the name of the key column. If multiple columns forms the key, combine them before writing to Redis
     - key.pattern: match the keys based on the pattern.
     - infer.schema: automatically infer the schema based on a random row
