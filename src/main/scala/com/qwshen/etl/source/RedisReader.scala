@@ -21,7 +21,7 @@ final class RedisReader extends RedisActor[RedisReader] {
   private var _schema: Option[StructType] = None
 
   /**
-   * Initialize the file reader
+   * Initialize the redis reader
    *
    * @param config - the configuration object
    * @param session - the spark-session object

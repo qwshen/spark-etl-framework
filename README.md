@@ -196,6 +196,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [KafkaStreamReader](docs/kafka-stream-reader.md)
 - [RedisReader](docs/redis-reader.md)
 - [RedisStreamReader](docs/redis-stream-reader.md)
+- [MongoReader](docs/mongo-reader.md)
 
 ### Transformers
 - [SqlTransformer](docs/sql-transformer.md)
