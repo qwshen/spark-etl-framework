@@ -109,8 +109,8 @@ The following explains the definition of each section in a pipeline:
   debug-staging:
     uri: "${staging_uri}"
     actions:
-      - transform-events
-      - load-events, transform-user-train
+      - load-events
+      - transform-user-train
   ```
   In the above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}. More actions for staging incur more impact on the performance. Therefore they should be used primarily in dev environments.  
   <br />
