@@ -21,7 +21,7 @@
         <maven.scala.plugin>2.15.2</maven.scala.plugin>
         <typesafe.config.version>1.4.1</typesafe.config.version>
         <io.confluent.version>4.1.2</io.confluent.version>
-        <hadoop.version>2.7.3</hadoop.version>
+        <hadoop.version>2.10.1</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
     </properties>
 
