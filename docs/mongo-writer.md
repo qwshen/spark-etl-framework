@@ -14,8 +14,8 @@ The MongoWriter is for writing a data-frame to MongoDB in batch mode.
     - maxBatchSize: the maximum batch size for bulk operations when saving data. Default: 512.
     - writeConcern.w: the write concern w option requests acknowledgment that the write operation has propagated to a specified number of mongod instances or to mongod instances with specified tags:
         - majority: requests acknowledgment that write operations have propagated to the calculated majority of the data-bearing voting members.
-        - <number>: requests acknowledgment that the write operation has propagated to the specified number of mongod instances. Default: 1
-        - <custom write concern name>: requests acknowledgment that the write operations have propagated to tagged members that satisfy the custom write concern defined in settings.getLastErrorModes. see https://docs.mongodb.com/manual/tutorial/configure-replica-set-tag-sets/#std-label-configure-custom-write-concern.
+        - ```<number>```: requests acknowledgment that the write operation has propagated to the specified number of mongod instances. Default: 1
+        - ```<custom write concern name>```: requests acknowledgment that the write operations have propagated to tagged members that satisfy the custom write concern defined in settings.getLastErrorModes. see https://docs.mongodb.com/manual/tutorial/configure-replica-set-tag-sets/#std-label-configure-custom-write-concern.
     - writeConcern.journal: the write concern j option requests acknowledgment from MongoDB that the write operation has been written to the on-disk journal.
         - If j: true, requests acknowledgment that the mongod instances, as specified in the w: <value>, have written to the on-disk journal.
     - writeConcern.wTimeoutMS: the write concern wTimeout option specifies a time limit, in milliseconds, for the write concern. The wtimeout is only applicable for w values greater than 1.
