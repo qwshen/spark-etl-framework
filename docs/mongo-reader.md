@@ -46,6 +46,26 @@ The MongoReader is for reading data from MongoDB into a dataframe in batch mode.
     - allowDiskUse: enables writing to temporary files during aggregation.
     - batchSize: the size of the internal batches within the cursor.
 
+For more details of reader options, please check https://docs.mongodb.com/spark-connector/current/configuration/#std-label-spark-output-conf.
+
+<b>Important Note:</b> When submitting a job to read from MongoDB, please provide the following configuration either through command argument or runtime-config in the application configuration file:    
+```spark.mongodb.input.uri=mongodb://mongod-server:port/database.collection```
+
+Example:
+
+- Submitting a job
+  ```
+  spark-submit --master local --conf "spark.mongodb.input.uri=mongodb://localhost:27017/events.users" ...
+  ```
+- In application configuration
+  ```
+  application.runtime {
+    spark {
+      mongodb.input.uri = "mongodb://localhost:27017/events.users"
+      ...
+    }
+  ```
+
 The definition of the MongoReader:
 - In YAML format
 ```yaml

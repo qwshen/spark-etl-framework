@@ -1,0 +1,125 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "mongo_password",
+                "value": "${events.db.password}",
+                "decryptionKeyString": "${application.security.decryption.key}"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "file-reader",
+                "type": "com.qwshen.etl.source.FileReader"
+            },
+            {
+                "name": "flat-reader",
+                "type": "com.qwshen.etl.source.FlatReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.qwshen.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "mongo-writer",
+                "type": "com.qwshen.etl.sink.MongoWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load users",
+                        "actor": {
+                            "type": "file-reader",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true"
+                                },
+                                "fileUri": "${events.users_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "users",
+                            "global": "false"
+                        }
+                    },
+                    {
+                        "name": "write users",
+                        "actor": {
+                            "type": "mongo-writer",
+                            "properties": {
+                                "host": "192.168.21.11",
+                                "port": "27017",
+                                "database": "events",
+                                "collection": "users",
+                                "user": "qwshen",
+                                "password": "${mongo_password}",
+                                "options": {
+                                    "replaceDocument": "true",
+                                    "writeConcern.w": "majority",
+                                    "forceInsert": "true"
+                                },
+                                "mode": "overwrite",
+                                "view": "users"
+                            }
+                        },
+                        "input-views": ["users"]
+                    },
+                    {
+                        "name": "load train",
+                        "actor": {
+                            "type": "flat-reader",
+                            "properties": {
+                                "ddlFieldsString": "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int",
+                                "addInputFile": "false",
+                                "fileUri": "${events.train_input}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "train",
+                            "global": false
+                        }
+                    },
+                    {
+                        "name": "write train",
+                        "actor": {
+                            "type": "mongo-writer",
+                            "properties": {
+                                "host": "192.168.21.11",
+                                "port": "27017",
+                                "database": "events",
+                                "collection": "train",
+                                "user": "qwshen",
+                                "password": "${mongo_password}",
+                                "options": {
+                                    "writeConcern.w": "majority"
+                                },
+                                "mode": "append",
+                                "view": "train"
+                            }
+                        },
+                        "input-views": ["train"]
+                    }
+                ]
+            }
+        ]
+    }
+}

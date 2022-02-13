@@ -38,6 +38,8 @@ trait SparkApp extends TestApp {
     .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    .config("spark.mongodb.input.uri", "mongodb://localhost:27017/events.users")
+    .config("spark.mongodb.output.uri", "mongodb://localhost:27017/events.train")
     .getOrCreate()
 
   //turn off info logs
