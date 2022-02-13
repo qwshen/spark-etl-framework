@@ -10,7 +10,6 @@ class PipelineTest extends SparkApp {
   implicit val config: Config = loadConfig()
   val runner = new PipelineRunner(new ApplicationContext())
 
-  /*
   test("Pipeline test - file read / file write") {
     for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-fileWrite.xml"))) {
       runner.run(pipeline)
@@ -135,10 +134,15 @@ class PipelineTest extends SparkApp {
       runner.run(pipeline)
     }
   }
-   */
 
   test("Pipeline test - file read / mongo write") {
     for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-mongoWrite.json"))) {
+      runner.run(pipeline)
+    }
+  }
+
+  test("Pipeline test - mongo read / file write") {
+    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_mongoRead-fileWrite.yaml"))) {
       runner.run(pipeline)
     }
   }

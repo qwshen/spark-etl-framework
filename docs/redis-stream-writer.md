@@ -17,7 +17,7 @@ The RedisWriter is for writing dataframe to Redis environment in batch mode.
     - scan.count: count option of SCAN command (used to iterate over keys)
     - max.pipeline.size: maximum number of commands per pipeline (used to batch commands)
     - timeout: timeout in milli-seconds for connection
-- The checkpointLocation can be specified as one write-option.
+- The checkpointLocation must be specified as one write-option.
 - The trigger mode must be one of the following values:
     - continuous
     - processingTime

@@ -1,17 +1,18 @@
 package com.qwshen.etl.sink
 
+import com.mongodb.spark.MongoSpark
+import com.mongodb.spark.config.WriteConfig
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, RedisActor}
+import com.qwshen.etl.common.{ExecutionContext, MongoActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
 import scala.util.{Failure, Success, Try}
 
 /**
- * Stream-Write to Redis. Note - the redis requires to be 5.0.5+.
+ * Stream-Write to MongoDB
  */
-final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
+final class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
   //trigger mode
   @PropertyKey("trigger.mode", true)
   private var _triggerMode: Option[String] = None
@@ -38,22 +39,20 @@ final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
    * @return
    */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    host <- this._host
-    port <- this._port
-    dbNum <- this._dbNum
-    table <- this._table
+    hostName <- this._host
+    portNum <- this._port
+    dbName <- this._database
+    collectionName <- this._collection
     mode <- this._outputMode
     checkpointLocation <- this._options.get("checkpointLocation")
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
-    var options = Map("host" -> host, "port" -> port.toString, "dbNum" -> dbNum.toString, "table" -> table)
-    this._authPassword match {
-      case Some(pwd) => options = options + ("auth" -> pwd)
-      case _ =>
+    val uri = (this._user, this._password) match {
+      case (Some(usr), Some(pwd)) => s"mongodb://$usr:$pwd@$hostName:$portNum/$dbName.$collectionName"
+      case _ => s"mongodb://$hostName:$portNum/$dbName.$collectionName"
     }
-    options = options ++ this._options.filter(!_._1.equals("checkpointLocation"))
-    val writer = (df: DataFrame, id: Long) => options
-      .foldLeft(df.write.format("org.apache.spark.sql.redis"))((w, o) => w.option(o._1, o._2.toString)).mode("append").save
+    val wc = WriteConfig(Map("uri" -> uri) ++ this._options.filter(!_._1.equals("checkpointLocation")), Some(WriteConfig(session)))
+    val writer = (df: DataFrame, id: Long) => MongoSpark.save(df.write.mode("append"), wc)
 
     val streamQuery = df.writeStream.option("checkLocation", checkpointLocation).outputMode(mode).foreachBatch { writer }
     val triggerQuery = (this._triggerMode, this._triggerInterval) match {
@@ -68,7 +67,7 @@ final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
     }
   } match {
     case Success(_) => df
-    case Failure(ex) => throw new RuntimeException(s"Cannot write to source - ${this._table}.", ex)
+    case Failure(ex) => throw new RuntimeException(s"Cannot write to source - ${this._database}.${this._collection}", ex)
   }
 
   /**
@@ -86,14 +85,14 @@ final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
    * @param mode
    * @return
    */
-  def triggerMode(mode: String): RedisStreamWriter = { this._triggerMode = Some(mode); this }
+  def triggerMode(mode: String): MongoStreamWriter = { this._triggerMode = Some(mode); this }
 
   /**
    * The trigger interval
    * @param duration
    * @return
    */
-  def triggerInterval(duration: String): RedisStreamWriter = { this._triggerInterval = Some(duration); this }
+  def triggerInterval(duration: String): MongoStreamWriter = { this._triggerInterval = Some(duration); this }
 
   /**
    * The output mode
@@ -101,7 +100,7 @@ final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
    * @param mode
    * @return
    */
-  def outputMode(mode: String): RedisStreamWriter = { this._outputMode = Some(mode); this }
+  def outputMode(mode: String): MongoStreamWriter = { this._outputMode = Some(mode); this }
 
   /**
    * Wait time for streaming to execute before shut it down
@@ -109,12 +108,12 @@ final class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
    * @param waittime
    * @return
    */
-  def waitTimeInMs(waittime: Long): RedisStreamWriter = { this._waittimeInMs = Some(waittime); this }
+  def waitTimeInMs(waittime: Long): MongoStreamWriter = { this._waittimeInMs = Some(waittime); this }
 
   /**
    * The source view to be written
    * @param view
    * @return
    */
-  def sourceView(view: String): RedisStreamWriter = { this._view = Some(view); this }
+  def sourceView(view: String): MongoStreamWriter = { this._view = Some(view); this }
 }

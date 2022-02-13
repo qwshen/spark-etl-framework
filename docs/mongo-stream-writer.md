@@ -1,4 +1,4 @@
-The MongoWriter is for writing a data-frame to MongoDB in batch mode.
+The MongoWriter is for writing a data-frame to MongoDB in stream mode.
 
 - The following connection properties must be provided in order to connect to target MongoDB
     - host: the host name of the target mongod instance.
@@ -22,7 +22,16 @@ The MongoWriter is for writing a data-frame to MongoDB in batch mode.
     - shardKey: the field by which to split the collection data. The field should be indexed and contain unique values. Default: _id.
     - forceInsert: forces saves to use inserts, even if a Dataset contains _id. Default: false.
     - ordered: sets the bulk operations ordered property. Default: true.
-- Write Mode: the write behavior must be either overwrite or append. Default: overwrite.
+- The checkpointLocation must be specified as one write-option.
+- The trigger mode must be one of the following values:
+  - continuous
+  - processingTime
+  - once
+- The output mode must be one of the following values:
+  - complete
+  - append
+  - update
+- The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 
 For more details of writer options, please check https://docs.mongodb.com/spark-connector/current/configuration/#std-label-spark-output-conf.
 
@@ -35,7 +44,7 @@ Example:
   ```
   spark-submit --master local --conf "spark.mongodb.output.uri=mongodb://localhost:27017/events.users" ...
   ```
-- In application configuration  
+- In application configuration
   ```
   application.runtime {
     spark {
@@ -48,7 +57,7 @@ The definition of the MongoWriter:
 - In YAML format
 ```yaml
   actor:
-    type: mongo-writer
+    type: mongo-stream-writer
     properties:
       host: localhost
       port: 27017
@@ -61,14 +70,20 @@ The definition of the MongoWriter:
         maxBatchSize: 1024
         writeConcern.w: majority
         shardKey: order_id
-      mode: overwrite
+        checkpointLocation: /tmp/redis/staging/users
+      trigger:
+        mode: once
+        interval: 2 minutes
+      outputMode: complete
+      test:
+        waittimeMS: 9000
       view: users
 ```
 - In JSON format
 ```json
   {
     "actor": {
-      "type": "mongo-writer",
+      "type": "mongo-stream-writer",
       "properties": {
         "host": "localhost",
         "port": "27017",
@@ -80,9 +95,17 @@ The definition of the MongoWriter:
           "replaceDocument": "false",
           "writeConcern.w": "majority",
           "shardKey": "order_id",
-          "maxBatchSize": "16000"
+          "maxBatchSize": "16000",
+          "checkpointLocation": "/tmp/redis/staging/users"
         },
-        "mode": "append",
+        "trigger": {
+          "mode": "continuous",
+          "interval": "3 minutes"
+        },
+        "outputMode": "append",
+        "test": {
+          "waittimeMS": "16000"
+        },
         "view": "users"
       }
     }
@@ -103,8 +126,16 @@ The definition of the MongoWriter:
         <writeConcern.w>majority</writeConcern.w>
         <shardKey>order_id</shardKey>
         <maxBatchSize>16000</maxBatchSize>
+        <checkpointLocation>/tmp/redis/staging/users</checkpointLocation>
       </options>
-      <mode>overwrite</mode>
+      <trigger>
+        <mode>processingTime</mode>
+        <interval>5 minutes</interval>
+      </trigger>
+      <outputMode>update</outputMode>
+      <test>
+        <waittimeMS>15000</waittimeMS>
+      </test>
       <view>users</view>
     </properties>
   </actor>

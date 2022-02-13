@@ -2,9 +2,11 @@ package com.qwshen.etl.sink
 
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.WriteConfig
-import com.qwshen.common.PropertyKey
+import com.qwshen.common.{PropertyKey, PropertyUse}
 import com.qwshen.etl.common.{ExecutionContext, MongoActor}
+import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -42,6 +44,15 @@ final class MongoWriter extends MongoActor[MongoWriter] {
   } match {
     case Success(_) => df
     case Failure(ex) => throw new RuntimeException(s"Cannot write to source - ${this._database}.${this._collection}.", ex)
+  }
+
+  /**
+   * Initialize the Mongo-Writer
+   */
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    super.init(properties, config)
+
+    validate(this._mode, "The mode in MongoWriter is mandatory.", Seq("overwrite", "append"))
   }
 
   /**

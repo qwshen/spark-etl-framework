@@ -1,0 +1,80 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: ${events.process_date}
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: export_dir
+      value: "${events.output_dir}"
+    - name: mongo.password
+      value: ${events.db.password}
+      decryptionKeyString: "${application.security.decryption.key}"
+  aliases:
+    - name: mongo-reader
+      type: com.qwshen.etl.source.MongoReader
+    - name: sql
+      type: com.qwshen.etl.transform.SqlTransformer
+    - name: file-writer
+      type: com.qwshen.etl.sink.FileWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load users
+          actor:
+            type: mongo-reader
+            properties:
+              host: localhost
+              port: "27017"
+              database: events
+              collection: users
+              user: sqw
+              password: ${mongo.password}
+              options:
+                readPreference.name: primaryPreferred
+                readConcern.level: majority
+                batchSize: 1024
+          output-view:
+            name: users
+            global: true
+        - name: load train
+          actor:
+            type: mongo-reader
+            properties:
+              host: localhost
+              port: "27017"
+              database: events
+              collection: train
+              user: sqw
+              password: ${mongo.password}
+              options:
+                readPreference.name: primaryPreferred
+                readConcern.level: majority
+                batchSize: 1024
+          output-view:
+            name: train
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/transform-user-train.sql"
+          input-views: [users, train]
+          output-view:
+            name: features
+        - name: write features
+          actor:
+            type: file-writer
+            properties:
+              format: csv
+              options:
+                header: true
+                maxRecordsPerFile: "30000"
+              mode: overwrite
+              fileUri: "${export_dir}"
+              view: features
+          input-views: [features]
