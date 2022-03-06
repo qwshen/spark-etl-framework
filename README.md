@@ -255,7 +255,7 @@ Then the UDF Register can be configured at pipeline level as follows:
 Check this [UDF example](docs/udf-example.md)
 
 ### Writing custom Actor
-In situation where the logic of transforming data is very complicated, or a new reader and/or writer are required, a custom Actor can be created by following this [guide](docs/custom-actor.md).
+In situation where the logic of transforming data is very complicated, or a new reader and/or writer would be preferred, a custom Actor can be created by following this [guide](docs/custom-actor.md).
 
 ### Spark-SQL practices
 
