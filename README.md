@@ -258,7 +258,7 @@ Check this [UDF example](docs/udf-example.md)
 In situation where the logic of transforming data is very complicated, or a new reader and/or writer would be preferred, a custom Actor can be created by following this [guide](docs/custom-actor.md).
 
 ### Spark-SQL practices
-- Never use in where clause, such as
+- Never use "in" key word in where clause, such as
 ```SQL
    select * from orders where user_id in (select id from users)
 ```
