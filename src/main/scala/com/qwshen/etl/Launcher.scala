@@ -26,8 +26,11 @@ import scala.util.Try
  *     --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
  *     --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
  */
-object Launcher {
-  def main(args: Array[String]): Unit = {
+class Launcher {
+  /*
+      Run a pipeline-job
+   */
+  def run(args: Array[String]): Unit = {
     val arguments = ArgumentParser.parse(args)
 
     implicit val config: Config = arguments.config
@@ -55,8 +58,10 @@ object Launcher {
     }
   }
 
-  //create the spark-session
-  private def createSparkSession(implicit config: Config): SparkSession = if (!config.hasPath("application.runtime")) {
+  /*
+    Create the spark-session
+   */
+  def createSparkSession(implicit config: Config): SparkSession = if (!config.hasPath("application.runtime")) {
     SparkSession.builder.getOrCreate()
   } else {
     var builder: SparkSession.Builder = config.getConfig("application.runtime").entrySet().asScala
@@ -83,4 +88,9 @@ object Launcher {
         s
       })
   }
+
+}
+
+object Launcher {
+  def main(args: Array[String]): Unit = (new Launcher()).run(args)
 }
