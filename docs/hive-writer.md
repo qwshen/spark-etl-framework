@@ -9,6 +9,8 @@ When a hive-table is given, the following properties can be defined to further c
 - mode: it must be either overwrite or append. When overwrite, the whole target table will be over-written.
 - view: the input view (dataframe) to be written
 
+Actor Class: `com.qwshen.etl.sink.HiveWriter`
+
 The definition for the HiveWriter:
 
 - In YAML format
