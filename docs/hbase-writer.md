@@ -38,6 +38,8 @@ The HBaseWriter is for writing a dataframe to a HBase table in batch mode.
   - merge -> the new data will be merged into target table
   <br />
 
+Actor Class: `com.qwshen.etl.sink.HBaseWriter`
+
 The definition of HBaseWriter:
 - In YAML format
 ```yaml
