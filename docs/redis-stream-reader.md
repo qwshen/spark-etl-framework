@@ -39,6 +39,8 @@ The RedisStreamWriter is for reading data from Redis into a dataframe in streami
 - For watermark configuration, the timeField is one field in the dataframe to be used for the delay calculation.
 - To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
 
+Actor Class: `com.qwshen.etl.source.RedisStreamReader`
+
 The definition of the RedisReader:
 - In YAML format
 ```yaml
