@@ -11,6 +11,8 @@ The SqlDataValidator is for identifying invalid records in a given view, and ret
   - ignore: discard all invalid records, and move forward the process with all valid records.
 - The view property defines the dataframe to be validated.
 
+Actor Class: `com.qwshen.etl.validation.SqlDataValidator`
+
 The definition of the SqlDataValidator:
 - in YAML
 ```yaml
