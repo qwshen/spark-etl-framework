@@ -44,6 +44,8 @@ Example:
     }
   ```
 
+Actor Class: `com.qwshen.etl.sink.MongoWriter`
+
 The definition of the MongoWriter:
 - In YAML format
 ```yaml
