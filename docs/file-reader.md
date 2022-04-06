@@ -4,6 +4,8 @@ The FileReader is for loading files from various locations, such as local, hdfs 
 - The options are optional.
 - The schema is optional. If specified, it must be in ddl-schema format. If the schema is defined in a file, please use ddlSchemaFile with the file-name as the value.
 
+Actor Class: `com.qwshen.etl.source.FileReader`
+
 The Definition of the FileReader:
 
 - In YAML format
