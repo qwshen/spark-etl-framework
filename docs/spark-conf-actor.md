@@ -3,6 +3,8 @@ the behavior of all actors (from all jobs & actions) in a pipeline. One good pra
 work-units, and each of them is defined as a job in the pipeline (also turn off the singleSparkSession at the pipeline level), so in 
 such case, any changes to the Spark-Conf in one job only affect the behavior of the actors associated with the job.
 
+Actor Class: `com.qwshen.etl.common.SparkConfActor`
+
 The definition of the SparkConfActor:
 - in YAML
 ```yaml
