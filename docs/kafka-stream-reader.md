@@ -32,6 +32,8 @@ If more than one above options are provided, it takes the following order to pic
 #### IMPORTANT Note:
    ##### All Kafka built-in columns such as timestamp, partition etc. are renamed to __kafka_*, such as __kafka_timestamp etc.
 
+Actor Class: `com.qwshen.etl.source.KafkaStreamReader`
+
 The definition of the KafkaStreamReader:
 
 - In YAML format
