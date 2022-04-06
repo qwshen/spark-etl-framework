@@ -1,5 +1,7 @@
 The SqlTransformer is for executing Spark-Sql statements. It references one or more views and produces one output view.
 
+Actor Class: `com.qwshen.etl.transform.SqlTransformer`
+
 The definition for the SqlTransformer:
 
 - In YAML format
