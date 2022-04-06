@@ -16,6 +16,8 @@ The JdbcWriter is for writing a Spark dataframe into a table in a relational dat
     - merge: insert or update the new data into the target table. When this option is used, the sink.SqlString or sink.SqlFile is required.
 - The sink.SqlString or sink.SqlFile defines how the new data is merged into the target table. It normally is a merge into statement.
 
+Actor Class: `com.qwshen.etl.sink.JdbcWriter`
+
 The definition of JdbcWriter
 - In YAML format
 ```yaml
