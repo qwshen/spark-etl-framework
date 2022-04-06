@@ -15,23 +15,23 @@
         <hbase.version>1.7.1</hbase.version>
 
         <!-- For Spark 2.4.2 with Scala 2.11 -->
+        <!--
         <scala.version>2.11.12</scala.version>
         <scala.compact.version>2.11</scala.compact.version>
         <spark.version>2.4.2</spark.version>
         <spark.avro.version>2.4.8</spark.avro.version>
         <delta.lake.version>0.6.1</delta.lake.version>
         <mongo-spark-version>2.4.3</mongo-spark-version>
-        <!--
         -->
 
         <!-- Spark 3.0.1 with Scala 2.12 -->
-        <!--
         <scala.version>2.12.9</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.0.1</spark.version>
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>0.8.0</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
+        <!--
         -->
 
         <!-- Spark 3.0.1 with Scala 2.12 -->
@@ -46,7 +46,7 @@
     </properties>
 
     <groupId>com.qwshen</groupId>
-    <artifactId>spark-etl-framework_${spark.version}</artifactId>
+    <artifactId>spark-etl-framework_${scala.compact.version}_${spark.version}</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 

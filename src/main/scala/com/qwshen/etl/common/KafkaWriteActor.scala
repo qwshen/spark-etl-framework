@@ -39,11 +39,11 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
         case _ => DataType.fromJson(schema.sValue.stripMargin).asInstanceOf[StructType].fields.map(f => f.name)
       }
       //For Spark 3.*
-      //import org.apache.spark.sql.avro.functions.to_avro
-      //x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
+      import org.apache.spark.sql.avro.functions.to_avro
+      x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
       //For Spark 2.*
-      import org.apache.spark.sql.avro.to_avro
-      x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*)))
+      //import org.apache.spark.sql.avro.to_avro
+      //x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*)))
     }
     def getByField(srcField: String, dstField: String)(x: DataFrame): DataFrame = x.withColumn(dstField, col(srcField))
     def getKeyDefault(x: DataFrame): DataFrame = if (!x.columns.contains("key")) x.withColumn("key", monotonically_increasing_id.cast(StringType)) else x
