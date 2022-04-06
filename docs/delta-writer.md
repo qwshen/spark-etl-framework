@@ -11,6 +11,8 @@ The DeltaWriter is for writing a data-frame to delta lake in batch mode.
   - Important: bucketing only supports saveAsTable for the time being
 - The location of the writing can be either by sinkPath or sinkTable. If both specified, sinkTable takes precedence.
 
+Actor Class: `com.qwshen.etl.sink.DeltaWriter`
+
 The definition of the DeltaWriter:
 
 - In YAML format
