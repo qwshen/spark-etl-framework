@@ -19,6 +19,8 @@ The RedisWriter is for writing dataframe to Redis environment in batch mode.
   - timeout: timeout in milli-seconds for connection
 - The mode must be either overwrite or append.
 
+Actor Class: `com.qwshen.etl.sink.RedisWriter`
+
 The definition of the RedisWriter:
 - In YAML format
 ```yaml
