@@ -14,6 +14,8 @@ The JdbcReader is for reading data from a table in a relational database in batc
   - numPartitions: defines the maximum number of partitions that can be used for parallelism in table reading.
   - fetchSize: defines the # of records per fetch.
 
+Actor Class: `com.qwshen.etl.source.JdbcReader`
+
 The definition of JdbcReader
 - In YAML format
 ```yaml
