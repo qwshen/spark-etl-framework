@@ -8,6 +8,8 @@ The FileStreamReader is for reading files in streaming mode.
 - To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
 - To clean up processed files, please enable cleanSource option.
 
+Actor Class: `com.qwshen.etl.source.FileStreamReader`
+
 The Definition of the FileStreamReader:
 
 - In YAML format
