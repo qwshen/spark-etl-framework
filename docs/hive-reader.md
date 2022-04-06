@@ -2,6 +2,8 @@ The HiveReader is for reading data from a Hive environment. Either a sql-stateme
 
 When reading from a hive-table, a filter in sql syntax may be specified to limit what data is to be read.
 
+Actor Class: `com.qwshen.etl.source.HiveReader`
+
 The definition for the HiveReader:
 
 - In YAML format
