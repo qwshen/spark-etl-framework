@@ -30,6 +30,8 @@ To add a custom (processing) timestamp, please use the addTimestamp property. Th
 
 To clean up processed files, please enable cleanSource option.
 
+Actor Class: `com.qwshen.etl.source.FlatStreamReader`
+
 The definition of the FlatReader:
 
 - In YAML format
