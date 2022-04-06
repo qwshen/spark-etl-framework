@@ -17,6 +17,8 @@ The RedisReader is for reading data from Redis into a dataframe in batch mode.
     - timeout: timeout in milli-seconds for connection
 - The schema of the output dataframe can be defined in DDL format by key ddlSchemaString or ddlSchemaFile. This is optional.
 
+Actor Class: `com.qwshen.etl.source.RedisReader`
+
 The definition of the RedisReader:
 - In YAML format
 ```yaml
