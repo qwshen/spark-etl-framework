@@ -18,6 +18,8 @@ The DeltaStreamWriter is for writing a data-frame to delta lake in streaming mod
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The location of the writing can be either by sinkPath or sinkTable. If both specified, sinkTable takes precedence.
 
+Actor Class: `com.qwshen.etl.sink.DeltaStreamWriter`
+
 The definition of the DeltaStreamWriter:
 
 - In YAML format
