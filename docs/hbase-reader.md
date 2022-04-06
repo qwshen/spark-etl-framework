@@ -39,6 +39,8 @@ The HBaseReader is for reading a HBase table into a dataframe in batch mode.
   - tsEnd: the end timestamp of rows
        <br />
 
+Actor Class: `com.qwshen.etl.source.HBaseReader`
+
 The definition of HBaseWriter:
 - In YAML format
 ```yaml
