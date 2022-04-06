@@ -21,6 +21,8 @@ The JdbcStreamWriter is for writing a Spark dataframe into a table in a relation
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The sink.SqlString or sink.SqlFile defines how the new data is merged into the target table. It normally is a merge into statement.
 
+Actor Class: `com.qwshen.etl.sink.JdbcStreamWriter`
+
 The definition of JdbcStreamWriter
 - In YAML format
 ```yaml
