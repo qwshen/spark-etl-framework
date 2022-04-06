@@ -18,6 +18,8 @@ The SchemaValidator is for validating the schema of the input data-frame (view) 
   - ignore: the process ignores the validation failure, but logs will be written.
 - The view is the input dataframe that its schema is validated with the schema provided in the definition.
 
+Actor Class: `com.qwshen.etl.validation.SchemaValidator`
+
 The definition of the SchemaValidator:
 - in YAML
 ```yaml
