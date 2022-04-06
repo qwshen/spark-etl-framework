@@ -4,6 +4,8 @@ The FileWriter is for writing a data-frame to files in a local or hdfs file syst
 - The write mode can only be overwrite or append
 - The partition-by is optional. If provided, it must be the names of one or more columns separated by comma.
 
+Actor Class: `com.qwshen.etl.sink.FileWriter`
+
 The definition of the FileWriter:
 
 - In YAML format
