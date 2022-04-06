@@ -10,6 +10,8 @@ The KafkaWriter is for writing data to Kafka topics in batch mode.
 - If the key column with name key or keyField not provided, the KafkaWriter generates a unique sequence number per batch
 - If the value column with name value or valueField not provided, the KafkaWriter generates json document with all columns in the source dataframe.
 
+Actor Class: `com.qwshen.etl.sink.KafkaWriter`
+
 The definition of the KafkaWriter:
 
 - In YAML format
