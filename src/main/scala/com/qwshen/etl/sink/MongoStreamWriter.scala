@@ -12,24 +12,24 @@ import scala.util.{Failure, Success, Try}
 /**
  * Stream-Write to MongoDB
  */
-final class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
+class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
   //trigger mode
   @PropertyKey("trigger.mode", true)
-  private var _triggerMode: Option[String] = None
+  protected var _triggerMode: Option[String] = None
   //trigger interval
   @PropertyKey("trigger.interval", true)
-  private var _triggerInterval: Option[String] = None
+  protected var _triggerInterval: Option[String] = None
 
   //the output mode
   @PropertyKey("outputMode", true)
-  private var _outputMode: Option[String] = None
+  protected var _outputMode: Option[String] = None
   //wait time in ms for test
   @PropertyKey("test.waittimeMS", false)
-  private var _waittimeInMs: Option[Long] = None
+  protected var _waittimeInMs: Option[Long] = None
 
   //view
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   /**
    * Run the jdbc-reader

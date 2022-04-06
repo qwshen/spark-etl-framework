@@ -9,24 +9,24 @@ import scala.util.{Failure, Success, Try}
 /**
  * Validate data with validWhere or invalidWhere to filter out valid or invalid records.
  */
-final class SqlDataValidator() extends Actor {
+class SqlDataValidator() extends Actor {
   @PropertyKey("validWhere", false)
-  private var _validWhere: Option[String] = None
+  protected var _validWhere: Option[String] = None
   @PropertyKey("invalidWhere", false)
-  private var _invalidWhere: Option[String] = None
+  protected var _invalidWhere: Option[String] = None
 
   @PropertyKey("action", true)
-  private var _action: Option[String] = None
+  protected var _action: Option[String] = None
 
   @PropertyKey("staging.uri", false)
-  private var _stagingUri: Option[String] = None
+  protected var _stagingUri: Option[String] = None
   @PropertyKey("staging.format", false)
-  private var _stagingFormat: Option[String] = None
+  protected var _stagingFormat: Option[String] = None
   @PropertyKey("staging.options.*", false)
-  private var _stagingOptions: Map[String, String] = Map.empty[String, String]
+  protected var _stagingOptions: Map[String, String] = Map.empty[String, String]
 
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   /**
    * Run the actor

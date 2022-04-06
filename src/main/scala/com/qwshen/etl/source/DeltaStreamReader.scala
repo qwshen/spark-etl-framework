@@ -9,16 +9,16 @@ import com.qwshen.common.PropertyKey
 /**
  * This reader reads data from delta lake into a data-frame in streaming mode.
  */
-final class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
+class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
   //add timestamp
   @PropertyKey("addTimestamp", false)
-  private var _addTimestamp: Boolean = false
+  protected var _addTimestamp: Boolean = false
 
   @PropertyKey("watermark.timeField", false)
-  private var _wmTimeField: Option[String] = None
+  protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
   @PropertyKey("watermark.delayThreshold", false)
-  private var _wmDelayThreshold: Option[String] = None
+  protected var _wmDelayThreshold: Option[String] = None
 
   /**
    * Execute the action

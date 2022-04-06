@@ -6,17 +6,6 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <scala.version>2.12.9</scala.version>
-        <scala.compact.version>2.12</scala.compact.version>
-
-        <!-- Spark 3.0.1
-        <spark.version>3.0.1</spark.version>
-        <delta.lake.version>0.8.0</delta.lake.version>
-        -->
-        <spark.version>3.1.1</spark.version>
-        <delta.lake.version>1.0.1</delta.lake.version>
-
-        <spark.avro.version>3.0.1</spark.avro.version>
         <gson.version>2.8.6</gson.version>
         <maven.compiler.plugin>3.8.1</maven.compiler.plugin>
         <maven.scala.plugin>2.15.2</maven.scala.plugin>
@@ -24,6 +13,36 @@
         <io.confluent.version>4.1.2</io.confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
+
+        <!-- For Spark 2.4.2 with Scala 2.11 -->
+        <scala.version>2.11.12</scala.version>
+        <scala.compact.version>2.11</scala.compact.version>
+        <spark.version>2.4.2</spark.version>
+        <spark.avro.version>2.4.8</spark.avro.version>
+        <delta.lake.version>0.6.1</delta.lake.version>
+        <mongo-spark-version>2.4.3</mongo-spark-version>
+        <!--
+        -->
+
+        <!-- Spark 3.0.1 with Scala 2.12 -->
+        <!--
+        <scala.version>2.12.9</scala.version>
+        <scala.compact.version>2.12</scala.compact.version>
+        <spark.version>3.0.1</spark.version>
+        <spark.avro.version>3.0.1</spark.avro.version>
+        <delta.lake.version>0.8.0</delta.lake.version>
+        <mongo-spark-version>3.0.1</mongo-spark-version>
+        -->
+
+        <!-- Spark 3.0.1 with Scala 2.12 -->
+        <!--
+        <scala.version>2.12.9</scala.version>
+        <scala.compact.version>2.12</scala.compact.version>
+        <spark.version>3.1.1</spark.version>
+        <spark.avro.version>3.0.1</spark.avro.version>
+        <delta.lake.version>1.0.1</delta.lake.version>
+        <mongo-spark-version>3.0.1</mongo-spark-version>
+        -->
     </properties>
 
     <groupId>com.qwshen</groupId>
@@ -233,7 +252,7 @@
         <dependency>
             <groupId>org.mongodb.spark</groupId>
             <artifactId>mongo-spark-connector_${scala.compact.version}</artifactId>
-            <version>3.0.1</version>
+            <version>${mongo-spark-version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

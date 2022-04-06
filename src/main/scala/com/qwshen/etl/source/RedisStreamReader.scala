@@ -12,7 +12,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Stream Read from Redis. Note - the redis requires to be 5.0.5+.
  */
-final class RedisStreamReader extends RedisActor[RedisStreamReader] {
+class RedisStreamReader extends RedisActor[RedisStreamReader] {
   @PropertyKey("ddlSchemaString", false)
   protected var _ddlSchemaString: Option[String] = None
   @PropertyKey("ddlSchemaFile", false)
@@ -23,14 +23,14 @@ final class RedisStreamReader extends RedisActor[RedisStreamReader] {
 
   //add timestamp
   @PropertyKey("addTimestamp", false)
-  private var _addTimestamp: Boolean = false
+  protected var _addTimestamp: Boolean = false
 
   //water-mark time field
   @PropertyKey("watermark.timeField", false)
-  private var _wmTimeField: Option[String] = None
+  protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
   @PropertyKey("watermark.delayThreshold", false)
-  private var _wmDelayThreshold: Option[String] = None
+  protected var _wmDelayThreshold: Option[String] = None
 
   /**
    * Initialize the file reader

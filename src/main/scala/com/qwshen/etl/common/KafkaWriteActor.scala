@@ -2,7 +2,6 @@ package com.qwshen.etl.common
 
 import com.qwshen.common.PropertyKey
 import org.apache.avro.Schema.Parser
-import org.apache.spark.sql.avro.functions.to_avro
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -39,7 +38,12 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
         case "avro" => new Parser().parse(schema.sValue).getFields.asScala.map(f => f.name)
         case _ => DataType.fromJson(schema.sValue.stripMargin).asInstanceOf[StructType].fields.map(f => f.name)
       }
-      x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
+      //For Spark 3.*
+      //import org.apache.spark.sql.avro.functions.to_avro
+      //x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*), schema.sValue))
+      //For Spark 2.*
+      import org.apache.spark.sql.avro.to_avro
+      x.withColumn(dstField, to_avro(struct(x.columns.filter(c => fields.contains(c)).map(column): _*)))
     }
     def getByField(srcField: String, dstField: String)(x: DataFrame): DataFrame = x.withColumn(dstField, col(srcField))
     def getKeyDefault(x: DataFrame): DataFrame = if (!x.columns.contains("key")) x.withColumn("key", monotonically_increasing_id.cast(StringType)) else x

@@ -8,10 +8,10 @@ import scala.util.{Failure, Success, Try}
 /**
  * This writer is for writing csv, json, avro & parquet files to the target location
  */
-final class FileWriter extends FileWriteActor[FileWriter] {
+class FileWriter extends FileWriteActor[FileWriter] {
   //the mode for the writing
   @PropertyKey("mode", false)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
 
   /**
    * Run the file-writer

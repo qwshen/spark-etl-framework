@@ -8,13 +8,13 @@ import scala.util.{Failure, Success, Try}
 /**
  * Write to Redis. Note - the redis requires to be 5.0.5+.
  */
-final class RedisWriter extends RedisActor[RedisWriter] {
+class RedisWriter extends RedisActor[RedisWriter] {
   //mode
   @PropertyKey("mode", true)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
   //view
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   /**
    * Run the jdbc-reader

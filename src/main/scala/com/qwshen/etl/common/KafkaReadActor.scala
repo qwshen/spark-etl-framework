@@ -1,7 +1,6 @@
 package com.qwshen.etl.common
 
 import com.qwshen.common.PropertyKey
-import org.apache.spark.sql.avro.functions.from_avro
 import org.apache.spark.sql.functions.{col, from_json}
 import org.apache.spark.sql.types.{DataType, StringType, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -40,10 +39,15 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
       .withColumn("key", this._keySchema match {
         case Some(s) if (s.sType == "avro" || s.sType == "Json") => s.sType match {
           case "avro" =>
-            if (this._keySchemaOptions.nonEmpty)
-              from_avro(col("key"), s.sValue, this._keySchemaOptions.asJava)
-            else
-              from_avro(col("key"), s.sValue)
+            //For Spark 3.*
+            //import org.apache.spark.sql.avro.functions.from_avro
+            //if (this._keySchemaOptions.nonEmpty)
+            //  from_avro(col("key"), s.sValue, this._keySchemaOptions.asJava)
+            //else
+            //  from_avro(col("key"), s.sValue)
+            //For Spark 2.*
+            import org.apache.spark.sql.avro.from_avro
+            from_avro(col("key"), s.sValue)
           case _ =>
             if (this._keySchemaOptions.nonEmpty)
               from_json(col("key").cast(StringType), DataType.fromJson(s.sValue).asInstanceOf[StructType], this._keySchemaOptions.asJava)
@@ -55,10 +59,15 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
       .withColumn("value", this._valueSchema match {
         case Some(s) if (s.sType == "avro" || s.sType == "Json") => s.sType match {
           case "avro" =>
-            if (this._valueSchemaOptions.nonEmpty)
-              from_avro(col("value"), s.sValue, this._valueSchemaOptions.asJava)
-            else
-              from_avro(col("value"), s.sValue)
+            //For Spark 3.*
+            //import org.apache.spark.sql.avro.functions.from_avro
+            //if (this._valueSchemaOptions.nonEmpty)
+            //  from_avro(col("value"), s.sValue, this._valueSchemaOptions.asJava)
+            //else
+            //  from_avro(col("value"), s.sValue)
+            //For Spark 2.*
+            import org.apache.spark.sql.avro.from_avro
+            from_avro(col("value"), s.sValue)
           case _ =>
             if (this._valueSchemaOptions.nonEmpty)
               from_json(col("value").cast(StringType), DataType.fromJson(s.sValue).asInstanceOf[StructType], this._valueSchemaOptions.asJava)

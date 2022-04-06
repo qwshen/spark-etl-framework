@@ -13,22 +13,22 @@ import scala.util.{Failure, Success, Try}
 /**
   * This class is for validating the schema of theinput data-frame with schema provided
   */
-final class SchemaValidator extends Actor {
+class SchemaValidator extends Actor {
   @PropertyKey("ddlSchemaString", false)
-  private var _ddlSchemaString: Option[String] = None
+  protected var _ddlSchemaString: Option[String] = None
   @PropertyKey("ddlSchemaFile", false)
-  private var _ddlSchemaqFile: Option[String] = None
+  protected var _ddlSchemaqFile: Option[String] = None
 
   @PropertyKey("type", true)
-  private var _type: Option[String] = None
+  protected var _type: Option[String] = None
   @PropertyKey("mode", true)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
   @PropertyKey("action", true)
-  private var _action: Option[String] = None
+  protected var _action: Option[String] = None
 
   //the target view to be validated
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   //the schema from definition
   private var _schema: Option[StructType] = None

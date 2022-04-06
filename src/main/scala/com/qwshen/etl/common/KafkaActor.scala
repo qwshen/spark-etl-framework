@@ -3,7 +3,7 @@ package com.qwshen.etl.common
 import com.qwshen.common.PropertyKey
 import com.qwshen.common.io.FileChannel
 import org.apache.spark.sql.SparkSession
-import io.confluent.kafka.schemaregistry.client.rest.RestService
+//import io.confluent.kafka.schemaregistry.client.rest.RestService
 import com.typesafe.config.Config
 
 private[etl] abstract class KafkaActor[T] extends Actor { self: T =>
@@ -92,7 +92,8 @@ private[etl] abstract class KafkaActor[T] extends Actor { self: T =>
    * TODO: in future it needs to enhance the service call to have the authentication added
    */
   private def fetchSchema(url: String, schemaId: String): String = {
-    new RestService(url).getLatestVersion(schemaId).getSchema
+    //new RestService(url).getLatestVersion(schemaId).getSchema
+    ""
   }
 
   /**

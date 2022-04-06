@@ -6,7 +6,7 @@ import org.apache.spark.sql.DataFrame
 /**
  * This writer writes a data-frame to Kafka topics
  */
-final class KafkaWriter extends KafkaWriteActor[KafkaWriter] {
+class KafkaWriter extends KafkaWriteActor[KafkaWriter] {
   //write the dataframe
   protected def write(df: DataFrame): Unit = for {
     servers <- this._bootStrapServers

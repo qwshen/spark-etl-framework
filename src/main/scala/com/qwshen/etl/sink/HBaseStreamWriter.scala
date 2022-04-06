@@ -8,20 +8,20 @@ import org.apache.spark.sql.DataFrame
 /**
  * To write data-frame to HBase
  */
-final class HBaseStreamWriter extends HBaseWriteActor[HBaseStreamWriter] {
+class HBaseStreamWriter extends HBaseWriteActor[HBaseStreamWriter] {
   //trigger mode
   @PropertyKey("trigger.mode", false)
-  private var _triggerMode: Option[String] = None
+  protected var _triggerMode: Option[String] = None
   //trigger interval
   @PropertyKey("trigger.interval", false)
-  private var _triggerInterval: Option[String] = None
+  protected var _triggerInterval: Option[String] = None
 
   //the output mode
   @PropertyKey("outputMode", false)
-  private var _outputMode: Option[String] = None
+  protected var _outputMode: Option[String] = None
   //wait time in ms for test
   @PropertyKey("test.waittimeMS", false)
-  private var _waittimeInMs: Option[Long] = None
+  protected var _waittimeInMs: Option[Long] = None
 
   //the write method
   protected def write(props: Map[String, String], keyColumns: Seq[String], securityToken: Option[String])(df: DataFrame): Unit = for {

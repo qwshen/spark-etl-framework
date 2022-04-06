@@ -6,19 +6,19 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-final class HiveWriter extends SqlActor[HiveWriter] {
+class HiveWriter extends SqlActor[HiveWriter] {
   @PropertyKey("table", false)
-  private var _hiveTable: Option[String] = None
+  protected var _hiveTable: Option[String] = None
 
   @PropertyKey("partitionBy", false)
-  private var _partitionBy: Option[String] = None
+  protected var _partitionBy: Option[String] = None
   @PropertyKey("numPartitions", false)
-  private var _numPartitions: Option[Int] = None
+  protected var _numPartitions: Option[Int] = None
 
   @PropertyKey("mode", false)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   /**
    * Run the file-reader

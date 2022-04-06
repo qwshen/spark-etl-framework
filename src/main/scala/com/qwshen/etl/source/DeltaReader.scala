@@ -7,7 +7,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * This reader reads data from delta lake into a data-frame.
  */
-final class DeltaReader extends DeltaReadActor[DeltaReader] {
+class DeltaReader extends DeltaReadActor[DeltaReader] {
   /**
    * Execute the action
    *

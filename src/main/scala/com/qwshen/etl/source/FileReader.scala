@@ -7,7 +7,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * This FileReader is for loading json, avro & parquet files
  */
-final class FileReader extends FileReadActor[FileReader] {
+class FileReader extends FileReadActor[FileReader] {
   /**
    * Run the file-reader
    *

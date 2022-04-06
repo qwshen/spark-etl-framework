@@ -11,20 +11,20 @@ import com.typesafe.config.Config
 /**
  * Write to RDBMS
  */
-final class JdbcWriter extends JdbcActor[JdbcWriter] with VariableResolver {
+class JdbcWriter extends JdbcActor[JdbcWriter] with VariableResolver {
   //the write mode
   @PropertyKey("mode", true)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
 
   //merge query
   @PropertyKey("sink.sqlString", false)
-  private var _sinkSqlString: Option[String] = None
+  protected var _sinkSqlString: Option[String] = None
   @PropertyKey("sink.sqlFile", false)
-  private var _sinkSqlFile: Option[String] = None
+  protected var _sinkSqlFile: Option[String] = None
 
   //the source view
   @PropertyKey("view", true)
-  private var _sourceView: Option[String] = None
+  protected var _sourceView: Option[String] = None
 
   /**
    * Run the jdbc-writer

@@ -10,13 +10,13 @@ import scala.util.{Failure, Success, Try}
 /**
  * Run a custom arbitrary stateful transformation with mapGroupsWithState or flatMapGroupsWithState.
  */
-final class StreamStatefulTransformer extends Actor {
+class StreamStatefulTransformer extends Actor {
   //the custom transform type which implements mapGroupsWithState or flatMapGroupsWithState
   private var _stateTransformer: Option[ArbitraryStatefulProcessor] = None
 
   //the source view
   @PropertyKey("view", true)
-  private var _sourceView: Option[String] = None
+  protected var _sourceView: Option[String] = None
 
   /**
    * Run the transform

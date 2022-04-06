@@ -5,11 +5,11 @@ import com.qwshen.etl.common.{ExecutionContext, SqlActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-final class HiveReader extends SqlActor[HiveReader] {
+class HiveReader extends SqlActor[HiveReader] {
   @PropertyKey("table", false)
-  private var _hiveTable: Option[String] = None
+  protected var _hiveTable: Option[String] = None
   @PropertyKey("filter", false)
-  private var _filterPredicate: Option[String] = None
+  protected var _filterPredicate: Option[String] = None
 
   /**
    * Run the file-reader

@@ -7,7 +7,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Read from RDBMS
  */
-final class JdbcReader extends JdbcActor[JdbcReader] {
+class JdbcReader extends JdbcActor[JdbcReader] {
   /**
    * Run the jdbc-reader
    *

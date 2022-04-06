@@ -9,17 +9,17 @@ import scala.util.{Failure, Success, Try}
 /**
  * This loader is for loading json, avro & parquet files in streaming mode
  */
-final class FileStreamReader extends FileReadActor[FileStreamReader] {
+class FileStreamReader extends FileReadActor[FileStreamReader] {
   //water-mark time field
   @PropertyKey("watermark.timeField", false)
-  private var _wmTimeField: Option[String] = None
+  protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
-  @PropertyKey("watermark.delayThreshold", false)
-  private var _wmDelayThreshold: Option[String] = None
+  @PropertyKey("waterprotectedmark.delayThreshold", false)
+  protected var _wmDelayThreshold: Option[String] = None
 
   //add timestamp
   @PropertyKey("addTimestamp", false)
-  private var _addTimestamp: Boolean = false
+  protected var _addTimestamp: Boolean = false
 
   /**
    * Run the file-reader

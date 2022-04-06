@@ -10,6 +10,18 @@ class MyActor extends com.qwshen.etl.common.Actor {}
 ```scala
 import com.qwshen.common.PropertyKey
 
+//For Scala 2.11
+class MyActor extends com.qwshen.etl.common.Actor {
+  @PropertyKey("options.*", false)
+  protected var _options: Map[String, String] = Map.empty[String, String]
+
+  @PropertyKey("sourcePath", true)
+  protected var _sourcePath: Option[String] = None
+
+  //.....
+}
+
+//For Scala 2.12 and above
 class MyActor extends com.qwshen.etl.common.Actor {
   @PropertyKey("options.*", false)
   private var _options: Map[String, String] = Map.empty[String, String]

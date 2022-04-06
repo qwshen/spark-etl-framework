@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * To write data-frame to HBase
  */
-final class HBaseReader extends HBaseActor[HBaseReader] {
+class HBaseReader extends HBaseActor[HBaseReader] {
   @PropertyKey("columnsMapping.*", false)
   protected var _fieldsMapping: Map[String, String] = Map.empty[String, String]
 

@@ -7,17 +7,17 @@ import org.apache.spark.sql.DataFrame
 /**
  * This writer writes a data-frame to delta-lake
  */
-final class DeltaWriter extends DeltaWriteActor[DeltaWriter] {
+class DeltaWriter extends DeltaWriteActor[DeltaWriter] {
   //number of buckets
   @PropertyKey("bucket.numBuckets", false)
-  private var _numBuckets: Option[Int] = None
+  protected var _numBuckets: Option[Int] = None
   //columns separated by comma for bucket-by
   @PropertyKey("bucket.by", false)
-  private var _bucketBy: Option[String] = None
+  protected var _bucketBy: Option[String] = None
 
   //the write mode
   @PropertyKey("mode", true)
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
 
   //write the dataframe
   protected def write(df: DataFrame): Unit = for {

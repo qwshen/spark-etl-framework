@@ -13,17 +13,17 @@ import org.apache.spark.sql.functions.current_timestamp
  *   - row_value: the content of each row
  *   - row_no: the sequence number of each row.
  */
-final class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
+class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
   //water-mark time field
   @PropertyKey("watermark.timeField", false)
-  private var _wmTimeField: Option[String] = None
+  protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
   @PropertyKey("watermark.delayThreshold", false)
-  private var _wmDelayThreshold: Option[String] = None
+  protected var _wmDelayThreshold: Option[String] = None
 
   //add timestamp
   @PropertyKey("addTimestamp", false)
-  private var _addTimestamp: Boolean = false
+  protected var _addTimestamp: Boolean = false
 
   /**
    * Run the file-reader

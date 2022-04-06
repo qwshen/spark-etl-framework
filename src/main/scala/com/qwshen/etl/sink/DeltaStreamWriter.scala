@@ -8,21 +8,21 @@ import com.qwshen.common.PropertyKey
 /**
  * This writer writes a data-frame to delta-lake in streaming mode.
  */
-final class DeltaStreamWriter extends DeltaWriteActor[DeltaStreamWriter] {
+class DeltaStreamWriter extends DeltaWriteActor[DeltaStreamWriter] {
   //output mode
   @PropertyKey("outputMode", true)
-  private var _outputMode: Option[String] = None
+  protected var _outputMode: Option[String] = None
 
   //trigger mode
   @PropertyKey("trigger.mode", true)
-  private var _triggerMode: Option[String] = None
+  protected var _triggerMode: Option[String] = None
   //trigger interval
   @PropertyKey("trigger.interval", true)
-  private var _triggerInterval: Option[String] = None
+  protected var _triggerInterval: Option[String] = None
 
   //wait time in ms for test
   @PropertyKey("test.waittimeMS", false)
-  private var _waittimeInMs: Option[Long] = None
+  protected var _waittimeInMs: Option[Long] = None
 
   //write the dataframe
   protected def write(df: DataFrame): Unit = for {

@@ -8,17 +8,17 @@ import org.apache.spark.sql.functions.current_timestamp
 /**
  * This stream-reader reads real-time data from kafka topics into a data-frame
  */
-final class KafkaStreamReader extends KafkaReadActor[KafkaStreamReader] {
+class KafkaStreamReader extends KafkaReadActor[KafkaStreamReader] {
   //add timestamp
   @PropertyKey("addTimestamp", false)
-  private var _addTimestamp: Boolean = false
+  protected var _addTimestamp: Boolean = false
 
   //water-mark time field
   @PropertyKey("watermark.timeField", false)
-  private var _wmTimeField: Option[String] = None
+  protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
   @PropertyKey("watermark.delayThreshold", false)
-  private var _wmDelayThreshold: Option[String] = None
+  protected var _wmDelayThreshold: Option[String] = None
 
   //load data from kafka
   protected def load(implicit session: SparkSession): Option[DataFrame] = for {

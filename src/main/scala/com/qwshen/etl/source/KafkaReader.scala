@@ -6,7 +6,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 /**
  * This reader reads data from kafka topics into a data-frame.
  */
-final class KafkaReader extends KafkaReadActor[KafkaReader] {
+class KafkaReader extends KafkaReadActor[KafkaReader] {
   //load data from kafka
   protected def load(implicit session: SparkSession): Option[DataFrame] = for {
     servers <- this._bootStrapServers

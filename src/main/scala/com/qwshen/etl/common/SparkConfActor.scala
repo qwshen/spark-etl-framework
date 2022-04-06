@@ -6,9 +6,9 @@ import com.qwshen.common.PropertyKey
 /**
  * Set up spark-settings
  */
-final class SparkConfActor(private val settings: Seq[(String, String)]) extends Actor {
+class SparkConfActor(private val settings: Seq[(String, String)]) extends Actor {
   @PropertyKey("configs.*", true)
-  private var _settings: Map[String, String] = Map.empty[String, String]
+  protected var _settings: Map[String, String] = Map.empty[String, String]
 
   /**
    * Setting up the settings

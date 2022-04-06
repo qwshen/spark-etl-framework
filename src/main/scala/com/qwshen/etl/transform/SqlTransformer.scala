@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 /**
  * The following is the xml definition.
  */
-final class SqlTransformer extends SqlActor[SqlTransformer] {
+class SqlTransformer extends SqlActor[SqlTransformer] {
   /**
    * Initialize the actor with the properties & config
    */

@@ -11,10 +11,10 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 /**
  * To write data-frame to HBase
  */
-final class HBaseWriter extends HBaseWriteActor[HBaseWriter] {
+class HBaseWriter extends HBaseWriteActor[HBaseWriter] {
   @PropertyKey("mode", true)
   //the mode for writing to HBase
-  private var _mode: Option[String] = None
+  protected var _mode: Option[String] = None
 
   //truncate the hbase table if it is to over-write
   override protected def preWrite(connection: Connection): Unit = for {

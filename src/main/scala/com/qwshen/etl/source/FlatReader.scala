@@ -13,12 +13,12 @@ import org.apache.spark.sql.functions.{input_file_name}
  *   - row_value: the content of each row
  *   - row_no: the sequence number of each row.
  */
-final class FlatReader extends FlatReadActor[FlatReader] {
+class FlatReader extends FlatReadActor[FlatReader] {
   @PropertyKey("row.noField", false)
-  private var _noField: Option[String] = None
+  protected var _noField: Option[String] = None
 
   @PropertyKey("addInputFile", false)
-  private var _addInputFile: Boolean = false
+  protected var _addInputFile: Boolean = false
 
   /**
    * Load the flat-file

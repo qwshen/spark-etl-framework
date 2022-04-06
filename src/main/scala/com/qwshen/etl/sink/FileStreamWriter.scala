@@ -9,21 +9,21 @@ import scala.util.{Failure, Success, Try}
 /**
  * This writer is for writing csv, json, avro & parquet files to the target location
  */
-final class FileStreamWriter extends FileWriteActor[FileStreamWriter] {
+class FileStreamWriter extends FileWriteActor[FileStreamWriter] {
   //output mode
   @PropertyKey("outputMode", true)
-  private var _outputMode: Option[String] = None
+  protected var _outputMode: Option[String] = None
 
   //trigger mode
   @PropertyKey("trigger.mode", false)
-  private var _triggerMode: Option[String] = None
+  protected var _triggerMode: Option[String] = None
   //trigger interval
   @PropertyKey("trigger.interval", false)
-  private var _triggerInterval: Option[String] = None
+  protected var _triggerInterval: Option[String] = None
 
   //wait time in ms for test
   @PropertyKey("test.waittimeMS", false)
-  private var _waittimeInMs: Option[Long] = None
+  protected var _waittimeInMs: Option[Long] = None
 
   /**
    * Run the file-writer

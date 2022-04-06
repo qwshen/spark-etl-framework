@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Read from mongo-db
  */
-final class MongoReader extends MongoActor[MongoReader] {
+class MongoReader extends MongoActor[MongoReader] {
   /**
    * Run the jdbc-reader
    *

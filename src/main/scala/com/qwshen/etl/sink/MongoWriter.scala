@@ -12,13 +12,13 @@ import scala.util.{Failure, Success, Try}
 /**
  * Write to mongo-db
  */
-final class MongoWriter extends MongoActor[MongoWriter] {
+class MongoWriter extends MongoActor[MongoWriter] {
   //mode
   @PropertyKey("mode", false)
-  private var _mode: Option[String] = Some("overwrite")
+  protected var _mode: Option[String] = Some("overwrite")
   //view
   @PropertyKey("view", true)
-  private var _view: Option[String] = None
+  protected var _view: Option[String] = None
 
   /**
    * Run the actor

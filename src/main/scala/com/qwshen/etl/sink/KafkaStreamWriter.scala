@@ -9,24 +9,24 @@ import org.apache.spark.sql.streaming.Trigger
 /**
  * This writer writes a data-frame to Kafka topics
  */
-final class KafkaStreamWriter extends KafkaWriteActor[KafkaStreamWriter] {
+class KafkaStreamWriter extends KafkaWriteActor[KafkaStreamWriter] {
   //the options for the streaming write to Kafka
   @PropertyKey("options.*", false)
-  private var _options: Map[String, String] = Map.empty[String, String]
+  protected var _options: Map[String, String] = Map.empty[String, String]
 
   //trigger mode
   @PropertyKey("trigger.mode", true)
-  private var _triggerMode: Option[String] = None
+  protected var _triggerMode: Option[String] = None
   //trigger interval
   @PropertyKey("trigger.interval", false)
-  private var _triggerInterval: Option[String] = None
+  protected var _triggerInterval: Option[String] = None
 
   //the output mode
   @PropertyKey("outputMode", true)
-  private var _outputMode: Option[String] = None
+  protected var _outputMode: Option[String] = None
   //wait time in ms for test
   @PropertyKey("test.waittimeMS", false)
-  private var _waittimeInMs: Option[Long] = None
+  protected var _waittimeInMs: Option[Long] = None
 
   //write the dataframe
   protected def write(df: DataFrame): Unit = for {

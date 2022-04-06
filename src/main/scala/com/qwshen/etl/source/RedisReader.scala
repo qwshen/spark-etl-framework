@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Read from Redis. Note - the redis requires to be 5.0.5+.
  */
-final class RedisReader extends RedisActor[RedisReader] {
+class RedisReader extends RedisActor[RedisReader] {
   @PropertyKey("ddlSchemaString", false)
   protected var _ddlSchemaString: Option[String] = None
   @PropertyKey("ddlSchemaFile", false)
