@@ -14,6 +14,8 @@ The FileStreamWriter is for writing a data-frame a target file system in streami
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The view property specifies which view is to be written to Kafka.
 
+Actor Class: `com.qwshen.etl.sink.FileStreamWriter`
+
 The definition of the FileStreamWriter:
 
 - In YAML format
