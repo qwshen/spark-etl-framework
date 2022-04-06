@@ -5,6 +5,8 @@ The DeltaReader is for reading from delta lake in batch mode.
     - versionAsOf - to specify the version of data to be read from data lake
 - The location of the reading can be either by sourcePath or sourceTable. If both specified, sourceTable takes precedence.
 
+Actor Class: `com.qwshen.etl.source.DeltaReader`
+
 The definition of the DeltaReader:
 
 - In YAML format
