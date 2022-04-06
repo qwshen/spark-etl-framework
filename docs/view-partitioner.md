@@ -1,6 +1,8 @@
 The ViewPartitioner is for partitioning an existing view (dataframe) into the number of partitions 
 by the optional columns, which are separated by comma.
 
+Actor Class: `com.qwshen.etl.utils.ViewPartitioner`
+
 The definition of the ViewPartitioner:
 - in YAML
 ```yaml
