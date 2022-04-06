@@ -25,6 +25,8 @@ The FlatReader is for reading flat files from local or hdfs file system.
 
 - If addInputFile property is enabled, a column called input_file is added in the output dataframe, which indicates which file the current record is from. By default it is disabled.
 
+Actor Class: `com.qwshen.etl.source.FlatReader`
+
 The definition of the FlatReader:
 
 - In YAML format
