@@ -28,6 +28,8 @@ The RedisWriter is for writing dataframe to Redis environment in batch mode.
     - update
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 
+Actor Class: `com.qwshen.etl.sink.RedisStreamWriter`
+
 The definition of the RedisWriter:
 - In YAML format
 ```yaml
