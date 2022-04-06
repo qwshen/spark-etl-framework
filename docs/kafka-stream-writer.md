@@ -20,6 +20,8 @@ The KafkaStreamWriter is for writing data to Kafka topics in streaming mode.
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The view property specifies which view is to be written to Kafka.
 
+Actor Class: `com.qwshen.etl.sink.KafkaStreamWriter`
+
 The definition of the KafkaStreamWriter:
 
 - In YAML format
