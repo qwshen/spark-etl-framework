@@ -5,6 +5,8 @@ def transformState(df: DataFrame): DataFrame
 ```
 The StreamStatefulTransformer requires an input view against which to execute the stateful transformation. 
 
+Actor Class: `com.qwshen.etl.transform.StreamStatefulTransformer`
+
 The definition of the StreamStatefulTransformer:
 - in YAML
 ```yaml
