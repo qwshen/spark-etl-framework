@@ -45,6 +45,8 @@ The HBaseStreamWriter is for writing a dataframe to a HBase table in streaming m
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
       <br />
 
+Actor Class: `com.qwshen.etl.sink.HBaseStreamWriter`
+
 The definition of HBaseStreamWriter:
 - In YAML format
 ```yaml
