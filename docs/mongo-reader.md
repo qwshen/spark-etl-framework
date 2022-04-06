@@ -66,6 +66,8 @@ Example:
     }
   ```
 
+Actor Class: `com.qwshen.etl.source.MongoReader`
+
 The definition of the MongoReader:
 - In YAML format
 ```yaml
