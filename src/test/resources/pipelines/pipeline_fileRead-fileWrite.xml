@@ -73,10 +73,10 @@
         </action>
     </job>
 
-    <staging>
+    <debug-staging>
         <uri>${staging_uri}</uri>
         <actions>
             <action name="transform users-train" />
         </actions>
-    </staging>
+    </debug-staging>
 </pipeline-def>

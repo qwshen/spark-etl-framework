@@ -8,7 +8,10 @@ import scala.io.Source
  */
 object FileChannel {
   def loadAsString(fileUri: String): String = {
-    val source = if (fileUri.startsWith("file:/")) Source.fromURL(fileUri) else Source.fromFile(fileUri)
+    val source = "^[a-z0-9A-Z]+:/.*$".r.findFirstMatchIn(fileUri) match {
+      case Some(_) => Source.fromURL(fileUri)
+      case _ => Source.fromFile(fileUri)
+    }
     try {
       source.getLines().mkString(Properties.lineSeparator)
     } finally {

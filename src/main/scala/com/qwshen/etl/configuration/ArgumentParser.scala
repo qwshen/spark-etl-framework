@@ -1,5 +1,7 @@
 package com.qwshen.etl.configuration
 
+import com.qwshen.common.io.FileChannel
+
 import java.io.File
 import com.qwshen.common.logging.Loggable
 import com.qwshen.etl.pipeline.definition.StagingBehavior
@@ -57,7 +59,7 @@ object ArgumentParser extends Loggable {
   def parse(args: Array[String]): Arguments = scoptParser.parse(args, Configuration("", "")) match {
     case Some(cfg) => {
       //merge the variables into the config object
-      val config: Config = ConfigurationManager.mergeVariables(ConfigFactory.parseFile(new File(cfg.applicationConf)), cfg.variables)
+      val config: Config = ConfigurationManager.mergeVariables(ConfigFactory.parseString(FileChannel.loadAsString(cfg.applicationConf)), cfg.variables)
 
       //staging behavior
       val stagingBehavior: Option[StagingBehavior] = (cfg.stagingUri, cfg.stagingActions) match {
