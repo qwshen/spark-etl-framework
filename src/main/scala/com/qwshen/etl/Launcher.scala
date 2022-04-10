@@ -54,7 +54,7 @@ class Launcher {
       }
     }
     finally {
-      session.stop()
+      recycleSparkSession
     }
   }
 
@@ -89,6 +89,9 @@ class Launcher {
       })
   }
 
+  def recycleSparkSession(implicit session: SparkSession): Unit = {
+    session.stop();
+  }
 }
 
 object Launcher {

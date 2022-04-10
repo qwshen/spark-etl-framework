@@ -13,22 +13,25 @@
         <io.confluent.version>4.1.2</io.confluent.version>
         <hadoop.version>2.10.1</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
+        <iceberg.runtime.version>0.13.1</iceberg.runtime.version>
 
-        <!-- For Spark 2.4.2 with Scala 2.11 -->
+        <!-- For Spark 2.4.2 with Scala 2.11. Note: please change the iceberg dependency accordingly -->
         <!--
         <scala.version>2.11.12</scala.version>
         <scala.compact.version>2.11</scala.compact.version>
         <spark.version>2.4.2</spark.version>
+        <spark.compact.version>2.4</spark.compact.version>
         <spark.avro.version>2.4.8</spark.avro.version>
         <delta.lake.version>0.6.1</delta.lake.version>
         <mongo-spark-version>2.4.3</mongo-spark-version>
         -->
 
-        <!-- Spark 3.0.1 with Scala 2.12 -->
+        <!-- Spark 3.0.1 with Scala 2.12. Note: please change the iceberg dependency accordingly -->
         <!--
         <scala.version>2.12.10</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.0.1</spark.version>
+        <spark.compact.version>3.0</spark.compact.version>
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>0.8.0</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
@@ -39,6 +42,7 @@
         <scala.version>2.12.10</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.1.1</spark.version>
+        <spark.compact.version>3.1</spark.compact.version>
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>1.0.1</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
@@ -50,6 +54,7 @@
         <scala.version>2.12.10</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.2.1</spark.version>
+        <spark.compact.version>3.2</spark.compact.version>
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>1.1.0</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
@@ -181,16 +186,19 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
             <artifactId>scala-collection-compat_${scala.compact.version}</artifactId>
-            <version>2.2.0</version>
+            <version>2.1.4</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -208,61 +216,101 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-hive_${scala.compact.version}</artifactId>
             <version>${spark.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-0-10_${scala.compact.version}</artifactId>
             <version>${spark.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compact.version}</artifactId>
             <version>${delta.lake.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_${scala.compact.version}</artifactId>
             <version>${spark.avro.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org..apache.iceberg</groupId>
+            <artifactId>iceberg-spark-runtime-${spark.compact.version}_${scala.compact.version}</artifactId>
+            <version>${iceberg.runtime.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- For Spark 3.0
+        <dependency>
+            <groupId>org..apache.iceberg</groupId>
+            <artifactId>iceberg-spark3-runtime</artifactId>
+            <version>${iceberg.runtime.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        <!-- For Spark 2.4
+        <dependency>
+            <groupId>org..apache.iceberg</groupId>
+            <artifactId>iceberg-spark-runtime</artifactId>
+            <version>${iceberg.runtime.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-hive-runtime</artifactId>
+            <version>${iceberg.runtime.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-server</artifactId>
             <version>${hbase.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client</artifactId>
             <version>${hbase.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
             <version>${hbase.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
             <version>${io.confluent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-schema-registry</artifactId>
             <version>${io.confluent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.mongodb.spark</groupId>
             <artifactId>mongo-spark-connector_${scala.compact.version}</artifactId>
             <version>${mongo-spark-version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -273,6 +321,7 @@
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
             <version>${typesafe.config.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.scopt</groupId>

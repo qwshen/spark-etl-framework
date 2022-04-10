@@ -1,15 +1,46 @@
 package com.qwshen.etl.test
 
+import com.qwshen.etl.ApplicationContext
+import com.qwshen.etl.pipeline.PipelineRunner
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{FunSuite, BeforeAndAfterEach, Matchers}
-import scala.util.Properties
-import scala.io.Source
+import org.scalatest.{FunSuite, Matchers}
+import scala.util.{Properties, Try, Success, Failure}
+import com.qwshen.common.io.FileChannel
 
-trait TestApp extends FunSuite with BeforeAndAfterEach with Matchers {
+class TestApp extends FunSuite with Matchers {
   protected val resourceRoot: String = getClass.getClassLoader.getResource("").getPath
 
-  def loadConfig(): Config = {
+  protected val config: Config = loadConfig()
+  protected val runner = new PipelineRunner(new ApplicationContext())
+
+  protected def start(): Option[SparkSession] = Try {
+    val session = createSparkSession()
+
+    //turn off info logs
+    session.sparkContext.setLogLevel("WARN")
+    //disable writing crc files
+    org.apache.hadoop.fs.FileSystem.get(session.sparkContext.hadoopConfiguration).setWriteChecksum(false)
+    //disable writing __SUCCESS file
+    session.sparkContext.hadoopConfiguration.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+
+    session
+  } match {
+    case Success(session) => Some(session)
+    case Failure(t) => throw t
+  }
+
+  protected def done(session: SparkSession): Unit = {
+    session.stop()
+  }
+
+  protected def createSparkSession(): SparkSession = SparkSession.builder()
+    .appName("test")
+    .master("local[*]")
+      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    .getOrCreate()
+
+  protected def loadConfig(): Config = {
     val cfgString = loadContent(this.resourceRoot + "application-test.conf")
     val config = ConfigFactory.parseString(cfgString)
 
@@ -22,30 +53,5 @@ trait TestApp extends FunSuite with BeforeAndAfterEach with Matchers {
     ConfigFactory.parseString(cfgOverride).withFallback(config)
   }
 
-  def loadContent(file: String): String = {
-    val source = Source.fromFile(file)
-    try {
-      source.getLines().mkString(Properties.lineSeparator)
-    } finally {
-      source.close()
-    }
-  }
-}
-
-trait SparkApp extends TestApp {
-  implicit val session: SparkSession = SparkSession.builder().appName("test")
-    .master("local[*]")
-    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-    .config("spark.mongodb.input.uri", "mongodb://localhost:27017/events.users")
-    .config("spark.mongodb.output.uri", "mongodb://localhost:27017/events.train")
-    .getOrCreate()
-
-  //turn off info logs
-  session.sparkContext.setLogLevel("WARN")
-  //disable writing crc files
-  org.apache.hadoop.fs.FileSystem.get(session.sparkContext.hadoopConfiguration).setWriteChecksum(false)
-  //disable writing __SUCCESS file
-  session.sparkContext.hadoopConfiguration.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+  protected def loadContent(file: String): String = FileChannel.loadAsString(file)
 }
