@@ -1,6 +1,6 @@
 The IcebergWriter is for writing a data-frame to an iceberg table in batch mode.
 
-- The location of the writing can be either an existing iceberg table or a directory pathss.
+- The location of the writing can be either an existing iceberg table or a directory path.
 - The supported write-options are as follows
   - write-format - specify the file format to use for the write operation; It should be one of parquet, avro, or orc etc. Default: write.format.default - table property when the table was being created.
   - target-file-size-bytes - override the target table’s write.target-file-size-bytes. Default: as per table property.
