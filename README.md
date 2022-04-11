@@ -221,7 +221,8 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [RedisStreamWriter](docs/redis-stream-writer.md)
 - [MongoWriter](docs/mongo-writer.md)
 - [MongoStreamWriter](docs/mongo-stream-writer.md)
-
+- [IcebergWriter](docs/iceberg-writer.md)
+- 
 ### Spark-Configuration
 - [SparkConfActor](docs/spark-conf-actor.md)
 

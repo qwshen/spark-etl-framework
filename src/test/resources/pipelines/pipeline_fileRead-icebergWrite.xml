@@ -56,7 +56,7 @@
         <action name="write features">
             <actor type="iceberg-writer">
                 <properties>
-                    <table>events.db.features</table>
+                    <location>events.db.features</location>
                     <mode>overwrite</mode>
                     <view>features</view>
                 </properties>

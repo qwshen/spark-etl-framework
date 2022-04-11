@@ -1,6 +1,6 @@
 package com.qwshen.etl.sink
 
-import com.qwshen.etl.common.{Actor, ExecutionContext}
+import com.qwshen.etl.common.{ExecutionContext, IcebergActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.qwshen.common.PropertyKey
 import com.typesafe.config.Config
@@ -9,11 +9,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * To write a dataframe into a iceberg table
  */
-class IcebergWriter extends Actor {
-  //table name
-  @PropertyKey("table", true)
-  protected var _table: Option[String] = None
-
+class IcebergWriter extends IcebergActor[IcebergWriter] {
   //the mode - must be one of overwrite, append
   @PropertyKey("mode", true)
   protected var _mode: Option[String] = None
@@ -39,26 +35,15 @@ class IcebergWriter extends Actor {
    * @return
    */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    table <- this._table
+    location <- this._location
     mode <- this._mode
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
-    mode match {
-      case "overwrite" => df.writeTo(table).createOrReplace()
-      case "append" => df.writeTo(table).append()
-    }
+      this._options.foldLeft(df.write.format("iceberg"))((w, o) => w.option(o._1, o._2)).mode(mode).save(location)
   } match {
     case Success(_) => df
-    case Failure(ex) => throw new RuntimeException(s"Cannot write data to the target - $table.", ex)
+    case Failure(ex) => throw new RuntimeException(s"Cannot write data to the target - $location.", ex)
   }
-
-  /**
-   * The name of the target iceberg table
-   *
-   * @param value
-   * @return
-   */
-  def table(value: String): IcebergWriter = { this._table = Some(value); this }
 
   /**
    * The write mode. The valid values are: append, overwrite.

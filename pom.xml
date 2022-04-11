@@ -351,5 +351,5 @@
             <version>2.6.0</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+     </dependencies>
 </project>
