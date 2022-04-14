@@ -1,15 +1,13 @@
-The HiveReader is for reading data from a Hive environment. Either a sql-statement (via sqlString or sqlFile) or a hive-table must be defined.
+The SqlReader is for executing Spark-Sql select-statements to load data from source tables. It may reference one or more tables with join relationship and produces one output view. Please note that the SqlReader can only run select-statements.
 
-When reading from a hive-table, a filter in sql syntax may be specified to limit what data is to be read.
+Actor Class: `com.qwshen.etl.source.SqlReader`
 
-Actor Class: `com.qwshen.etl.source.HiveReader`
-
-The definition for the HiveReader:
+The definition for the SqlReader:
 
 - In YAML format
 ```yaml
     actor:
-      type: hive-reader
+      type: sql-reader
       properties:
         sqlString: >
           select
@@ -23,19 +21,18 @@ The definition for the HiveReader:
 or
 ```yaml
     actor:
-      type: hive-reader
+      type: sql-reader
       properties:
-        table: eCommerce.users
-        filter: first_name like 'J%'
+        sqlFile: scripts/event_raw.sql
 ```
 
 - In JSON format
 ```json
   {
     "actor": {
-      "type": "hive-reader",
+      "type": "sql-reader",
       "properties": {
-        "table": "ref.periods"
+        "sqlString": "select * from events_raw"
       }
     }
   }
@@ -44,7 +41,7 @@ or
 ```json
   {
     "actor": {
-      "type": "hive-reader",
+      "type": "sql-reader",
       "properties": {
         "sqlFile": "scripts/event_raw.sql"
       }
@@ -54,7 +51,7 @@ or
 
 - In XML format
 ```xml
-    <actor type="hive-reader">
+    <actor type="sql-reader">
         <properties>
             <sqlString>
                 select
@@ -70,7 +67,7 @@ or
 ```
 or
 ```xml
-    <actor type="hive-reader">
+    <actor type="sql-reader">
         <properties>
             <sqlFile>scripts/event_raw.sql</sqlFile>
         </properties>

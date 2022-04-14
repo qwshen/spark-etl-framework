@@ -2,6 +2,7 @@ package com.qwshen.etl.configuration
 
 import com.qwshen.common.security.SecurityChannel
 import com.typesafe.config.{Config, ConfigFactory}
+import com.qwshen.common.VariableResolver
 
 /**
  * Utility class to manipulate configuration
@@ -16,13 +17,16 @@ object ConfigurationManager {
    */
   def decrypt(value: String, keyString: String): String = new SecurityChannel(keyString).decrypt(value)
 
-  /**
+  /**:
    * if the configuration value is URL, quote it.
    *
    * @param value
    * @return
    */
-  def quote(value: String): String = "[:|+]+".r.findFirstIn(value).foldLeft(value)((r, _) => "\"" + r + "\"")
+  def quote(value: String): String = VariableResolver.getName(value) match {
+    case `value` => "[\\W]+".r.findFirstIn(value).foldLeft(value)((r, _) => "\"" + r + "\"")
+    case _ => value
+  }
 
   /**
    * Merge the variables into the config object

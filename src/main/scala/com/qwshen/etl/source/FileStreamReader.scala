@@ -22,7 +22,7 @@ class FileStreamReader extends FileReadActor[FileStreamReader] {
   protected var _addTimestamp: Boolean = false
 
   /**
-   * Run the file-reader
+   * Run the file-stream-reader
    *
    * @param ctx - the execution context
    * @param session - the spark-session

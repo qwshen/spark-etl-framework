@@ -1,6 +1,6 @@
-The IcebergWriter is for writing a data-frame to an iceberg table in batch mode.
+The IcebergWriter is for writing data-frames to iceberg tables in batch mode with DataFrame API.
 
-- The location of the writing can be either an existing iceberg table or a directory pathss.
+- The location of the writing can be either an existing iceberg table or a directory path.
 - The supported write-options are as follows
   - write-format - specify the file format to use for the write operation; It should be one of parquet, avro, or orc etc. Default: write.format.default - table property when the table was being created.
   - target-file-size-bytes - override the target table’s write.target-file-size-bytes. Default: as per table property.
@@ -56,8 +56,8 @@ The definition of the IcebergWriter:
 ```
 
 Note:
-1. When submitting a job for writing an icerberg table, dynamic overwrite mode is recommended by setting spark.sql.sources.partitionOverwriteMode=dynamic.
-2. The IcebergWriter provides only fundamental write operations. It is recommended to use SQL commands for complicated writes.
+1. When submitting a job for writing to an icerberg table, dynamic overwrite mode is recommended by setting spark.sql.sources.partitionOverwriteMode=dynamic.
+2. The IcebergWriter provides only fundamental write operations. It is recommended to use SQL commands with SqlWriter for more complicated writes.
    1. INSERT INTO (for Spark 3.0 or later)
     ```
     INSERT INTO prod.db.table VALUES (1, 'a'), (2, 'b')

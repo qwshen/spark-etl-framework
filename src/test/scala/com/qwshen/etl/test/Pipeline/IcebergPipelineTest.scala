@@ -7,7 +7,6 @@ import org.apache.spark.sql.SparkSession
 
 class IcebergPipelineTest extends TestApp {
   test("Pipeline test - file read / iceberg write") {
-
     for {
       session <- this.start()
       pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-icebergWrite.xml"))(config, session)
@@ -23,23 +22,16 @@ class IcebergPipelineTest extends TestApp {
     }
   }
 
-//  test(   "Pipeline test - delta read / file write") {
-//    for (pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_deltaRead-fileWrite.json"))) {
-//      runner.run(pipeline)
-//    }
-//  }
-//
-//  test("Pipeline test - delta streaming read / kafka streaming write") {
-//    for (pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_deltaStreamRead-kafkaStreamWrite.xml"))) {
-//      runner.run(pipeline)
-//    }
-//  }
-//
-//  test("Pipeline test - kafka streaming read / delta streaming write") {
-//    for (pipeline <- PipelineFactory.fromYaml(loadContent(s"${resourceRoot}pipelines/pipeline_kafkaStreamRead-deltaStreamWrite.yaml"))) {
-//      runner.run(pipeline)
-//    }
-//  }
+  test(   "Pipeline test - iceberg read / file write") {
+    for {
+      session <- this.start()
+      pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_icebergRead-fileWrite.json"))(config, session)
+    } ultimately {
+      this.done(session)
+    } {
+      runner.run(pipeline)(session)
+    }
+  }
 
   override def createSparkSession(): SparkSession = SparkSession.builder()
     .appName("test")

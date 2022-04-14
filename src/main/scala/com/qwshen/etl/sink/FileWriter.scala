@@ -3,7 +3,6 @@ package com.qwshen.etl.sink
 import com.qwshen.common.PropertyKey
 import com.qwshen.etl.common.{ExecutionContext, FileWriteActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -11,7 +10,7 @@ import scala.util.{Failure, Success, Try}
  */
 class FileWriter extends FileWriteActor[FileWriter] {
   //the mode for the writing
-  @PropertyKey("mode", false)
+  @PropertyKey("mode", true)
   protected var _mode: Option[String] = None
 
    /**

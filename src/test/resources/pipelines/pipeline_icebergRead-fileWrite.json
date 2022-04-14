@@ -1,0 +1,80 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "process_date",
+                "value": "${events.process_date}"
+            },
+            {
+                "name": "staging_uri",
+                "value": "file:///tmp/staging/events"
+            },
+            {
+                "name": "export_dir",
+                "value": "${events.output_dir}"
+            },
+            {
+                "name": "iceberg_location",
+                "value": "events.db.features"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "iceberg-reader",
+                "type": "com.qwshen.etl.source.IcebergReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.qwshen.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-writer",
+                "type": "com.qwshen.etl.sink.FileWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load features",
+                        "actor": {
+                            "type": "iceberg-reader",
+                            "properties": {
+                                "location": "${iceberg_location}"
+                            }
+                        },
+                        "output-view": {
+                            "name": "features",
+                            "global": "false"
+                        }
+                    },
+                    {
+                        "name": "write features",
+                        "actor": {
+                            "type": "file-writer",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true",
+                                    "maxRecordsPerFile": "300"
+                                },
+                                "mode": "overwrite",
+                                "fileUri": "${export_dir}",
+                                "view": "features"
+                            }
+                        },
+                        "input-views": ["features"]
+                    }
+                ]
+            }
+        ]
+    }
+}

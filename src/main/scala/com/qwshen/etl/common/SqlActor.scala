@@ -8,7 +8,16 @@ import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
 import scala.util.{Failure, Success, Try}
 
-private[etl] class SqlActor[T] extends Actor with VariableResolver { self: T =>
+/**
+ * The general SqlActor
+ */
+class SqlActor extends SqlBase[SqlActor]
+
+/**
+ * The base class for SQL actors
+ * @tparam T
+ */
+private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
   @PropertyKey("sqlString", false)
   protected var _sqlStmt: Option[String] = None
   @PropertyKey("sqlFile", false)
@@ -50,9 +59,10 @@ private[etl] class SqlActor[T] extends Actor with VariableResolver { self: T =>
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
 
-    this._sqlFile match {
-      case Some(sf) => this._sqlStmt = Some(FileChannel.loadAsString(sf))
-      case _ =>
+    (this._sqlStmt, this._sqlFile) match {
+      case (Some(_), _) =>
+      case (_, Some(sf)) => this._sqlStmt = Some(FileChannel.loadAsString(sf))
+      case _ => throw new RuntimeException("The sql-string & sql-file cannot be both empty in all sql actors.")
     }
     this._sqlStmt = this._sqlStmt.map(stmt => resolve(stmt)(config))
     //extract all tables in the sql-statement

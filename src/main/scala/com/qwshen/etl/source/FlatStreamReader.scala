@@ -26,7 +26,7 @@ class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
   protected var _addTimestamp: Boolean = false
 
   /**
-   * Run the file-reader
+   * Run the flat-stream-reader
    *
    * @param ctx - the execution context
    * @param session - the spark-session
