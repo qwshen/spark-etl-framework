@@ -6,8 +6,9 @@ The IcebergWriter is for writing data-frames to iceberg tables in batch mode wit
   - target-file-size-bytes - override the target table’s write.target-file-size-bytes. Default: as per table property.
   - check-nullability - set the nullable check on fields. Default: true.
   - snapshot-property.custom-key - add an entry with custom-key and corresponding value in the snapshot summary. Default: null.
-  - fanout-enabled - override the target table’s write.spark.fanout.enabled. Default: false. 
+  - fanout-enabled - override the target table’s write.spark.fanout.enabled. Default: false. Fanout writer opens the files per partition value and doesn’t close these files till write task is finished. This functionality is discouraged for batch query, as explicit sort against output rows isn’t expensive for batch workload. 
   - check-ordering - check if input schema and table schema are same. Default: true
+- The tablePartitionedBy are the column(s) (separated by ,[comma] if multiple columns are presented) that are used in the "partitioned by" clause of the target table creation statement. If not specified, the data-frame being written to the target iceberg table must be explicitly sorted by these columns before calling this writer. The property only applies when the writing location is a partitioned iceberg table. **Please note that the column(s) is/are not used for partitioning the data-frame being written out**.   
 - The write mode can only be overwrite or append
 
 Actor Class: `com.qwshen.etl.sink.IcebergWriter`
@@ -21,6 +22,7 @@ The definition of the IcebergWriter:
     properties:
       options:
         check-ordering: "true"
+      tablePartitionedBy: "city, timestamp"
       mode: overwrite
       location: /tmp/users-warehouse
       view: users      
@@ -34,6 +36,7 @@ The definition of the IcebergWriter:
         "options": {
           "check-orering": "true"
         },
+        "tablePartitionedBy": "city, timestamp",
         "mode": "overwrite",
         "location": "events.db.users",
         "view": "users"
@@ -48,6 +51,7 @@ The definition of the IcebergWriter:
       <options>
         <check-ordering>true</check-ordering>
       </options>
+      <tablePartitionedBy>city, timestamp</tablePartitionedBy>  
       <mode>overwrite</mode>
       <location>hdfs:///event-warehouse/users</location>
       <view>users</view>
@@ -116,3 +120,22 @@ Note:
     SET order_status = 'returned'
     WHERE EXISTS (SELECT oid FROM prod.db.returned_orders WHERE t1.oid = oid)
     ```
+
+Please use SqlActor to create/alter/drop iceberg tables, including calling stored-procedures:
+```
+CREATE TABLE prod.db.sample (
+    id bigint,
+    data string,
+    category string,
+    ts timestamp)
+USING iceberg
+PARTITIONED BY (bucket(16, id), days(ts), category)
+```
+
+```
+ALTER TABLE prod.db.sample ADD COLUMN point.z double
+```
+
+```
+ALTER TABLE prod.db.sample WRITE DISTRIBUTED BY PARTITION LOCALLY ORDERED BY category, id
+```

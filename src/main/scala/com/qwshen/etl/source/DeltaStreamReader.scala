@@ -36,7 +36,7 @@ class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
         //reader.table(table)
         throw new RuntimeException("As of Delta 1.0.0 by 24 May, 2020, it doesn't support stream-reading from table.")
       case (_, Some(path)) =>  reader.load(path)
-      case _ => throw new RuntimeException("The source table andr source path are defined.")
+      case _ => throw new RuntimeException("The source table nor the source path is defined.")
     }
 
     //plug in the special __timestamp with current-timestamp

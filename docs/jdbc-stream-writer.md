@@ -11,13 +11,13 @@ The JdbcStreamWriter is for writing a Spark dataframe into a table in a relation
     - isolationLevel: defines the isolation level of transactions
 - The checkpointLocation can be specified as one write-option.
 - The trigger mode must be one of the following values:
-  - continuous
-  - processingTime
-  - once
+  - continuous - trigger a continuous query to checkpoint by an interval
+  - processingTime - trigger a micro-batch query to start (one micro-batch) by an interval
+  - once - trigger the streaming process one time
 - The output mode must be one of the following values:
-  - complete
-  - append
-  - update
+  - complete - all the rows in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
+  - append - only the new rows in the streaming DataFrame/Dataset will be written to the sink.
+  - update - only the rows that were updated in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The sink.SqlString or sink.SqlFile defines how the new data is merged into the target table. It normally is a merge into statement.
 

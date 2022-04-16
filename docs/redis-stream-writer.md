@@ -19,13 +19,13 @@ The RedisWriter is for writing dataframe to Redis environment in batch mode.
     - timeout: timeout in milli-seconds for connection
 - The checkpointLocation must be specified as one write-option.
 - The trigger mode must be one of the following values:
-    - continuous
-    - processingTime
-    - once
+    - continuous - trigger a continuous query to checkpoint by an interval
+    - processingTime - trigger a micro-batch query to start (one micro-batch) by an interval
+    - once - trigger the streaming process one time
 - The output mode must be one of the following values:
-    - complete
-    - append
-    - update
+    - complete - all the rows in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
+    - append - only the new rows in the streaming DataFrame/Dataset will be written to the sink.
+    - update - only the rows that were updated in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 
 Actor Class: `com.qwshen.etl.sink.RedisStreamWriter`

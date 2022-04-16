@@ -36,19 +36,8 @@ class Launcher {
     implicit val config: Config = arguments.config
     implicit val session: SparkSession = createSparkSession
     try {
-      val pipelineString = FileChannel.loadAsString(arguments.pipelineFile)
       for {
-        pipeline <-
-          if (arguments.pipelineFile.endsWith(".yaml")) {
-            PipelineFactory.fromYaml(pipelineString)
-          } else if (arguments.pipelineFile.endsWith(".json")) {
-            PipelineFactory.fromJson(pipelineString)
-          } else if (arguments.pipelineFile.endsWith(".xml")) {
-            PipelineFactory.fromXml(pipelineString)
-          }
-          else {
-            throw new RuntimeException("The pipeline definition must be in the format of one of yaml, json & xml file.")
-          }
+        pipeline <- PipelineFactory.fromFile(arguments.pipelineFile)
       } {
         new PipelineRunner(new ApplicationContext()).run(pipeline)
       }

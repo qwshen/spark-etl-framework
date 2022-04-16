@@ -163,7 +163,7 @@ Pipeline examples:
     hiveSupport = true
   }
   ```
-  **Note: spark configs from application configuration takes highest precedence.**
+  **Note: spark configs from application configuration takes the highest precedence.**
 
 ### Submitting a spark-job
 The following is one example of how to submit a Spark job. Note that it also demonstrates how to provide the runtime configs, as well as pass variables.  
@@ -198,10 +198,13 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [RedisReader](docs/redis-reader.md)
 - [RedisStreamReader](docs/redis-stream-reader.md)
 - [MongoReader](docs/mongo-reader.md)
+- [IcebergReader](docs/iceberg-reader.md)
+- [IcebergStreamReader](docs/iceberg-stream-reader.md)
 
 ### Transformers
 - [SqlTransformer](docs/sql-transformer.md)
 - [StreamStatefulTransformer](docs/stream-stateful-transformer.md)
+
 ### Validations
 - [SchemaValidator](docs/schema-validator.md)
 - [SqlDataValidator](docs/sql-data-validator.md)
@@ -212,7 +215,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [FileWriter](docs/file-writer.md)
 - [FileStreamWriter](docs/file-stream-writer.md)
 - [HBaseWriter](docs/hbase-writer.md)
-- [HBaseStremWriter](docs/hbase-stream-writer.md)
+- [HBaseStreamWriter](docs/hbase-stream-writer.md)
 - [SqlWriter](docs/sl-writer.md)
 - [SqlTableWriter](docs/sql-table-writer.md)
 - [JdbcWriter](docs/jdbc-writer.md)
@@ -224,11 +227,13 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [MongoWriter](docs/mongo-writer.md)
 - [MongoStreamWriter](docs/mongo-stream-writer.md)
 - [IcebergWriter](docs/iceberg-writer.md)
-- 
+- [IcebergStreamWriter](docs/iceberg-stream-writer.md)
+
 ### Spark-Configuration
 - [SparkConfActor](docs/spark-conf-actor.md)
 
 ### Other Utilities
+- [SqlActor](docs/sql-actor.md)
 - [ViewPartitioner](docs/view-partitioner.md)
 
 ### Custom UDF Registration

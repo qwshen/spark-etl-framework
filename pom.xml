@@ -40,6 +40,7 @@
 
         <!-- Spark 3.1.1 with Scala 2.12 -->
         <!--
+        -->
         <scala.version>2.12.10</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.1.1</spark.version>
@@ -47,11 +48,9 @@
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>1.0.1</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
-        -->
 
         <!-- Spark 3.2.1 with Scala 2.12 -->
         <!--
-        -->
         <scala.version>2.12.10</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
         <spark.version>3.2.1</spark.version>
@@ -59,6 +58,7 @@
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>1.1.0</delta.lake.version>
         <mongo-spark-version>3.0.1</mongo-spark-version>
+        -->
     </properties>
 
     <groupId>com.qwshen</groupId>

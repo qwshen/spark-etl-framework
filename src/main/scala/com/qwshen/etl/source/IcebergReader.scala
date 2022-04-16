@@ -16,9 +16,9 @@ class IcebergReader extends IcebergActor[IcebergReader] {
    * @return
    */
   override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    location <- this._location
+    table <- this._table
   } yield Try {
-    this._options.foldLeft(session.read.format("iceberg"))((r, o) => r.option(o._1, o._2)).load(location)
+    this._options.foldLeft(session.read.format("iceberg"))((r, o) => r.option(o._1, o._2)).load(table)
   } match {
     case Success(df) => df
     case Failure(ex) => throw new RuntimeException("Cannot load data from table - ${table}.", ex)

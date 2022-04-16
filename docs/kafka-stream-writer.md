@@ -10,13 +10,13 @@ The KafkaStreamWriter is for writing data to Kafka topics in streaming mode.
 - If the key column with name key or keyField not provided, the KafkaStreamWriter generates a unique sequence number per micro-batch
 - If the value column with name value or valueField not provided, the KafkaStreamWriter generates json document with all columns in the source dataframe.
 - The trigger mode must be one of the following values:
-  - continuous
-  - processingTime
-  - once
+  - continuous - trigger a continuous query to checkpoint by an interval
+  - processingTime - trigger a micro-batch query to start (one micro-batch) by an interval
+  - once - trigger the streaming process one time
 - The output mode must be one of the following values:
-  - complete
-  - append
-  - update
+  - complete - all the rows in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
+  - append - only the new rows in the streaming DataFrame/Dataset will be written to the sink.
+  - update - only the rows that were updated in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
 - The view property specifies which view is to be written to Kafka.
 

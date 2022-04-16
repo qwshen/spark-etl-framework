@@ -4,12 +4,17 @@ import com.qwshen.etl.common.{ExecutionContext, IcebergActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.qwshen.common.PropertyKey
 import com.typesafe.config.Config
+import org.apache.spark.sql.functions.col
 import scala.util.{Failure, Success, Try}
 
 /**
  * To write a dataframe into a iceberg table
  */
 class IcebergWriter extends IcebergActor[IcebergWriter] {
+  //the mode - must be one of overwrite, append
+  @PropertyKey("tablePartitionedBy", false)
+  protected var _tablePartitionedBy: Option[String] = None
+
   //the mode - must be one of overwrite, append
   @PropertyKey("mode", true)
   protected var _mode: Option[String] = None
@@ -35,15 +40,24 @@ class IcebergWriter extends IcebergActor[IcebergWriter] {
    * @return
    */
   def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
-    location <- this._location
+    table <- this._table
     mode <- this._mode
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
-      this._options.foldLeft(df.write.format("iceberg"))((w, o) => w.option(o._1, o._2)).mode(mode).save(location)
+      val dfResult  = this._tablePartitionedBy.map(cs => cs.split(",").map(s => col(s.trim))).foldLeft(df)((t, cs) => t.sortWithinPartitions(cs: _*))
+      this._options.foldLeft(dfResult.write.format("iceberg"))((w, o) => w.option(o._1, o._2)).mode(mode).save(table)
   } match {
     case Success(_) => df
-    case Failure(ex) => throw new RuntimeException(s"Cannot write data to the target - $location.", ex)
+    case Failure(ex) => throw new RuntimeException(s"Cannot write data to the target - $table.", ex)
   }
+
+  /**
+   * The columns used in the table's partitioned-by clause
+   *
+   * @param value
+   * @return
+   */
+  def tablePartitionedBy(value: String): IcebergWriter = { this._tablePartitionedBy = Some(value); this }
 
   /**
    * The write mode. The valid values are: append, overwrite.

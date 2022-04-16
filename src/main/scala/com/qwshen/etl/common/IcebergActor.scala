@@ -1,17 +1,15 @@
 package com.qwshen.etl.common
 
 import com.qwshen.common.PropertyKey
-import com.typesafe.config.Config
-import org.apache.spark.sql.SparkSession
 
 /**
  * The base class for Iceberg reader & writer
  * @tparam T
  */
 abstract class IcebergActor[T] extends Actor { self: T =>
-  //location - either a table name or directory path
-  @PropertyKey("location", true)
-  protected var _location: Option[String] = None
+  //table - the full name of an iceberg table
+  @PropertyKey("table", true)
+  protected var _table: Option[String] = None
 
   //the options for loading the file
   @PropertyKey("options.*", false)
@@ -23,7 +21,7 @@ abstract class IcebergActor[T] extends Actor { self: T =>
    * @param value
    * @return
    */
-  def location(value: String): T = { this._location = Some(value); this }
+  def location(value: String): T = { this._table = Some(value); this }
 
   /**
    * The load option

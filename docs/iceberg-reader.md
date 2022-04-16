@@ -1,6 +1,6 @@
-The IcebergReader is for reading from iceberg tables into data-frames in batch mode with DataFrame API.
+The IcebergReader is for reading data from iceberg tables into data-frames in batch mode with DataFrame API.
 
-- The location of the reading can be either an existing iceberg table or a directory path.
+- The table of the reading is the full name of an icerberg table.
 - The supported read-options are as follows
   - snapshot-id - snapshot id of the table snapshot to read. Default: (latest)
   - as-of-timestamp - a timestamp in milliseconds. Default: latest - the snapshot used will be the snapshot current at this time.
@@ -28,8 +28,7 @@ The definition of the IcebergReader:
     properties:
       options:
         batch-size: "6400"
-      location: /tmp/users-warehouse
-      view: users      
+      table: events.db.users
 ```
 - In JSON format
 ```json
@@ -37,11 +36,10 @@ The definition of the IcebergReader:
     "actor": {
       "type": "iceberg-reader",
       "properties": {
+        "table": "events.db.users",
         "options": {
           "snapshot-id": "2342438929304"
-        },
-        "location": "events.db.users",
-        "view": "users"
+        }
       }
     }
   }
@@ -54,8 +52,7 @@ The definition of the IcebergReader:
         <start-snapshot-id>23423424324</start-snapshot-id>
         <end-snapshot-id>23423483234</end-snapshot-id>  
       </options>
-      <location>hdfs:///event-warehouse/users</location>
-      <view>users</view>
+      <table>events.db.users</table>
     </properties>
   </actor>
 ```
@@ -113,3 +110,21 @@ Incremental read is not supported by Spark’s SQL syntax.
   spark.read.format("iceberg").load("file:///tmp/events/db/users#manifests").show
 ```
 
+Please use SqlActor to create/alter/drop iceberg tables, including calling stored-procedures:
+```
+CREATE TABLE prod.db.sample (
+    id bigint,
+    data string,
+    category string,
+    ts timestamp)
+USING iceberg
+PARTITIONED BY (bucket(16, id), days(ts), category)
+```
+
+```
+ALTER TABLE prod.db.sample ADD COLUMN point.z double
+```
+
+```
+ALTER TABLE prod.db.sample WRITE DISTRIBUTED BY PARTITION LOCALLY ORDERED BY category, id
+```

@@ -1,4 +1,4 @@
-The SqlWriter is for executing Spark-Sql select-statements to modify data in target tables. It may reference one or more tables with join relationship. Please note that the SqlWriter can only run insert/merge/update/delete-statements.
+The SqlWriter is a specialized SqlActor for executing insert/update/merge/delete-statements only to modify data in target tables. It may reference one or more tables with join relationship. 
 
 Actor Class: `com.qwshen.etl.sink.SqlWriter`
 

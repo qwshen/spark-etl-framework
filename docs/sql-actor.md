@@ -1,13 +1,15 @@
-The SqlReader is a specialized SqlActor for executing select-statements only to load data from source tables. It may reference one or more tables with join relationship and produces one output view. Please note that the SqlReader can only run select-statements.
+The SqlActor is a generic sql actor which can be used to execute any sql-statements, including select, insert, update, merge, delete, create, alter, etc.
 
-Actor Class: `com.qwshen.etl.source.SqlReader`
+The sql statement can be specified by either sqlString or sqlFile property. However, one of them must be defined.
 
-The definition for the SqlReader:
+Actor Class: `com.qwshen.etl.common.SqlActor`
+
+The definition for the SqlActor:
 
 - In YAML format
 ```yaml
     actor:
-      type: sql-reader
+      type: sql-actor
       properties:
         sqlString: >
           select
@@ -21,7 +23,7 @@ The definition for the SqlReader:
 or
 ```yaml
     actor:
-      type: sql-reader
+      type: sql-actor
       properties:
         sqlFile: scripts/event_raw.sql
 ```
@@ -30,7 +32,7 @@ or
 ```json
   {
     "actor": {
-      "type": "sql-reader",
+      "type": "sql-actor",
       "properties": {
         "sqlString": "select * from events_raw"
       }
@@ -41,7 +43,7 @@ or
 ```json
   {
     "actor": {
-      "type": "sql-reader",
+      "type": "sql-actor",
       "properties": {
         "sqlFile": "scripts/event_raw.sql"
       }
@@ -51,7 +53,7 @@ or
 
 - In XML format
 ```xml
-    <actor type="sql-reader">
+    <actor type="sql-actor">
         <properties>
             <sqlString>
                 select
@@ -67,7 +69,7 @@ or
 ```
 or
 ```xml
-    <actor type="sql-reader">
+    <actor type="sql-actor">
         <properties>
             <sqlFile>scripts/event_raw.sql</sqlFile>
         </properties>

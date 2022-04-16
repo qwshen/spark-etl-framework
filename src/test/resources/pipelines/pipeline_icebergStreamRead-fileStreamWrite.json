@@ -4,8 +4,8 @@
         "description": "This is the process for transforming event data",
         "version": "1.0.0",
         "settings": {
-            "singleSparkSession": false,
-            "globalViewAsLocal": true
+            "singleSparkSession": "false",
+            "globalViewAsLocal": "true"
         },
         "variables": [
             {
@@ -17,26 +17,18 @@
                 "value": "file:///tmp/staging/events"
             },
             {
-                "name": "export_dir",
-                "value": "${events.output_dir}"
-            },
-            {
-                "name": "iceberg_location",
-                "value": "events.db.features"
+                "name": "file_stream_dir",
+                "value": "file:///tmp/file_streaming_result"
             }
         ],
         "aliases": [
             {
-                "name": "iceberg-reader",
-                "type": "com.qwshen.etl.source.IcebergReader"
+                "name": "iceberg-stream-reader",
+                "type": "com.qwshen.etl.source.IcebergStreamReader"
             },
             {
-                "name": "sql",
-                "type": "com.qwshen.etl.transform.SqlTransformer"
-            },
-            {
-                "name": "file-writer",
-                "type": "com.qwshen.etl.sink.FileWriter"
+                "name": "file-stream-writer",
+                "type": "com.qwshen.etl.sink.FileStreamWriter"
             }
         ],
         "jobs": [
@@ -46,28 +38,40 @@
                     {
                         "name": "load features",
                         "actor": {
-                            "type": "iceberg-reader",
+                            "type": "iceberg-stream-reader",
                             "properties": {
-                                "table": "${iceberg_location}"
+                                "table": "events.db.features",
+                                "options": {
+                                    "stream-from-timestamp": "1650136694",
+                                    "streaming-skip-delete-snapshots": "true"
+                                }
                             }
                         },
                         "output-view": {
-                            "name": "features",
-                            "global": "false"
+                            "name": "features"
                         }
                     },
                     {
                         "name": "write features",
                         "actor": {
-                            "type": "file-writer",
+                            "type": "file-stream-writer",
                             "properties": {
                                 "format": "csv",
                                 "options": {
                                     "header": "true",
-                                    "maxRecordsPerFile": "300"
+                                    "maxRecordsPerFile": "3000",
+                                    "checkpointLocation": "/tmp/file_streaming_checkpoint"
                                 },
-                                "mode": "overwrite",
-                                "fileUri": "${export_dir}",
+                                "partitionBy": "interested,gender",
+                                "trigger": {
+                                    "mode": "processingTime",
+                                    "interval": "60 seconds"
+                                },
+                                "outputMode": "append",
+                                "test": {
+                                    "waittimeMS": "16000"
+                                },
+                                "fileUri": "${file_stream_dir}",
                                 "view": "features"
                             }
                         },

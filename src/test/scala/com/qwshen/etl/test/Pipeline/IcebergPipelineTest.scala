@@ -1,36 +1,33 @@
 package com.qwshen.etl.test.Pipeline
 
-import com.qwshen.etl.pipeline.builder.PipelineFactory
-import scala.util.control.Exception.ultimately
 import com.qwshen.etl.test.TestApp
 import org.apache.spark.sql.SparkSession
 
 class IcebergPipelineTest extends TestApp {
   test("Pipeline test - file read / iceberg write") {
-    for {
-      session <- this.start()
-      pipeline <- PipelineFactory.fromXml(loadContent(s"${resourceRoot}pipelines/pipeline_fileRead-icebergWrite.xml"))(config, session)
-    } ultimately {
-      this.done(session)
-    } {
-      //prepare
+    val prepare = (session: SparkSession) => {
       session.sql("drop table if exists events.db.features")
-      session.sql("create table events.db.features(user_id string, gender string, birthyear int, timestamp string, interested int, process_date string, event_id long) using iceberg")
-
-      //run the pipeline
-      runner.run(pipeline)(session)
+      session.sql("create table events.db.features(user_id string, gender string, birthyear int, timestamp string, interested int, process_date string, event_id long) using iceberg partitioned by (gender, interested)")
+      ()
     }
+    this.run(s"${resourceRoot}pipelines/pipeline_fileRead-icebergWrite.xml", Some(prepare))
   }
 
   test(   "Pipeline test - iceberg read / file write") {
-    for {
-      session <- this.start()
-      pipeline <- PipelineFactory.fromJson(loadContent(s"${resourceRoot}pipelines/pipeline_icebergRead-fileWrite.json"))(config, session)
-    } ultimately {
-      this.done(session)
-    } {
-      runner.run(pipeline)(session)
+    this.run(s"${resourceRoot}pipelines/pipeline_icebergRead-fileWrite.json")
+  }
+
+  test(   "Pipeline test - iceberg streaming read / file streaming write") {
+    this.run(s"${resourceRoot}pipelines/pipeline_icebergStreamRead-fileStreamWrite.json")
+  }
+
+  test("Pipeline test - file streaming read / iceberg streaming write") {
+    val prepare = (session: SparkSession) => {
+      session.sql("drop table if exists events.db.features")
+      session.sql("create table events.db.features(user_id string, gender string, birthyear int, timestamp string, interested int, process_date string) using iceberg partitioned by (gender, interested)")
+      ()
     }
+    this.run(s"${resourceRoot}pipelines/pipeline_fileStreamRead-icebergStreamWrite.json", Some(prepare))
   }
 
   override def createSparkSession(): SparkSession = SparkSession.builder()

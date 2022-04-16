@@ -56,8 +56,9 @@
         <action name="write features">
             <actor type="iceberg-writer">
                 <properties>
-                    <location>events.db.features</location>
-                    <mode>overwrite</mode>
+                    <table>events.db.features</table>
+                    <tablePartitionedBy>gender,interested</tablePartitionedBy>
+                    <mode>append</mode>
                     <view>features</view>
                 </properties>
             </actor>

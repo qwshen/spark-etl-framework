@@ -5,8 +5,10 @@ import com.qwshen.etl.pipeline.PipelineRunner
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{FunSuite, Matchers}
-import scala.util.{Properties, Try, Success, Failure}
+import scala.util.{Failure, Properties, Success, Try}
 import com.qwshen.common.io.FileChannel
+import com.qwshen.etl.pipeline.builder.PipelineFactory
+import scala.util.control.Exception.ultimately
 
 class TestApp extends FunSuite with Matchers {
   protected val resourceRoot: String = getClass.getClassLoader.getResource("").getPath
@@ -28,6 +30,18 @@ class TestApp extends FunSuite with Matchers {
   } match {
     case Success(session) => Some(session)
     case Failure(t) => throw t
+  }
+
+  protected def run(pipelineFile: String, prepare: Option[SparkSession => Unit] = None): Unit = {
+    for {
+      session <- this.start()
+      pipeline <- PipelineFactory.fromFile(pipelineFile)(config, session)
+    } ultimately {
+      this.done(session)
+    } {
+      prepare.foreach(p => p(session))
+      this.runner.run(pipeline)(session)
+    }
   }
 
   protected def done(session: SparkSession): Unit = {

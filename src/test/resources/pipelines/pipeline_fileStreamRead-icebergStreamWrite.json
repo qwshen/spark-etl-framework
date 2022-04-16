@@ -15,10 +15,6 @@
             {
                 "name": "staging_uri",
                 "value": "file:///tmp/staging/events"
-            },
-            {
-                "name": "file_stream_dir",
-                "value": "file:///tmp/file_streaming_result"
             }
         ],
         "aliases": [
@@ -35,8 +31,8 @@
                 "type": "com.qwshen.etl.transform.SqlTransformer"
             },
             {
-                "name": "file-stream-writer",
-                "type": "com.qwshen.etl.sink.FileStreamWriter"
+                "name": "iceberg-stream-writer",
+                "type": "com.qwshen.etl.sink.IcebergStreamWriter"
             }
         ],
         "jobs": [
@@ -55,11 +51,11 @@
                                     "maxFileAge": "16h"
                                 },
                                 "ddlSchemaString": "user_id string, birthyear string, gender string, joinedAt string",
-                                "addTimestamp": true,
                                 "watermark": {
                                     "timeField": "__timestamp",
                                     "delayThreshold": "5 minutes"
                                 },
+                                "addTimestamp": true,
                                 "fileUri": "${events.users_input}"
                             }
                         },
@@ -78,11 +74,11 @@
                                 "row": {
                                     "valueField": "value"
                                 },
-                                "addTimestamp": "true",
                                 "watermark": {
                                     "timeField": "__timestamp",
                                     "delayThreshold": "5 minutes"
                                 },
+                                "addTimestamp": "true",
                                 "fileUri": "${events.train_input}"
                             }
                         },
@@ -106,15 +102,13 @@
                     {
                         "name": "write features",
                         "actor": {
-                            "type": "file-stream-writer",
+                            "type": "iceberg-stream-writer",
                             "properties": {
-                                "format": "csv",
+                                "table": "events.db.features",
                                 "options": {
-                                    "header": "true",
-                                    "maxRecordsPerFile": "3000",
-                                    "checkpointLocation": "/tmp/file_streaming_checkpoint"
+                                    "fanout-enabled": "true",
+                                    "checkpointLocation": "/tmp/iceberg_streaming_checkpoint"
                                 },
-                                "partitionBy": "interested,gender",
                                 "trigger": {
                                     "mode": "processingTime",
                                     "interval": "60 seconds"
@@ -123,7 +117,6 @@
                                 "test": {
                                     "waittimeMS": "16000"
                                 },
-                                "fileUri": "${file_stream_dir}",
                                 "view": "features"
                             }
                         },

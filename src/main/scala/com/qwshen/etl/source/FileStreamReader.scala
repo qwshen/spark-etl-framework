@@ -14,7 +14,7 @@ class FileStreamReader extends FileReadActor[FileStreamReader] {
   @PropertyKey("watermark.timeField", false)
   protected var _wmTimeField: Option[String] = None
   //water-mark delay duration
-  @PropertyKey("waterprotectedmark.delayThreshold", false)
+  @PropertyKey("watermark.delayThreshold", false)
   protected var _wmDelayThreshold: Option[String] = None
 
   //add timestamp
