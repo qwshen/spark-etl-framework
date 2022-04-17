@@ -3,8 +3,10 @@ package com.qwshen.etl.source
 import com.qwshen.etl.common.{DeltaReadActor, ExecutionContext}
 import org.apache.spark.sql.functions.current_timestamp
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import scala.util.{Failure, Success, Try}
 import com.qwshen.common.PropertyKey
+import com.typesafe.config.Config
 
 /**
  * This reader reads data from delta lake into a data-frame in streaming mode.
@@ -21,23 +23,26 @@ class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
   protected var _wmDelayThreshold: Option[String] = None
 
   /**
+   * Initialize the delta-stream-readers
+   */
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    super.init(properties, config)
+
+    this.validate(this._sourcePath, "The source-path is mandatory for delta stream readers")
+  }
+
+  /**
    * Execute the action
    *
    * @param ctx     - the execution context
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = Try {
+  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+    path <- this._sourcePath
+  } yield Try {
     //the initial DataframeReader
-    val reader = this._options.foldLeft(session.readStream.format("delta"))((r, o) => r.option(o._1, o._2))
-    //load
-    val df = (this._sourceTable, this._sourcePath) match {
-      case (Some(table), _) =>
-        //reader.table(table)
-        throw new RuntimeException("As of Delta 1.0.0 by 24 May, 2020, it doesn't support stream-reading from table.")
-      case (_, Some(path)) =>  reader.load(path)
-      case _ => throw new RuntimeException("The source table nor the source path is defined.")
-    }
+    val df = this._options.foldLeft(session.readStream.format("delta"))((r, o) => r.option(o._1, o._2)).load(path)
 
     //plug in the special __timestamp with current-timestamp
     val dfResult = if (this._addTimestamp) df.withColumn("__timestamp", current_timestamp) else df
@@ -47,8 +52,8 @@ class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
       case _ => dfResult
     }
   } match {
-    case Success(df) => Some(df)
-    case Failure(t) => throw new RuntimeException(s"Load from delta ${this._sourceTable.getOrElse(this._sourcePath.getOrElse(""))} failed.", t)
+    case Success(df) => df
+    case Failure(t) => throw new RuntimeException(s"Load from delta $path failed.", t)
   }
 
   /**

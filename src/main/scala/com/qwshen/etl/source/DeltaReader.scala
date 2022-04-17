@@ -22,7 +22,7 @@ class DeltaReader extends DeltaReadActor[DeltaReader] {
     (this._sourceTable, this._sourcePath) match {
       case (Some(table), _) => reader.table(table)
       case (_, Some(path)) => reader.load(path)
-      case _ => throw new RuntimeException("The source table and source path are defined.")
+      case _ => throw new RuntimeException("Neither the source table nor the source path is defined.")
     }
   } match {
     case Success(df) => Some(df)

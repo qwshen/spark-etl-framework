@@ -14,9 +14,8 @@ The DeltaStreamWriter is for writing a data-frame to delta lake in streaming mod
 - The output mode must be one of the following values:
     - complete - all the rows in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
     - append - only the new rows in the streaming DataFrame/Dataset will be written to the sink.
-    - update - only the rows that were updated in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
 - The test.waittimeMS is for testing purpose which specify how long the streaming run will be last.
-- The location of the writing can be either by sinkPath or sinkTable. If both specified, sinkTable takes precedence.
+- The location of the writing can be only specified by the sinkPath. If the sinkTable is specified, it is ignored.
 
 Actor Class: `com.qwshen.etl.sink.DeltaStreamWriter`
 
@@ -65,7 +64,7 @@ The definition of the DeltaStreamWriter:
         },
         "outputMode": "append",
         "test.waittimeMS": "30000",
-        "sinkTable": "users",
+        "sinkPath": "/tmp/users",
         "view": "users"
       }
     }
@@ -91,7 +90,7 @@ The definition of the DeltaStreamWriter:
       </trigger>
       <outputMode>append</outputMode>
       <test.waittimeMS>30000</test.waittimeMS>
-      <sinkTable>users</sinkTable>
+      <sinkPath>/tmp/users</sinkPath>
       <view>users</view>
     </properties>
   </actor>

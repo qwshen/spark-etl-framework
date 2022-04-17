@@ -66,7 +66,7 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
       || (this._format.nonEmpty && this._schema.nonEmpty && this._format.length != this._schema.get.fields.length)) {
       throw new RuntimeException("The schema provided is not valid in FlatReader.")
     }
-    validate(this._fileUri, "The fileUri in FileReader is mandatory.")
+    validate(this._fileUri, "The fileUri in FlatReader is mandatory.")
   }
 
   /**

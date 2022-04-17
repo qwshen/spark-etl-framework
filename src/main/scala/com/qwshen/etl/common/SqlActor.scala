@@ -62,7 +62,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
     (this._sqlStmt, this._sqlFile) match {
       case (Some(_), _) =>
       case (_, Some(sf)) => this._sqlStmt = Some(FileChannel.loadAsString(sf))
-      case _ => throw new RuntimeException("The sql-string & sql-file cannot be both empty in all sql actors.")
+      case _ => throw new RuntimeException("The sql-string & sql-file cannot be both empty in a sql actor.")
     }
     this._sqlStmt = this._sqlStmt.map(stmt => resolve(stmt)(config))
     //extract all tables in the sql-statement

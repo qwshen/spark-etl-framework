@@ -58,7 +58,7 @@ The definition of the IcebergReader:
 ```
 
 Note:
-The IcebergReader provides only fundamental read operations. It is recommended to use SQL commands with SqlReader for more complicated reads.
+- The IcebergReader provides only fundamental read operations. It is recommended to use SQL commands with SqlReader for more complicated reads. However, incremental read is not supported by Spark’s SQL syntax.
     ```
     SELECT 
       uuid, first(level), first(ts), first(message)
@@ -66,8 +66,6 @@ The IcebergReader provides only fundamental read operations. It is recommended t
     WHERE cast(ts as date) = '2020-07-01'
     GROUP BY uuid
     ```
-
-Incremental read is not supported by Spark’s SQL syntax.
 
 - To inspect the history of a table:
 ```
@@ -112,7 +110,7 @@ Incremental read is not supported by Spark’s SQL syntax.
 
 Please use SqlActor to create/alter/drop iceberg tables, including calling stored-procedures:
 ```
-CREATE TABLE prod.db.sample (
+CREATE/REPLACE TABLE prod.db.sample (
     id bigint,
     data string,
     category string,

@@ -21,7 +21,7 @@ private [etl] abstract class HBaseActor[T] extends Actor { self: T =>
     //check if driver & url are specified
     if (!this._connectionProperties.exists(_._1.equals("hbase-site.xml"))) {
       if (!Seq("hbase.zookeeper.quorum", "hbase.zookeeper.property.clientPort", "zookeeper.znode.parent").forall(k => this._connectionProperties.exists(_._1.equals(k)))) {
-        throw new RuntimeException("The mandatory properties for connecting to HBase is not defined.")
+        throw new RuntimeException("The mandatory properties for connecting to HBase are not defined.")
       }
     }
   }

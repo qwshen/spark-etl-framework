@@ -3,6 +3,9 @@ the behavior of all actors (from all jobs & actions) in a pipeline. One good pra
 work-units, and each of them is defined as a job in the pipeline (also turn off the singleSparkSession at the pipeline level), so in 
 such case, any changes to the Spark-Conf in one job only affect the behavior of the actors associated with the job.
 
+- the configs property is for specifying key-value pairs for the Spark configurations
+- the hadoopConfigs property is for specifying key-value pairs for the Hadoop configurations of the Spark-Context.
+ 
 Actor Class: `com.qwshen.etl.common.SparkConfActor`
 
 The definition of the SparkConfActor:
@@ -15,6 +18,8 @@ The definition of the SparkConfActor:
         spark.sql.shuffle.partitions: 300
         spark.files.overwrite: true
         spark.sql.adaptive.enabled: true
+      hadoopConfigs:
+        mapreduce.fileoutputcommitter.marksuccessfuljobs: false
 ```
 - in JSON
 ```json
@@ -26,6 +31,9 @@ The definition of the SparkConfActor:
           "spark.sql.shuffle.partitions": 300,
           "spark.files.overwrite": true,
           "spark.sql.adaptive.enabled": true
+        },
+        "hadoopConfigs": {
+          "mapreduce.fileoutputcommitter.marksuccessfuljobs": false
         }
       }
     }
@@ -40,6 +48,9 @@ The definition of the SparkConfActor:
         <spark.files.overwrite>true</spark.files.overwrite>
         <spark.sql.adaptive.enabled>true</spark.sql.adaptive.enabled>
       </configs>
+      <hadoopConfigs>
+        <mapreduce.fileoutputcommitter.marksuccessfuljobs>false</mapreduce.fileoutputcommitter.marksuccessfuljobs>
+      </hadoopConfigs>
     </properties>
   </actor>
 ```

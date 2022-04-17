@@ -184,7 +184,7 @@ private[etl] final class JdbcContinuousWriter(options: Map[String, String], sink
                 case Success(v) => stmt.setBytes(index, v)
                 case _ => stmt.setNull(index, java.sql.Types.BINARY)
               }
-              case _ => throw new RuntimeException("Unsupported data type in JdbcWriteProcessor.")
+              case _ => throw new RuntimeException("Unsupported data type in JdbcContinuousWriter.")
             }
             case _ => if (param == "batchId" && batchId.isDefined) {
               stmt.setLong(index, batchId.get)

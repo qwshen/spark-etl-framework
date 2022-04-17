@@ -2,8 +2,11 @@ package com.qwshen.etl.sink
 
 import com.qwshen.etl.common.DeltaWriteActor
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.qwshen.common.PropertyKey
+import com.typesafe.config.Config
+
+import scala.util.Try
 
 /**
  * This writer writes a data-frame to delta-lake in streaming mode.
@@ -24,16 +27,29 @@ class DeltaStreamWriter extends DeltaWriteActor[DeltaStreamWriter] {
   @PropertyKey("test.waittimeMS", false)
   protected var _waittimeInMs: Option[Long] = None
 
+  /**
+   * Initialize the delta-stream-readers
+   */
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    Try (super.init(properties, config))
+
+    this.validate(this._sinkPath, "The source-path is mandatory for delta stream writers")
+    this.validate(this._outputMode, "The output-mode in delta stream writer must be either complete or append.", Seq("complete", "append"))
+  }
+
   //write the dataframe
   protected def write(df: DataFrame): Unit = for {
+    path <- this._sinkPath
     mode <- this._outputMode
   } {
     val initQuery = this._options.foldLeft(df.writeStream.format("delta"))((w, o) => w.option(o._1, o._2)).outputMode(mode)
+
     //with partitionBy
     val partitionQuery = this._partitionBy match {
       case Some(cs) => initQuery.partitionBy(cs.split(","): _*)
       case _ => initQuery
     }
+
     //combine with trigger
     val triggerQuery = (this._triggerMode, this._triggerInterval) match {
       case (Some(m), Some(t)) if (m == "continuous") => partitionQuery.trigger(Trigger.Continuous(t))
@@ -42,19 +58,9 @@ class DeltaStreamWriter extends DeltaWriteActor[DeltaStreamWriter] {
       case _ => partitionQuery
     }
 
-    //write
-    (this._sinkTable, this._sinkPath) match {
-      case (Some(table), _) =>
-        //this._waittimeInMs match {
-        //  case Some(ts) => triggerQuery.table(table).awaitTermination(ts)
-        //  case _ => triggerQuery.table(table).awaitTermination()
-        //}
-        throw new RuntimeException("As of Delta 1.0.0 by 24 May, 2020, it doesn't support stream-writing to table.")
-      case (_, Some(path)) => this._waittimeInMs match {
-        case Some(ts) => triggerQuery.start(path).awaitTermination(ts)
-        case _ => triggerQuery.start(path).awaitTermination()
-      }
-      case _ => throw new RuntimeException("DeltaStreamWriter is not writing anything.")
+    this._waittimeInMs match {
+      case Some(ts) => triggerQuery.start(path).awaitTermination(ts)
+      case _ => triggerQuery.start(path).awaitTermination()
     }
   }
 

@@ -7,7 +7,7 @@ The DeltaStreamReader is for reading from delta lake in streaming mode.
     - startingTimestamp - read data with timestamp starting from
     - maxBytesPerTrigger - How much data gets processed in each micro-batch. This option sets a “soft max”, meaning that a batch processes approximately this amount of data and may process more than the limit. If you use Trigger.Once for your streaming, this option is ignored.
     - maxFilesPerTrigger - How many new files to be considered in every micro-batch. The default is 1000.
-- The location of the reading can be either by sourcePath or sourceTable. If both specified, sourceTable takes precedence.
+- The location of the reading can be only specified by the sourcePath. If the sourceTable is specified, it is ignored.
 - For watermark configuration, the timeField is one field in the dataframe to be used for the delay calculation.
 - To add a custom (processing) timestamp, please use the addTimestamp property. This column is added as the name of __timestamp.
 

@@ -76,7 +76,7 @@ class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
 
-    this.validate(this._options, Seq("checkpointLocation"), "The checkpointLocation option is mandatory for Redis stream writing")
+    this.validate(this._options, Seq("checkpointLocation"), "The checkpointLocation option is mandatory for mongo-db stream writers")
   }
 
   /**

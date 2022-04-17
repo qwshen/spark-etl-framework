@@ -23,7 +23,7 @@ class DeltaWriter extends DeltaWriteActor[DeltaWriter] {
   protected def write(df: DataFrame): Unit = for {
     mode <- this._mode
   } {
-    val initWriter = this._options.foldLeft(df.write.format("delta"))((w, o) => w.option(o._1, o._2)).mode(mode)
+    val initWriter = this._options.foldLeft(df.write.format("delta"))((w, o) => w.option(o._1, o._2))
     //with partitionBy
     val partitionWriter = this._partitionBy match {
       case Some(cs) => initWriter.partitionBy(cs.split(","): _*)
@@ -38,8 +38,11 @@ class DeltaWriter extends DeltaWriteActor[DeltaWriter] {
     }
     //write
     (this._sinkTable, this._sinkPath) match {
-      case (Some(table), _) => bucketWriter.saveAsTable(table)
-      case (_, Some(path)) => bucketWriter.save(path)
+      case (Some(table), _) => mode match {
+        case "overwrite" => bucketWriter.saveAsTable(table)
+        case _ => bucketWriter.insertInto(table)
+      }
+      case (_, Some(path)) => bucketWriter.mode(mode).save(path)
       case _ => throw new RuntimeException("The sinkPath or sinkTable cannot be both empty.")
     }
   }
