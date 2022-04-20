@@ -89,15 +89,22 @@ final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
   private def scanReferencedViews(action: Action): Seq[String] = action.inputViews.union(action.actor.extraViews).distinct
 
   //to ensure all referenced views have been already created, otherwise error out.
-  private def ensureViewsExist(views: Seq[String])(implicit session: SparkSession): Boolean = views.map(v => (v, session.catalog.tableExists(v)))
-    .foldLeft(true)(
-      (r, v) => {
-        if (!v._2) {
-          throw new RuntimeException(s"The required view [${v._1}] doesn't exists. Please check the pipeline definition.")
+  private def ensureViewsExist(views: Seq[String])(implicit session: SparkSession): Boolean = {
+    val isSparkView = (view: String) => {
+      val parts = view.split("\\.")
+      if (parts.length > 2) false else if (parts.length < 2) true else if (parts(0).equals("global_temp")) true else false
+    }
+
+    views.filter(v => isSparkView(v)).map(v => (v, session.catalog.tableExists(v)))
+      .foldLeft(true)(
+        (r, v) => {
+          if (!v._2) {
+            throw new RuntimeException(s"The required view [${v._1}] doesn't exists. Please check the pipeline definition.")
+          }
+          r & v._2
         }
-        r & v._2
-      }
-    )
+      )
+  }
 
   //promote the data-frame as a view
   private def promoteView(df: DataFrame, action: Action, globalViewAsLocal: Boolean, viewsReferenced: Map[String, Int]): Unit = {

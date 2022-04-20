@@ -40,7 +40,7 @@ class PropertyComponent extends PropertyInitializer with PropertyValidater with 
 
     if (props.exists(!_.applied)) {
       val keys = props.filter(!_.applied).map(p => p.path).mkString(",")
-      throw new RuntimeException(s"For ${this.getClass.getCanonicalName}, the properties with keys ${keys} are required, but their value not provided.")
+      throw new RuntimeException(s"For ${this.getClass.getCanonicalName}, the properties with key(s) [$keys] required, but its(their) value(s) not provided.")
     }
 
     if (this.logger.isDebugEnabled) {

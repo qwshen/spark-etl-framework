@@ -24,7 +24,7 @@ The definition of the IcebergWriter:
         check-ordering: "true"
       tablePartitionedBy: "city, timestamp"
       mode: overwrite
-      location: /tmp/users-warehouse
+      table: "events.db.features"
       view: users      
 ```
 - In JSON format
@@ -38,7 +38,7 @@ The definition of the IcebergWriter:
         },
         "tablePartitionedBy": "city, timestamp",
         "mode": "overwrite",
-        "location": "events.db.users",
+        "table": "events.db.users",
         "view": "users"
       }
     }
@@ -53,7 +53,7 @@ The definition of the IcebergWriter:
       </options>
       <tablePartitionedBy>city, timestamp</tablePartitionedBy>  
       <mode>overwrite</mode>
-      <location>hdfs:///event-warehouse/users</location>
+      <table>hdfs:///event-warehouse/users</table>
       <view>users</view>
     </properties>
   </actor>

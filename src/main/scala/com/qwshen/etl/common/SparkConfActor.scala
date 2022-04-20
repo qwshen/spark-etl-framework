@@ -6,7 +6,7 @@ import com.qwshen.common.PropertyKey
 /**
  * Set up spark-settings
  */
-class SparkConfActor(private val settings: Seq[(String, String)]) extends Actor {
+class SparkConfActor extends Actor {
   @PropertyKey("configs.*", false)
   protected var _settings: Map[String, String] = Map.empty[String, String]
 
@@ -33,4 +33,24 @@ class SparkConfActor(private val settings: Seq[(String, String)]) extends Actor 
    * @return
    */
   def add(name: String, value: String): SparkConfActor = { this._settings = this._settings + (name -> value); this }
+  /**
+   * Add a collection of setting
+   * @param settings
+   * @return
+   */
+  def add(settings: Map[String, String]): SparkConfActor = { this._settings = this._settings ++ settings; this }
+
+  /**
+   * Add a hadoop setting
+   * @param name
+   * @param value
+   * @return
+   */
+  def addHadoop(name: String, value: String): SparkConfActor = { this._hadoopSettings = this._hadoopSettings + (name -> value); this }
+  /**
+   * Add a collection of hadoop setting
+   * @param settings
+   * @return
+   */
+  def addHadoop(settings: Map[String, String]): SparkConfActor = { this._hadoopSettings = this._hadoopSettings ++ settings; this }
 }
