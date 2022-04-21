@@ -26,7 +26,7 @@ object ArgumentParser extends Loggable {
     opt[String]("application-conf")
       .required()
       .action((x, c) => c.copy(applicationConf = x))
-      .text("The application configuration file")
+      .text("The application configuration file(s)")
     opt[String]("var")
       .optional()
       .unbounded()
@@ -59,7 +59,9 @@ object ArgumentParser extends Loggable {
   def parse(args: Array[String]): Arguments = scoptParser.parse(args, Configuration("", "")) match {
     case Some(cfg) => {
       //merge the variables into the config object
-      val config: Config = ConfigurationManager.mergeVariables(ConfigFactory.parseString(FileChannel.loadAsString(cfg.applicationConf)), cfg.variables)
+      val appConfig = cfg.applicationConf.split(",")
+        .map(cfgFile => ConfigFactory.parseString(FileChannel.loadAsString(cfgFile))).reduce((cfg1, cfg2) => cfg2.withFallback(cfg1)).resolve()
+      val config: Config = ConfigurationManager.mergeVariables(appConfig, cfg.variables)
 
       //staging behavior
       val stagingBehavior: Option[StagingBehavior] = (cfg.stagingUri, cfg.stagingActions) match {

@@ -95,8 +95,8 @@ The following explains the definition of each section in a pipeline:
   select * from global_temp.features
   ```  
 
-  **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is used across multiple 
-  pipelines. Instead the job may be included as follows:**
+  **The definition of a job is not necessarily embedded in the definition of a pipeline, especially when the job is re-used across multiple 
+  pipelines. Instead, the job may be included as follows:**
   ```yaml
   jobs:
     - include: jobs/job.yaml
@@ -137,7 +137,7 @@ Pipeline examples:
     scripts_uri = "./scripts"
   }
   ```
-  There are two approaches to providing the runtime configuration:
+  There are three approaches to providing the runtime configuration:
   - Specify runtime variables when submitting a Spark job. See below at **"Submitting a spark-job"**
   - Configure runtime variables in application configuration. See the following example:
   ```
@@ -164,6 +164,22 @@ Pipeline examples:
   }
   ```
   **Note: spark configs from application configuration takes the highest precedence.**
+- Use SparkConfActor to dynamically set spark & hadoopConfiguion. For example:
+  ```yaml
+  - name: set up configuration for s3-access
+    actor:
+      type: spark-conf-actor
+      properties:
+        configs:
+          spark.sql.shuffle.partitions: 160
+        hadoopConfigs:
+          fs.s3a.path.style.access: "true"
+          fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+          fs.s3a.connection.ssl.enabled: "true"
+          fs.s3a.endpoint: "s3a.qwshen.com:9000"
+          fs.s3a.access.key: "sa_7891"
+          fs.s3a.secret.key: "s.UjEjksEnEidFehe\KdenG"
+  ```
 
 ### Submitting a spark-job
 The following is one example of how to submit a Spark job. Note that it also demonstrates how to provide the runtime configs, as well as pass variables.  
@@ -175,11 +191,14 @@ The following is one example of how to submit a Spark job. Note that it also dem
    --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
    --class com.qwshen.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
-   --pipeline-def ./test.yaml --application-conf ./application.conf \
+   --pipeline-def ./test.yaml --application-conf ./common.conf,./environment.conf,./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
    --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events
 ```
+- When multiple config files are provided, configs from the next file override configs from the previous file. In above example, environment.conf 
+overrides common.conf, and application.conf overrides environments.conf.
+
 [Run a live example](docs/submit-job.md)
 
 ### Source readers
