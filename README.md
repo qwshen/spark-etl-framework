@@ -1,8 +1,13 @@
-The Spark-etl-framework is a pipeline-based data transformation framework using Spark-SQL. For one process to transform and move data from end to end, a pipeline needs to be defined. At the start of a pipeline, one or more readers is required to load data from the source(s). The data gets transformed in the middle using Spark-SQL (extensible with custom components). Finally, usually at the end of the pipeline, the writer(s) write out the result to the target storage.
+The Spark-etl-framework is a pipeline-based data transformation framework using Spark-SQL. For one process flow to transform and move data from end to end, a pipeline is defined. 
+At the start of a pipeline, read-actors (readers) are required to load data from the source(s); in the middle of the pipeline, data normally gets transformed with Spark-SQL based transformers;
+and finally, at the end of the pipeline, the write-actors (writers) write outputs to the target storage. A pipeline is not limited to the order of read-transform-write, any of these 3 actions can
+be in any stages of a pipeline except write cannot be at the very beginning. Also, custom actors can be developed and plugged-in.
+
 
 ![pipeline flow](docs/images/pipeline.png?raw=true "Pipeline Data Flow")
 
-A pipeline consists of multiple jobs, and each job contains multiple actions (each represented by an Actor). Each job can run under the same or separate Spark Sessions or Sub-Sessions, and dataframes (as views) can be shared across jobs. Each action (except for configuration updates) requires one or more input views and produces at most one output view. 
+Technically a pipeline consists of multiple jobs, and each job contains multiple actions which are represented by Actors. Each job can run under the same Spark Session or separate Spark Sub-Sessions; 
+and dataframes (as views) can be shared across jobs. Most actors require input view(s) and produce output view(s). 
 
 To build the project, run
 ```
