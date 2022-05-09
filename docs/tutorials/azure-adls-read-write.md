@@ -93,6 +93,7 @@
    - Upload [train.txt](../examples/data/train.txt) to /input/train
    - Upload [application.conf](azure-databricks/application.conf) to /conf
    - Upload [transform-user-train.sql](../examples/transform-user-train.sql) to /scripts 
+   - Upload [fileRead-fileWrite](azure-databricks/pipeline_fileRead-fileWrite.xml) to /pipelines
    - Upload spark-etl-framework_2.12_3.2.1-1.0.jar to /lib
    - Verify the uploaded files
      ```shell
