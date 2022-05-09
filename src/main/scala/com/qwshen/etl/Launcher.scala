@@ -1,6 +1,5 @@
 package com.qwshen.etl
 
-import com.qwshen.common.io.FileChannel
 import com.qwshen.etl.configuration.ArgumentParser
 import com.qwshen.etl.pipeline.PipelineRunner
 import com.qwshen.etl.pipeline.builder.PipelineFactory
@@ -28,7 +27,7 @@ import scala.util.Try
  */
 class Launcher {
   /*
-      Run a pipeline-job
+   * Run a pipeline-job
    */
   def run(args: Array[String]): Unit = {
     val arguments = ArgumentParser.parse(args)
@@ -48,7 +47,7 @@ class Launcher {
   }
 
   /*
-    Create the spark-session
+   * Create the spark-session
    */
   def createSparkSession(implicit config: Config): SparkSession = if (!config.hasPath("application.runtime")) {
     SparkSession.builder.getOrCreate()
@@ -79,10 +78,12 @@ class Launcher {
   }
 
   def recycleSparkSession(implicit session: SparkSession): Unit = {
-    session.stop();
+    if (!sys.env.contains("DATABRICKS_RUNTIME_VERSION")) {
+      session.stop();
+    }
   }
 }
 
 object Launcher {
-  def main(args: Array[String]): Unit = (new Launcher()).run(args)
+  def main(args: Array[String]): Unit = new Launcher().run(args)
 }

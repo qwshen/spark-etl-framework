@@ -1,7 +1,7 @@
 The Spark-etl-framework is a pipeline-based data transformation framework using Spark-SQL. For one process flow to transform and move data from end to end, a pipeline is defined. 
 At the start of a pipeline, read-actors (readers) are required to load data from the source(s); in the middle of the pipeline, data normally gets transformed with Spark-SQL based transformers;
-and finally, at the end of the pipeline, the write-actors (writers) write outputs to the target storage. A pipeline is not limited to the order of read-transform-write, any of these 3 actions can
-be in any stages of a pipeline except write cannot be at the very beginning. Also, custom actors can be developed and plugged-in.
+and finally, at the end of the pipeline, write-actors (writers) write outputs to the target location. A pipeline is not limited to the order of read-transform-write, any of these 3 actions can
+be in any stages of a pipeline except write cannot be the first action. Also, custom actors can be developed and plugged-in.
 
 
 ![pipeline flow](docs/images/pipeline.png?raw=true "Pipeline Data Flow")
@@ -204,7 +204,7 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - When multiple config files are provided, configs from the next file override configs from the previous file. In above example, environment.conf 
 overrides common.conf, and application.conf overrides environments.conf.
 
-[Run a live example](docs/submit-job.md)
+[Run a live example](docs/submit-job.md), and more [tutorials](docs/tutorials.md)
 
 ### Source readers
 - [DeltaReader](docs/delta-reader.md)
