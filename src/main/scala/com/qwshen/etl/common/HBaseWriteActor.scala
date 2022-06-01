@@ -69,7 +69,7 @@ private[etl] abstract class HBaseWriteActor[T] extends HBaseActor[T] { self: T =
       }
     })
     val (keyColumns: Seq[String], dfOutput: DataFrame) = this._keyColumns match {
-      case Some(kc) => (kc.split(",").toSeq, df)
+      case Some(kc) => (kc.split(",").map(_.trim).toSeq, df)
       case _ =>
         val uuid = udf { () => java.util.UUID.randomUUID().toString }
         (Seq("__row_key"), df.withColumn("__row_key", uuid()))

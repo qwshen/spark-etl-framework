@@ -30,7 +30,7 @@ class ViewPartitioner extends Actor {
     np <- this._numPartitions
   } yield Try {
     this._partitionBy match {
-      case Some(columns) => df.repartition(np, columns.split(",").map(c => col(c)): _*)
+      case Some(columns) => df.repartition(np, columns.split(",").map(c => col(c.trim)): _*)
       case _ => df.repartition(np)
     }
   } match {

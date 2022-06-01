@@ -36,7 +36,7 @@ class SqlTableWriter extends Actor {
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield {
     val writer = this._partitionBy match {
-      case Some(s) => this._numPartitions.map(num => df.repartition(num, s.split(",").map(c => col(c)): _*)).getOrElse(df).write
+      case Some(s) => this._numPartitions.map(num => df.repartition(num, s.split(",").map(c => col(c.trim)): _*)).getOrElse(df).write
       case _ => this._numPartitions.map(num => df.coalesce(num)).getOrElse(df).write
     }
     md match {

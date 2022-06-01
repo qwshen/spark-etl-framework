@@ -28,7 +28,7 @@ class FileWriter extends FileWriteActor[FileWriter] {
   } yield Try {
     val initWriter = this._options.foldLeft(df.write.format(fmt))((s, o) => s.option(o._1, o._2))
     //with partitionBy
-    val partitionWriter = this._partitionBy.foldLeft(initWriter)((w, cs) => w.partitionBy(cs.split(","): _*))
+    val partitionWriter = this._partitionBy.foldLeft(initWriter)((w, cs) => w.partitionBy(cs.split(",").map(_.trim): _*))
     //write
     partitionWriter.mode(mode).save(uri)
   } match {

@@ -48,7 +48,7 @@ object HBaseChannel extends Loggable {
     //key & field columns
     val keyColumn: Option[String] = fieldsMap.find { case(_, from) => from.equals(HBaseChannel.rowkeyName) }.map(x => x._1)
     val fieldColumns: Seq[(String, String, String)] = fieldsMap.filter { case(_, from) => !from.equals(HBaseChannel.rowkeyName) }
-      .map(kv => (kv._1, kv._2.split(":", -1))).map(kv => (kv._1, kv._2(0), kv._2(1)))(breakOut)
+      .map(kv => (kv._1, kv._2.split(":", -1).map(_.trim))).map(kv => (kv._1, kv._2(0), kv._2(1)))(breakOut)
 
     val scan = new Scan()
     //set the columns to be scanned
@@ -147,7 +147,7 @@ object HBaseChannel extends Loggable {
         }
         val put = new Put(rowKey.get)
         values.filter(v => v._1 != this.rowkeyName && v._2.nonEmpty)
-          .map(x => (x._1.split(":"), x._2))
+          .map(x => (x._1.split(":").map(_.trim), x._2))
           .foreach(x => put.addColumn(Bytes.toBytes(x._1(0)), Bytes.toBytes(x._1(1)), x._2))
         puts.add(put)
       }

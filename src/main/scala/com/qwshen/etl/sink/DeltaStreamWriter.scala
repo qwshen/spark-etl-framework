@@ -46,7 +46,7 @@ class DeltaStreamWriter extends DeltaWriteActor[DeltaStreamWriter] {
 
     //with partitionBy
     val partitionQuery = this._partitionBy match {
-      case Some(cs) => initQuery.partitionBy(cs.split(","): _*)
+      case Some(cs) => initQuery.partitionBy(cs.split(",").map(_.trim): _*)
       case _ => initQuery
     }
 

@@ -41,7 +41,7 @@ class FileStreamWriter extends FileWriteActor[FileStreamWriter] {
     val initWriter = this._options.foldLeft(df.writeStream.format(fmt))((w, o) => w.option(o._1, o._2))
     //with partitionBy
     val partitionWriter = this._partitionBy match {
-      case Some(cs) => initWriter.partitionBy(cs.split(","): _*)
+      case Some(cs) => initWriter.partitionBy(cs.split(",").map(_.trim): _*)
       case _ => initWriter
     }
     //combine with trigger

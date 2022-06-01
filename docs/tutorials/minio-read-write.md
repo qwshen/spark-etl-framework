@@ -7,6 +7,7 @@ To read from/write to MinIO buckets:
         hadoopConfigs:
           fs.s3a.path.style.access: "true"
           fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+          fs.s3a.aws.credentials.provider: "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
           fs.s3a.connection.ssl.enabled: "true"
           fs.s3a.connection.timeout: "30000",
           fs.s3a.endpoint: "${minio.host}:${minio.port}"

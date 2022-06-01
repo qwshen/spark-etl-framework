@@ -26,13 +26,13 @@ class DeltaWriter extends DeltaWriteActor[DeltaWriter] {
     val initWriter = this._options.foldLeft(df.write.format("delta"))((w, o) => w.option(o._1, o._2))
     //with partitionBy
     val partitionWriter = this._partitionBy match {
-      case Some(cs) => initWriter.partitionBy(cs.split(","): _*)
+      case Some(cs) => initWriter.partitionBy(cs.split(",").map(_.trim): _*)
       case _ => initWriter
     }
     //with bucketBy
     val bucketWriter = (this._numBuckets, this._bucketBy) match {
       case (Some(n), Some(cs)) =>
-        val columns = cs.split(",").toSeq
+        val columns = cs.split(",").map(_.trim).toSeq
         partitionWriter.bucketBy(n, columns.head, columns.tail: _*)
       case _ => partitionWriter
     }
