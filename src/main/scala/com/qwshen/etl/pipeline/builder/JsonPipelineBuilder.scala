@@ -171,7 +171,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   protected def parseJob(kv: Map[String, Any], aliases: Map[String, String], pipeline: Pipeline)(implicit config: Config, session: SparkSession): Unit = {
     var job: Option[Job] = None
     kv.get("include") match {
-      case Some(f: String) => parseIncludeJob(f, aliases, pipeline)
+      case Some(f: String) => parseIncludeJob(resolve(f), aliases, pipeline)
       case _ =>
         kv.get("name") match {
           case Some(s: String) => job = Some(Job(resolve(s)))
