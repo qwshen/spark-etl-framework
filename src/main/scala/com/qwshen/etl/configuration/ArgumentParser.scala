@@ -60,7 +60,7 @@ object ArgumentParser extends Loggable {
     case Some(cfg) => {
       //merge the variables into the config object
       val appConfig = cfg.applicationConf.split(",")
-        .map(cfgFile => ConfigFactory.parseString(FileChannel.loadAsString(cfgFile))).reduce((cfg1, cfg2) => cfg2.withFallback(cfg1)).resolve()
+        .map(cfgFile => ConfigFactory.parseString(FileChannel.loadAsString(cfgFile))).reduce((cfg1, cfg2) => cfg2.withFallback(cfg1))
       val config: Config = ConfigurationManager.mergeVariables(appConfig, cfg.variables)
 
       //staging behavior
