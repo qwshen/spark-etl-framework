@@ -10,6 +10,8 @@ pipeline-def:
       value: "${events.process_date}"
     - name: staging_uri
       value: "file:///tmp/staging/events"
+    - name: metrics_uri
+      value: "file:///tmp/metrics/events"
     - name: export_dir
       value: "${events.output_dir}"
     - name: delta_dir
@@ -94,3 +96,8 @@ pipeline-def:
               view: delta_features
             input-views:
               - delta_features
+  metrics-logging:
+    uri: "${metrics_uri}"
+    actions:
+      - load users
+      - transform users-train

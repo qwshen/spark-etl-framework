@@ -13,24 +13,24 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * @param appCtx
  */
 class ExecutionContext private[etl](val appCtx: ApplicationContext, val config: Option[Config] = None)(implicit session: SparkSession) extends Loggable {
-  //the container for holding any object between actions
-  private val container: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map.empty[String, Any]
+  //the _container for holding any object between actions
+  private val _container: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map.empty[String, Any]
 
   /**
-   * Add an object into the container
+   * Add an object into the _container
    *
    * @param key
    * @param obj
    * @return
    */
-  def addObject(key: String, obj: Any): Unit = container.put(key, obj)
+  def addObject(key: String, obj: Any): Unit = this._container.put(key, obj)
 
   /**
-   * Get an object by name from the container
+   * Get an object by name from the _container
    * @param key
    * @return
    */
-  def getObject(key: String): Option[Any] = this.container.get(key)
+  def getObject(key: String): Option[Any] = this._container.get(key)
 
   /**
    * Get a value in the configuration by the key

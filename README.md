@@ -109,6 +109,16 @@ The following explains the definition of each section in a pipeline:
   where the definition of the job is in a separate file called job.yaml.  
   <br />
  
+- Metrics Logging - metrics collection and logging can be enabled per action based on the following configuration in pipeline definition:
+  ```yaml
+  metrics-logging:
+    uri: "${metrics_uri}"
+    actions:
+      - load-events
+      - transform user-train
+  ```
+  In the above setting, the metrics of the two actions (load-events, transform user-train) will be collected and written to ${metrics_uri}. The default metrics include schema in DDL format, row-count, estimate-size and execute-time of the views. Custom metrics can be added by following this [guide](docs/custom-actor.md)  _Please note: collecting metrics may impact the overall performance._ 
+  
 - Staging - for situations where the results of one or more actions need to be checked for troubleshooting or data verification. This can be achieved by adding the following section in the definition of a pipeline:
   ```yaml
   debug-staging:

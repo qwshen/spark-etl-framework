@@ -20,6 +20,10 @@
       {
         "name": "staging_uri",
         "value": "file:///c:/temp/staging"
+      },
+      {
+        "name": "metrics_uri",
+        "value": "file:///c:/temp/metrics"
       }
     ],
     "aliases": [
@@ -100,6 +104,14 @@
         "include": "./src/test/resources/pipelines/jobs/job.json"
       }
     ],
+
+    "metrics-logging": {
+      "uri": "${metrics_uri}",
+      "actions": [
+        "load-events"
+      ]
+    },
+
     "debug-staging": {
       "uri": "${staging_uri}",
       "actions": [

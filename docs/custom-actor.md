@@ -75,3 +75,11 @@ The following code is to retrieve an existing view by name:
     //custom implementation here
   }
 ```
+
+If custom metrics need to be added during the execution of the actor, override the following method:
+```scala
+def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, String)] = {
+  //custom implementation here
+}
+```
+_Please note: custom metrics are only collected when the actor has metric-logging enabled in the pipeline definition._

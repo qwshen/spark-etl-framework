@@ -9,6 +9,7 @@
         <variable name="iam_password" value="${events.db.password}" decryptionKeyString="${application.security.decryption.key}" />
         <variable name="process_date" value="${application.process_date}" />
         <variable name="staging_uri" value="file:///c:/temp/staging" />
+        <variable name="metrics_uri" value="file:///c:/temp/metrics" />
     </variables>
 
     <aliases>
@@ -64,6 +65,13 @@
             <output-view name="events" global="true" />
         </action>
     </job>
+
+    <metrics-logging>
+        <uri>${metrics_uri}</uri>
+        <actions>
+            <action name="load-events" />
+        </actions>
+    </metrics-logging>
 
     <debug-staging>
         <uri>${staging_uri}</uri>

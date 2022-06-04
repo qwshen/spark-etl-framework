@@ -23,7 +23,7 @@ final class YamlPipelineBuilder extends JsonPipelineBuilder {
       properties.foreach {
         case (k, v) => (k, v) match {
           case ("job", kvJob: Map[String, Any] @unchecked) => parseJob(kvJob, aliases, pipeline)
-          case _ => throw new RuntimeException("Invalid job definition from $f")
+          case _ => throw new RuntimeException(s"Invalid job definition from $jobFile")
         }
       }
     }

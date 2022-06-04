@@ -98,6 +98,14 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
       etlPipeline.addUdfRegister(UdfRegistration((r \ "@prefix").text, register))
     })
 
+    //metrics logging
+    (doc \\ "metrics-logging").headOption.map(l => {
+      val loggingUri: Option[String] = (l \ "uri").headOption.map(s => s.text)
+      val loggingActions: Seq[String] = (l \ "actions" \ "action").map(a => (a \ "@name").text)
+      //add the metrics logging
+      etlPipeline.takeMetricsLogging(MetricsLogging(loggingUri, loggingActions))
+    })
+
     //logging behavior
     (doc \\ "debug-staging").headOption.map(l => {
       val stagingUri: Option[String] = (l \ "uri").headOption.map(s => s.text)

@@ -54,6 +54,14 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
   }
 
   /**
+   * Collect metrics of current actor
+   * @param df
+   * @param session
+   * @return
+   */
+  override def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
+
+  /**
    * Initialize the actor with the properties & config
    */
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {

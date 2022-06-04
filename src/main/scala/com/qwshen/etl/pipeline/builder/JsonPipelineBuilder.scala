@@ -89,8 +89,13 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
             case _ => throw new RuntimeException("The jobs are not defined in the pipeline.")
           }
 
+          kvs.get("metrics-logging") match {
+            case Some(kvs: Map[String, Any] @unchecked) => pipeline.foreach(pl => parseMetricsLogging(kvs, pl))
+            case _ =>
+          }
+
           kvs.get("debug-staging") match {
-            case Some(kvs: Map[String, Any] @unchecked) => pipeline.foreach(pl => parseStaging(kvs, pl))
+            case Some(kvs: Map[String, Any] @unchecked) => pipeline.foreach(pl => parseStagingBehavior(kvs, pl))
             case _ =>
           }
         case _ =>
@@ -220,15 +225,17 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   //parse one actor in a job
   private def parseActor(kv: Map[String, Any], aliases: Map[String, String])(implicit config: Config, session: SparkSession): Option[Actor] = {
     var actor: Option[Actor] = None
+    val meta = sMap[(String, String)]()
     kv.foreach(x => (x._1, x._2) match {
       case ("type", s: String) => actor = Some(Class.forName(aliases.getOrElse(s, s)).getDeclaredConstructor().newInstance().asInstanceOf[Actor])
       case ("properties", properties: Map[String, Any] @unchecked) => actor.foreach(a => {
-        val meta = sMap[(String, String)]()
         parseMap(properties, "properties", meta)
-        a.init(meta.map { case (k, v) => (k.replaceAll("properties.", ""), resolve(v)) }, config)
       })
       case _ =>
     })
+    for (a <- actor) {
+      a.init(meta.map { case (k, v) => (k.replaceAll("properties.", ""), resolve(v)) }, config)
+    }
     actor
   }
 
@@ -252,8 +259,20 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
     }
   }
 
+  //parse metrics-logging
+  private def parseMetricsLogging(kv: Map[String, Any], pipeline: Pipeline)(implicit config: Config): Unit = {
+    var loggingUri: Option[String] = None
+    var loggingActions: Seq[String] = Nil
+    kv.foreach(x => (x._1, x._2) match {
+      case ("uri", s: String) => loggingUri = Some(resolve(s))
+      case ("actions", ss: Seq[String] @unchecked) => loggingActions = ss
+      case _ =>
+    })
+    pipeline.takeMetricsLogging(MetricsLogging(loggingUri, loggingActions))
+  }
+
   //parse debug-staging
-  private def parseStaging(kv: Map[String, Any], pipeline: Pipeline)(implicit config: Config): Unit = {
+  private def parseStagingBehavior(kv: Map[String, Any], pipeline: Pipeline)(implicit config: Config): Unit = {
     var stagingUri: Option[String] = None
     var stagingActions: Seq[String] = Nil
     kv.foreach(x => (x._1, x._2) match {

@@ -78,7 +78,21 @@ case class Pipeline(name: String) {
    */
   def udfRegistrations: Seq[UdfRegistration] = this._udfRegistrations
 
-  //logging behavior
+  //metrics logging
+  private var _metricsLogging: Option[MetricsLogging] = None
+  /**
+   * Take the metrics-logging
+   * @param metricsLogging
+   * @return
+   */
+  def takeMetricsLogging(metricsLogging: MetricsLogging): Pipeline = { this._metricsLogging = Some(metricsLogging); this }
+  /**
+   * The metrics logging
+   * @return
+   */
+  def metricsLogging: Option[MetricsLogging] = this._metricsLogging
+
+  //staging behavior
   private var _stagingBehavior: Option[StagingBehavior] = None
   /**
    * Take the staging-behavior

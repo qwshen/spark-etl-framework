@@ -8,6 +8,7 @@
     <variables>
         <variable name="process_date" value="${events.process_date}" />
         <variable name="staging_uri" value="/tmp/staging/events" />
+        <variable name="metrics_uri" value="/tmp/metrics/events" />
         <variable name="export_dir" value="${events.output_dir}" />
     </variables>
 
@@ -72,6 +73,15 @@
             </input-views>
         </action>
     </job>
+
+    <metrics-logging>
+        <uri>${metrics_uri}</uri>
+        <actions>
+            <action name="load users" />
+            <action name="load train" />
+            <action name="transform users-train" />
+        </actions>
+    </metrics-logging>
 
     <debug-staging>
         <uri>${staging_uri}</uri>
