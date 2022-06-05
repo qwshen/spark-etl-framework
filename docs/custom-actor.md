@@ -82,4 +82,12 @@ def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, 
   //custom implementation here
 }
 ```
+If preparation of collecting metrics is required in the execution of the actor, use the following hint
+```scala
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = {
+    if (ctx.metricsRequired) {
+      //prepare for metrics collection
+    }
+  }
+```
 _Please note: custom metrics are only collected when the actor has metric-logging enabled in the pipeline definition._
