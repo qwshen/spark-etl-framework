@@ -1,6 +1,6 @@
 package com.qwshen.etl.source
 
-import com.qwshen.etl.common.{DeltaReadActor, ExecutionContext}
+import com.qwshen.etl.common.{DeltaReadActor, JobContext}
 import org.apache.spark.sql.functions.current_timestamp
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -38,7 +38,7 @@ class DeltaStreamReader extends DeltaReadActor[DeltaStreamReader] {
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     path <- this._sourcePath
   } yield Try {
     //the initial DataframeReader

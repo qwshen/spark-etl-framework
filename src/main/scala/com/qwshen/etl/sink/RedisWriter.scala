@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{RedisActor, ExecutionContext}
+import com.qwshen.etl.common.{RedisActor, JobContext}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 
@@ -23,7 +23,7 @@ class RedisWriter extends RedisActor[RedisWriter] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     host <- this._host
     port <- this._port
     dbNum <- this._dbNum

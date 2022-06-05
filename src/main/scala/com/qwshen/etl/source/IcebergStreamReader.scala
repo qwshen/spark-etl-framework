@@ -1,7 +1,7 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, IcebergActor}
+import com.qwshen.etl.common.{JobContext, IcebergActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.current_timestamp
 import scala.util.{Failure, Success, Try}
@@ -27,7 +27,7 @@ class IcebergStreamReader extends IcebergActor[IcebergStreamReader] {
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
   } yield Try {
     //the initial DataframeReader

@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.{PropertyKey, VariableResolver}
-import com.qwshen.etl.common.{ExecutionContext, JdbcActor}
+import com.qwshen.etl.common.{JobContext, JdbcActor}
 import com.qwshen.etl.sink.process.{JdbcContinuousWriter, JdbcMicroBatchWriter}
 import com.qwshen.common.io.FileChannel
 import com.typesafe.config.Config
@@ -58,7 +58,7 @@ class JdbcStreamWriter extends JdbcActor[JdbcStreamWriter] with VariableResolver
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     mode <- this._outputMode
     df <- this._sourceView.flatMap(name => ctx.getView(name))
   } yield Try {

@@ -1,6 +1,6 @@
 package com.qwshen.etl.source
 
-import com.qwshen.etl.common.{ExecutionContext, IcebergActor}
+import com.qwshen.etl.common.{JobContext, IcebergActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 
@@ -15,7 +15,7 @@ class IcebergReader extends IcebergActor[IcebergReader] {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
   } yield Try {
     this._options.foldLeft(session.read.format("iceberg"))((r, o) => r.option(o._1, o._2)).load(table)

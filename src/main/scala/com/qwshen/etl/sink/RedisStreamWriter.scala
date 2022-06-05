@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, RedisActor}
+import com.qwshen.etl.common.{JobContext, RedisActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -37,7 +37,7 @@ class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     host <- this._host
     port <- this._port
     dbNum <- this._dbNum

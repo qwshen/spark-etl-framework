@@ -1,6 +1,6 @@
 package com.qwshen.etl.source
 
-import com.qwshen.etl.common.{DeltaReadActor, ExecutionContext}
+import com.qwshen.etl.common.{DeltaReadActor, JobContext}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 
@@ -15,7 +15,7 @@ class DeltaReader extends DeltaReadActor[DeltaReader] {
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = Try {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = Try {
     //the initial DataframeReader
     val reader = this._options.foldLeft(session.read.format("delta"))((r, o) => r.option(o._1, o._2))
     //load

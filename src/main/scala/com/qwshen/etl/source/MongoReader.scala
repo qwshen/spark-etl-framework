@@ -1,6 +1,6 @@
 package com.qwshen.etl.source
 
-import com.qwshen.etl.common.{ExecutionContext, MongoActor}
+import com.qwshen.etl.common.{JobContext, MongoActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.mongodb.spark.config.ReadConfig
 import com.mongodb.spark.MongoSpark
@@ -17,7 +17,7 @@ class MongoReader extends MongoActor[MongoReader] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     hostName <- this._host
     portNum <- this._port
     dbName <- this._database

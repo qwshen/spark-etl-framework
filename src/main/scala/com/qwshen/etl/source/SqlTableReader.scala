@@ -1,7 +1,7 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{Actor, ExecutionContext}
+import com.qwshen.etl.common.{Actor, JobContext}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 
@@ -21,7 +21,7 @@ class SqlTableReader extends Actor {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
   } yield Try {
     this._filterPredicate.foldLeft(session.table(table))((r, p) => r.filter(p))

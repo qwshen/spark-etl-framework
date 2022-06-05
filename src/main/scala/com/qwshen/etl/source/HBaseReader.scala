@@ -2,7 +2,7 @@ package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
 import com.qwshen.common.io.HBaseChannel
-import com.qwshen.etl.common.{ExecutionContext, HBaseActor}
+import com.qwshen.etl.common.{JobContext, HBaseActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 
@@ -27,7 +27,7 @@ class HBaseReader extends HBaseActor[HBaseReader] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
   } yield Try {
     HBaseChannel.read(this._connectionProperties, table)(this._fieldsMapping, this._options, this._filter)

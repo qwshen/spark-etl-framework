@@ -1,14 +1,18 @@
-package com.qwshen.etl
+package com.qwshen.etl.common
+
+import com.qwshen.common.logging.Loggable
 
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import com.qwshen.common.logging.Loggable
 
 /**
  * The application-context describes the common and environment variables at the application level
  */
-final class ApplicationContext() extends Loggable {
+final class PipelineContext() extends Loggable {
+  //the _container for holding any object between jobs
+  private val _container: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map.empty[String, Any]
+
   /**
    * The name of the global database in spark-sql
    */
@@ -111,4 +115,20 @@ final class ApplicationContext() extends Loggable {
    * @return
    */
   def ioBatchSize: Int = 1600
+
+  /**
+   * Add an object into the _container
+   *
+   * @param key
+   * @param obj
+   * @return
+   */
+  def addObject(key: String, obj: Any): Unit = this._container.put(key, obj)
+
+  /**
+   * Get an object by name from the _container
+   * @param key
+   * @return
+   */
+  def getObject(key: String): Option[Any] = this._container.get(key)
 }

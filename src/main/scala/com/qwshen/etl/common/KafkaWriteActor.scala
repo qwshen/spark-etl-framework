@@ -30,7 +30,7 @@ private[etl] abstract class KafkaWriteActor[T] extends KafkaActor[T] { self: T =
   /**
    * Run the file-reader
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
     def getBySchema(schema: Schema, dstField: String)(x: DataFrame): DataFrame = {

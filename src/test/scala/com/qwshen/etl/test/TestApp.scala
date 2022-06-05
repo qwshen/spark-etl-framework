@@ -1,20 +1,22 @@
 package com.qwshen.etl.test
 
-import com.qwshen.etl.ApplicationContext
 import com.qwshen.etl.pipeline.PipelineRunner
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{FunSuite, Matchers}
+
 import scala.util.{Failure, Properties, Success, Try}
 import com.qwshen.common.io.FileChannel
+import com.qwshen.etl.common.PipelineContext
 import com.qwshen.etl.pipeline.builder.PipelineFactory
+
 import scala.util.control.Exception.ultimately
 
 class TestApp extends FunSuite with Matchers {
   protected val resourceRoot: String = getClass.getClassLoader.getResource("").getPath
 
   protected val config: Config = loadConfig()
-  protected val runner = new PipelineRunner(new ApplicationContext())
+  protected val runner = new PipelineRunner(new PipelineContext())
 
   protected def start(): Option[SparkSession] = Try {
     val session = createSparkSession()

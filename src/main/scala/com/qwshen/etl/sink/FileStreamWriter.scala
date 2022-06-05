@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, FileWriteActor}
+import com.qwshen.etl.common.{JobContext, FileWriteActor}
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
@@ -32,7 +32,7 @@ class FileStreamWriter extends FileWriteActor[FileStreamWriter] {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     fmt <- this._format
     mode <- this._outputMode
     uri <- this._fileUri

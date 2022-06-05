@@ -1,7 +1,7 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, FileReadActor}
+import com.qwshen.etl.common.{JobContext, FileReadActor}
 import org.apache.spark.sql.functions.current_timestamp
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
@@ -28,7 +28,7 @@ class FileStreamReader extends FileReadActor[FileStreamReader] {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     fmt <- this._format
     schema <- this._schema
     uri <- this._fileUri

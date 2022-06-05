@@ -30,7 +30,7 @@ abstract class Actor extends PropertyComponent with Serializable {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame]
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame]
 
   /**
    * Collect metrics of current actor
@@ -38,5 +38,5 @@ abstract class Actor extends PropertyComponent with Serializable {
    * @param session
    * @return
    */
-  def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, String)] = Nil
+  def collectMetrics(df: DataFrame): Seq[(String, String)] = Nil
 }

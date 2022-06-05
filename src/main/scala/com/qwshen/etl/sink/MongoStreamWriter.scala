@@ -3,7 +3,7 @@ package com.qwshen.etl.sink
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.WriteConfig
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, MongoActor}
+import com.qwshen.etl.common.{JobContext, MongoActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -38,7 +38,7 @@ class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     hostName <- this._host
     portNum <- this._port
     dbName <- this._database

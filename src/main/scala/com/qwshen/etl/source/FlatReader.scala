@@ -1,10 +1,11 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, FlatReadActor}
+import com.qwshen.etl.common.{JobContext, FlatReadActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import scala.util.{Failure, Success, Try}
-import org.apache.spark.sql.functions.{input_file_name}
+import org.apache.spark.sql.functions.{count, input_file_name, lit}
 
 /**
  * To load a text file.
@@ -26,7 +27,7 @@ class FlatReader extends FlatReadActor[FlatReader] {
    * @param ctx - the execution context
    * @param session - the spark-session
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     uri <- this._fileUri
   } yield Try {
     import session.implicits._
@@ -71,6 +72,21 @@ class FlatReader extends FlatReadActor[FlatReader] {
   } match {
     case Success(df) => df
     case Failure(ex) => throw new RuntimeException(s"Cannot load the flat file - $uri", ex)
+  }
+
+  /**
+   * Calculate the rows count of each file
+   * @param df
+   *  @return
+   */
+  override def collectMetrics(df: DataFrame): Seq[(String, String)] = {
+    import df.sparkSession.implicits._
+    df.select(input_file_name().as("___input_fn__"))
+      .groupBy($"___input_fn__")
+      .agg(count(lit(1)).as("___input_fn_cnt__"))
+      .select($"___input_fn__", $"___input_fn_cnt__").collect().zipWithIndex
+      .map { case(r, i) => ((r(0).toString, String.format("%s", r(1).toString)), i) }
+      .flatMap { case(r, i) => Seq((s"input-file${i + 1}-name", r._1), (s"input-file${i + 1}-row-count", r._2)) }
   }
 
   /**

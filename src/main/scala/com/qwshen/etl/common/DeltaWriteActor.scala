@@ -31,7 +31,7 @@ private[etl] abstract class DeltaWriteActor[T] extends Actor { self: T =>
   /**
    * Run the file-reader
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try(write(df)) match {
     case Success(_) => df

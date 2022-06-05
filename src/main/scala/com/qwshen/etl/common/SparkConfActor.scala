@@ -19,7 +19,7 @@ class SparkConfActor extends Actor {
    * @param session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = {
     this._settings.foreach { case (k, v) => session.conf.set(k, v) };
     this._hadoopSettings.foreach { case(k, v) => session.sparkContext.hadoopConfiguration.set(k, v) }
     None

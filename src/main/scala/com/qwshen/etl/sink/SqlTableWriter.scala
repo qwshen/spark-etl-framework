@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, Actor}
+import com.qwshen.etl.common.{JobContext, Actor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -30,7 +30,7 @@ class SqlTableWriter extends Actor {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     tbl <- this._table
     md <- this._mode
     df <- this._view.flatMap(name => ctx.getView(name))

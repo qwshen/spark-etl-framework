@@ -2,7 +2,7 @@ package com.qwshen.etl.transform
 
 import com.qwshen.common.PropertyKey
 import com.qwshen.etl.common.stream.ArbitraryStatefulProcessor
-import com.qwshen.etl.common.{Actor, ExecutionContext}
+import com.qwshen.etl.common.{Actor, JobContext}
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
@@ -25,7 +25,7 @@ class StreamStatefulTransformer extends Actor {
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     transformer <- this._stateTransformer
     df <- this._sourceView.flatMap(name => ctx.getView(name))
   } yield Try {

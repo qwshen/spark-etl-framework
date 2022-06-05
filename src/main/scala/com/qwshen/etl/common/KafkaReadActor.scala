@@ -29,7 +29,7 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     df <- this.load(session)
   } yield Try {
     //calculate all columns except key & value

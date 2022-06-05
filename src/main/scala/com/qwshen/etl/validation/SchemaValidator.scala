@@ -2,7 +2,7 @@ package com.qwshen.etl.validation
 
 import com.qwshen.common.PropertyKey
 import com.qwshen.common.io.FileChannel
-import com.qwshen.etl.common.{Actor, ExecutionContext}
+import com.qwshen.etl.common.{Actor, JobContext}
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
@@ -40,7 +40,7 @@ class SchemaValidator extends Actor {
     * @param session - the spark-session
     * @return
     */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     schema <- this._schema
     df <- this._view.flatMap(name => ctx.getView(name))
     vt <- this._type

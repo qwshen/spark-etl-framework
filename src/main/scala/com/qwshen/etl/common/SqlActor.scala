@@ -38,7 +38,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
    * @param session - the spark-session
    *  @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     stmt <- this._sqlStmt
   } yield {
     //log the sql statement in debug mode
@@ -59,7 +59,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
    * @param session
    * @return
    */
-  override def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
+  override def collectMetrics(df: DataFrame): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
 
   /**
    * Initialize the actor with the properties & config

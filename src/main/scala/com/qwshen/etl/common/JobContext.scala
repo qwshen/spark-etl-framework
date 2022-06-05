@@ -1,7 +1,6 @@
 package com.qwshen.etl.common
 
 import com.qwshen.common.logging.Loggable
-import com.qwshen.etl.ApplicationContext
 import com.qwshen.etl.pipeline.definition.View
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -12,7 +11,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * @param session
  * @param appCtx
  */
-class ExecutionContext private[etl](val appCtx: ApplicationContext, val config: Option[Config] = None)(implicit session: SparkSession) extends Loggable {
+class JobContext private[etl](val appCtx: PipelineContext, val config: Option[Config] = None)(implicit session: SparkSession) extends Loggable {
   //the _container for holding any object between actions
   private val _container: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map.empty[String, Any]
 
@@ -60,4 +59,14 @@ class ExecutionContext private[etl](val appCtx: ApplicationContext, val config: 
     None
   }
   def getView(view: View): Option[DataFrame] = getView(if (view.global) s"${appCtx.global_db}.${view.name}" else view.name)
+
+  //metrics collection hint
+  private var _metricsRequired: Boolean = false
+  /**
+   * Check this flag to see if metrics collection is required
+   * @return
+   */
+  def metricsRequired = this._metricsRequired
+  //this method is only called from pipeline-runner
+  private[etl] def metricsRequired_= (newVal: Boolean) = this._metricsRequired = newVal
 }

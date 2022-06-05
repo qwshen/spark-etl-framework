@@ -1,7 +1,7 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, IcebergActor}
+import com.qwshen.etl.common.{JobContext, IcebergActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -48,7 +48,7 @@ class IcebergStreamWriter extends IcebergActor[IcebergStreamWriter] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
     mode <- this._outputMode
     df <- this._view.flatMap(name => ctx.getView(name))

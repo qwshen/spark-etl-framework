@@ -1,11 +1,13 @@
 package com.qwshen.etl
 
+import com.qwshen.etl.common.PipelineContext
 import com.qwshen.etl.configuration.ArgumentParser
 import com.qwshen.etl.pipeline.PipelineRunner
 import com.qwshen.etl.pipeline.builder.PipelineFactory
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.fs.FileSystem
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -38,7 +40,7 @@ class Launcher {
       for {
         pipeline <- PipelineFactory.fromFile(arguments.pipelineFile)
       } {
-        new PipelineRunner(new ApplicationContext()).run(pipeline)
+        new PipelineRunner(new PipelineContext()).run(pipeline)
       }
     }
     finally {

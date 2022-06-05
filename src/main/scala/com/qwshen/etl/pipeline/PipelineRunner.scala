@@ -1,19 +1,19 @@
 package com.qwshen.etl.pipeline
 
 import com.qwshen.common.logging.Loggable
-import com.qwshen.etl.ApplicationContext
-import com.qwshen.etl.common.ExecutionContext
+import com.qwshen.etl.common.{JobContext, PipelineContext}
 import com.qwshen.etl.pipeline.definition._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{FileSystem, Path}
+
 import java.io.PrintWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
-final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
+final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   //to describe the content of metric entry
   private case class MetricEntry(jobName: String, actionName: String, key: String, value: String)
 
@@ -34,7 +34,7 @@ final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
       val curSession: SparkSession = if (pipeline.singleSparkSession) session else session.newSession()
       try {
         //create execution context
-        val ctx: ExecutionContext = new ExecutionContext(appCtx, pipeline.config)(curSession)
+        val ctx: JobContext = new JobContext(appCtx, pipeline.config)(curSession)
 
         //register UDFs if any
         registerUDFs(pipeline.udfRegistrations)(curSession)
@@ -54,6 +54,8 @@ final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
           }
           //check if all referenced view exist
           ensureViewsExist(scanReferencedViews(action))(curSession)
+          //check if metrics collection is required, so to give the hint to the actor before running
+          ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
           //execute
           action.actor.run(ctx)(curSession) collect { case r: DataFrame => r } foreach (df => {
             promoteView(df, action, pipeline.globalViewAsLocal, viewsReferenced)
@@ -140,15 +142,19 @@ final class PipelineRunner(appCtx: ApplicationContext) extends Loggable {
       ml <- metricsLogging
       _ <- ml.loggingActions.find(a => a.equalsIgnoreCase(action.name)) if !df.isStreaming
     } yield {
+      val customMetrics = action.actor.collectMetrics(df)
+        .map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
+
       if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
         df.persist(StorageLevel.MEMORY_AND_DISK)
       }
-      Seq(
+      val systemMetrics = Seq(
         MetricEntry(jobName, action.name, "ddl-schema", df.schema.toDDL),
         MetricEntry(jobName, action.name, "row-count", df.count.toString),
         MetricEntry(jobName, action.name, "estimate-size", String.format("%s bytes", df.sparkSession.sessionState.executePlan(df.queryExecution.logical).optimizedPlan.stats.sizeInBytes.toString())),
         MetricEntry(jobName, action.name, "execute-time", LocalDateTime.now.toString)
-      ) ++ action.actor.collectMetrics(df).map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r\n|\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
+      )
+      systemMetrics ++ customMetrics
     }
   } match {
     case Success(r) => r.getOrElse(Nil)

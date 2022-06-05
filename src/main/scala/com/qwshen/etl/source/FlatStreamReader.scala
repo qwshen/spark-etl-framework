@@ -1,7 +1,7 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{ExecutionContext, FlatReadActor}
+import com.qwshen.etl.common.{JobContext, FlatReadActor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.util.{Failure, Success, Try}
 import org.apache.spark.sql.functions.current_timestamp
@@ -32,7 +32,7 @@ class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
    * @param session - the spark-session
    * @return
    */
-  override def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     uri <- this._fileUri
   } yield Try {
     import session.implicits._

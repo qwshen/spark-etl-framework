@@ -58,7 +58,7 @@ Make sure the **super.init(properties, config)** is called at the beginning of t
 
 - Implement the data read/write/transformation logic:
 ```scala
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = {
     //custom implementation here
   }
 ```
@@ -67,7 +67,7 @@ The following code is to retrieve an existing view by name:
   @PropertyKey("view", true)
   private var _view: Option[String] = None
 
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     //...
     df <- this._view.flatMap(name => ctx.getView(name))
     //...

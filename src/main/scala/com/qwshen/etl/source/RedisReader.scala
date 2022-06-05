@@ -2,7 +2,7 @@ package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
 import com.qwshen.common.io.FileChannel
-import com.qwshen.etl.common.{RedisActor, ExecutionContext}
+import com.qwshen.etl.common.{RedisActor, JobContext}
 import com.typesafe.config.Config
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -46,7 +46,7 @@ class RedisReader extends RedisActor[RedisReader] {
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     host <- this._host
     port <- this._port
     dbNum <- this._dbNum

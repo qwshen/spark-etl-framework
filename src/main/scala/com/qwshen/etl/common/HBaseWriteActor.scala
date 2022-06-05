@@ -34,7 +34,7 @@ private[etl] abstract class HBaseWriteActor[T] extends HBaseActor[T] { self: T =
    * @param session - the spark-session
    * @return
    */
-  def run(ctx: ExecutionContext)(implicit session: SparkSession): Option[DataFrame] = for {
+  def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     table <- this._table
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
