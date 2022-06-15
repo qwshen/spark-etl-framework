@@ -6,4 +6,4 @@ package com.qwshen.common
  * @param path - the key path
  * @param required - whether or not the property is required.
  */
-case class PropertyKey(path: String, required: Boolean = false) extends scala.annotation.StaticAnnotation
+case class PropertyKey(path: String, required: Boolean) extends scala.annotation.StaticAnnotation
