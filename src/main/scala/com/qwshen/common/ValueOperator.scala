@@ -2,6 +2,7 @@ package com.qwshen.common
 
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe
+import scala.util.Try
 
 /**
  * Defines method for manipulating value of a member in an object through reflection
@@ -27,20 +28,20 @@ trait ValueOperator extends Serializable {
    */
   def matchValue(member: TermSymbol, value: AnyRef): AnyRef = member.typeSignature.resultType.toString match {
     case ValueOperator.optionType(tpe) => tpe match {
-      case "Int" => Option[AnyRef](Int.box(value.toString.toInt))
+      case "Int" => Option[AnyRef](Int.box(Try(value.toString.toInt).getOrElse(value.toString.toFloat.toInt)))
       case "Boolean" => Option[AnyRef](Boolean.box(value.toString.toBoolean))
-      case "Long" => Option[AnyRef](Long.box(value.toString.toLong))
-      case "Byte" => Option[AnyRef](Byte.box(value.toString.toByte))
-      case "Short" => Option[AnyRef](Short.box(value.toString.toShort))
+      case "Long" => Option[AnyRef](Long.box(Try(value.toString.toLong).getOrElse(value.toString.toDouble.toLong)))
+      case "Byte" => Option[AnyRef](Byte.box(Try(value.toString.toByte).getOrElse(value.toString.toFloat.toByte)))
+      case "Short" => Option[AnyRef](Short.box(Try(value.toString.toShort).getOrElse(value.toString.toFloat.toShort)))
       case "Float" => Option[AnyRef](Float.box(value.toString.toFloat))
       case "Double" => Option[AnyRef](Double.box(value.toString.toDouble))
       case _ => Option[AnyRef](value)
     }
-    case "Int" => Int.box(value.toString.toInt)
-    case "Long" => Long.box(value.toString.toLong)
+    case "Int" => Int.box(Try(value.toString.toInt).getOrElse(value.toString.toFloat.toInt))
+    case "Long" => Long.box(Try(value.toString.toLong).getOrElse(value.toString.toDouble.toLong))
     case "Boolean" => Boolean.box(value.toString.toBoolean)
-    case "Byte" => Byte.box(value.toString.toByte)
-    case "Short" => Short.box(value.toString.toShort)
+    case "Byte" => Byte.box(Try(value.toString.toByte).getOrElse(value.toString.toFloat.toByte))
+    case "Short" => Short.box(Try(value.toString.toShort).getOrElse(value.toString.toFloat.toShort))
     case "Float" => Float.box(value.toString.toFloat)
     case "Double" => Double.box(value.toString.toDouble)
     case "Char" | "String" => value.toString
