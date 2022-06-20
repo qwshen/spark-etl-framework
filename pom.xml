@@ -13,7 +13,7 @@
         <io.confluent.version>4.1.2</io.confluent.version>
         <hadoop.version>3.2.3</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
-        <iceberg.runtime.version>0.13.1</iceberg.runtime.version>
+        <iceberg.runtime.version>0.13.2</iceberg.runtime.version>
         <fasterxml.jackson.version>2.12.0</fasterxml.jackson.version>
 
         <!-- For Spark 2.4.2 with Scala 2.11. Note: please change the iceberg dependency accordingly -->

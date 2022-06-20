@@ -5,6 +5,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, count, input_file_name, lit}
 import org.apache.spark.storage.StorageLevel
 import scala.util.{Failure, Success, Try}
+import com.qwshen.common.PropertyKey
 
 /**
  * This FileReader is for loading json, avro & parquet files
@@ -12,6 +13,12 @@ import scala.util.{Failure, Success, Try}
 class FileReader extends FileReadActor[FileReader] {
   private final val _clmnFileName: String = "___input_fn__"
   private final val _clmnFileCnt: String = "___input_fn_cnt__"
+
+  /**
+   * The character to separate multiple URIs from where objects are loaded
+   */
+  @PropertyKey("multiUriSeparator", false)
+  protected var _multiUriSeparator: Option[String] = None
 
   /**
    * Run the file-reader
@@ -24,7 +31,11 @@ class FileReader extends FileReadActor[FileReader] {
     fmt <- this._format
     uri <- this._fileUri
   } yield Try {
-    val df = this._schema.foldLeft(this._options.foldLeft(session.read.format(fmt))((s, o) => s.option(o._1, o._2)))((r, s) => r.schema(s)).load(uri)
+    val reader = this._schema.foldLeft(this._options.foldLeft(session.read.format(fmt))((s, o) => s.option(o._1, o._2)))((r, s) => r.schema(s))
+    val df = this._multiUriSeparator match {
+      case Some(separator) => reader.load(uri.split(separator): _*)
+      case _ => reader.load(uri)
+    }
     if (ctx.metricsRequired) df.withColumn(this._clmnFileName, input_file_name()) else df
   } match {
     case Success(df) => df
