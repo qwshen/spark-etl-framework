@@ -58,4 +58,12 @@ class FileReader extends FileReadActor[FileReader] {
       .map { case(r, i) => ((r(0).toString, String.format("%s", r(1).toString)), i) }
       .flatMap { case(r, i) => Seq((s"input-file${i + 1}-name", r._1), (s"input-file${i + 1}-row-count", r._2)) }
   }
+
+  /**
+   * The URI separator
+   *
+   * @param separator - the splitting character
+   * @return
+   */
+  def uriSeparator(separator: String): FileReader = { this._multiUriSeparator = Some(separator); this }
 }

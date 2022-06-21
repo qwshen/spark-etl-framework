@@ -4,7 +4,7 @@ The FileReader is for loading files from various locations, such as local, hdfs 
 - The options are optional.
 - The schema is optional. If specified, it must be in ddl-schema format. If the schema is defined in a file, please use ddlSchemaFile with the file-name as the value.
 - The fileUri is the full path from where objects are loaded.
-- The multiUriSeparator specifies the character to split the fileUri to multiple paths so all objects from multiple paths are loaded
+- The multiUriSeparator specifies the character to split the fileUri into multiple paths so all objects from multiple paths are loaded
 
 Actor Class: `com.qwshen.etl.source.FileReader`
 
