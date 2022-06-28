@@ -39,7 +39,7 @@ class FileReader extends FileReadActor[FileReader] {
     if (ctx.metricsRequired) df.withColumn(this._clmnFileName, input_file_name()) else df
   } match {
     case Success(df) => df
-    case Failure(ex) => throw new RuntimeException(s"Cannot load the file into data-frame - ${this._fileUri}.", ex)
+    case Failure(ex) => throw new RuntimeException(this._multiUriSeparator.foldLeft(s"Cannot load the file into data-frame - ${this._fileUri}")((r, s) => String.format("%s. [with uri-separator - %s].", r, s)), ex)
   }
 
   /**

@@ -15,7 +15,7 @@ class SqlReader extends SqlBase[SqlReader] {
     super.init(properties, config)
 
     //verify the sql-statement is a select.
-    if (this._sqlStmt.flatMap(s => "^select.*".r.findFirstIn(s.toLowerCase())).isEmpty) {
+    if (this._sqlStmt.map(s => s.replaceAll("[\r|\n]", " ").toLowerCase).forall(s => Seq("^select.+", "^with.+select.+from.+").map(e => e.r.findFirstIn(s).isEmpty).reduce((x, y) => x & y))) {
       throw new RuntimeException("The sqlString or sqlFile in SqlReader is not a sql select-statement.")
     }
   }
