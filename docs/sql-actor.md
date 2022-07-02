@@ -94,7 +94,7 @@ The sql-statement specified by sqlString or from sqlFile can have multiple valid
   select * from t      
 ```
 
-- The ${runActor} and ${runTime} are defined in either application.conf, job-submit arguments or pipeline;
+- The ${runActor} & ${runTime} are defined in either application.conf, job-submit arguments or pipeline;
 - The ${run_date} is referenced in the next sql-statement;
 - The ${run_date} is also available in any downstream actors. 
 
