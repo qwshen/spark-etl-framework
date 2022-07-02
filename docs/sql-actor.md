@@ -96,7 +96,7 @@ The sql-statement specified by sqlString or from sqlFile can have multiple valid
 
 In the above example:
 - The ```${runActor}``` and ```${runTime}``` are defined in either application.conf, job-submit arguments or pipeline;
-- The "${run_date}" is referenced in the next sql-statement;
-- The "${run_date}" is also available in any downstream actors. 
+- The ```${run_date}``` is referenced in the next sql-statement;
+- The ```${run_date}``` is also available in any downstream actors. 
 
 **However, with such "complex" sql-statement, only the result of the last sql-sub-statement is outputted.**
