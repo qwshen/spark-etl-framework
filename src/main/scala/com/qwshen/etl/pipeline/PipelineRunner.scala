@@ -6,7 +6,6 @@ import com.qwshen.etl.pipeline.definition._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.apache.hadoop.fs.{FileSystem, Path}
-
 import java.io.PrintWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -37,7 +36,7 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
         val ctx: JobContext = new JobContext(appCtx, pipeline.config)(curSession)
 
         //register UDFs if any
-        registerUDFs(pipeline.udfRegistrations)(curSession)
+        UdfRegistration.setup(pipeline.udfRegistrations)(curSession)
         //localize global views
         if (pipeline.globalViewAsLocal) {
           localizeGlobalViews(curSession)
@@ -82,9 +81,6 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
       }
     })
   }
-
-  //register UDFs
-  private def registerUDFs(udfRegisters: Seq[UdfRegistration])(implicit session: SparkSession): Unit = udfRegisters.foreach(r => r.register.register(r.prefix))
 
   //localize global views so they can be used without specifying the global database.
   private def localizeGlobalViews(implicit session: SparkSession): Unit = {

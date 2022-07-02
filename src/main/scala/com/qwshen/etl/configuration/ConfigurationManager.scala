@@ -23,10 +23,17 @@ object ConfigurationManager {
    * @param value
    * @return
    */
-  def quote(value: String): String = VariableResolver.getName(value) match {
+  def quote(value: String): String = if (value.startsWith("\"") && value.endsWith("\"")) value else VariableResolver.getName(value) match {
     case `value` => "[\\W]+".r.findFirstIn(value).foldLeft(value)((r, _) => "\"" + r + "\"")
     case _ => value
   }
+
+  /**
+   * If the value is quoted, un-quote it
+   * @param value - the input string
+   * @return - un-quoted string
+   */
+  def unquote(value: String): String = if (value.startsWith("\"") && value.endsWith("\"")) value.stripPrefix("\"").stripSuffix("\"") else value
 
   /**
    * Merge the variables into the config object

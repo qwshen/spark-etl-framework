@@ -16,7 +16,11 @@ pipeline-def:
       value: "${events.output_dir}"
     - name: delta_dir
       value: "/tmp/delta"
+    - name: execution_date
+      value: "current_date()"
   aliases:
+    - name: var-setter
+      type: com.qwshen.etl.common.VariableSetter
     - name: file-reader
       type: com.qwshen.etl.source.FileReader
     - name: flat-reader
@@ -49,6 +53,13 @@ pipeline-def:
               fileUri: "${events.train_input}"
           output-view:
             name: train
+        - name: set up variables
+          actor:
+            type: var-setter
+            properties:
+              variables:
+                runActor: System
+                runTime: "now()"
         - name: transform users-train
           actor:
             type: sql

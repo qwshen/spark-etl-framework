@@ -10,16 +10,28 @@
         <variable name="staging_uri" value="/tmp/staging/events" />
         <variable name="metrics_uri" value="/tmp/metrics/events" />
         <variable name="export_dir" value="${events.output_dir}" />
+        <variable name="execution_date" value="current_date()" />
     </variables>
 
     <aliases>
         <alias name="file-reader" type="com.qwshen.etl.source.FileReader" />
         <alias name="flat-reader" type="com.qwshen.etl.source.FlatReader" />
         <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
+        <alias name="var-setter" type="com.qwshen.etl.common.VariableSetter" />
         <alias name="file-writer" type="com.qwshen.etl.sink.FileWriter" />
     </aliases>
 
     <job name="prepare events-features">
+        <action name="set variables">
+            <actor type="var-setter">
+                <properties>
+                    <variables>
+                        <runActor>System</runActor>
+                        <runTime>now()</runTime>
+                    </variables>
+                </properties>
+            </actor>
+        </action>
         <action name="load users">
             <actor type="file-reader">
                 <properties>

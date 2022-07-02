@@ -14,7 +14,7 @@ import scala.util.parsing.json.JSON
  */
 final class YamlPipelineBuilder extends JsonPipelineBuilder {
   //parse a job which is included in the definition
-  override protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(implicit config: Config, session: SparkSession): Unit = {
+  override protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = {
     for (properties <- {
       val data = new ObjectMapper(new YAMLFactory()).readValue(FileChannel.loadAsString(jobFile), classOf[Any])
       val jsonString = new ObjectMapper().writeValueAsString(data)
@@ -22,7 +22,7 @@ final class YamlPipelineBuilder extends JsonPipelineBuilder {
     }) {
       properties.foreach {
         case (k, v) => (k, v) match {
-          case ("job", kvJob: Map[String, Any] @unchecked) => parseJob(kvJob, aliases, pipeline)
+          case ("job", kvJob: Map[String, Any] @unchecked) => parseJob(kvJob, aliases, pipeline)(config, session)
           case _ => throw new RuntimeException(s"Invalid job definition from $jobFile")
         }
       }

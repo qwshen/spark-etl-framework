@@ -37,7 +37,7 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
   private def parseString(xmlString: String)(implicit config: Config, session: SparkSession): Option[Pipeline] = Try {
     //check version
     "version=\"[0-9|\\.]+\"".r.findFirstIn(xmlString).map(x => x.split("=")(1).stripPrefix("\"").stripSuffix("\"")) match {
-      case Some(v) if v == "1.0.0" => parse_1_0_0(xmlString)
+      case Some(v) if v == "1.0.0" => parse_1_0_0(xmlString)(config, session)
       case _ => throw new RuntimeException("Cannot build the pipeline from the xml definition - missing version.")
     }
   } match {
@@ -46,26 +46,38 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
   }
 
   //parse version 1.0.0
-  private def parse_1_0_0(xmlString: String)(implicit config: Config, session: SparkSession): Option[Pipeline] = Try {
+  private def parse_1_0_0(xmlString: String)(config: Config, session: SparkSession): Option[Pipeline] = Try {
+    //resolve all variables inside the xml doc.
+    val docRaw = XML.loadString(xmlString)
+    //etl-pipeline
+    val etlPipeline = Pipeline((docRaw \\ "pipeline-def" \ "@name").text)
+    etlPipeline.singleSparkSession = Try((docRaw \\ "pipeline-def" \ "settings" \ "singleSparkSession" \ "@setting").text.toBoolean).toOption.getOrElse(false)
+    etlPipeline.singleSparkSession = Try((docRaw \\ "pipeline-def" \ "settings" \ "globalViewAsLocal" \ "@setting").text.toBoolean).toOption.getOrElse(false)
+    //alias
+    val alias: Map[String, String] = (docRaw \\ "pipeline-def" \ "aliases" \ "alias").map(a => ((a \ "@name").text, (a \ "@type").text)).toMap
+    //user-defined-functions
+    (docRaw \\ "pipeline-def" \ "udf-registration" \ "register").foreach(r => {
+      val typ = (r \ "@type").text
+      val register = Class.forName(alias.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
+      etlPipeline.addUdfRegister(UdfRegistration((r \ "@prefix").text, register))
+    })
+
+    //register UDFs
+    UdfRegistration.setup(etlPipeline.udfRegistrations)(session)
     //merge the variables defined in thE etl-pipeline into the config object
-    val newConfig: Config = mergeVariables(xmlString)
+    val newConfig: Config = mergeVariables(xmlString)(config, session)
+    //set the config for the pipeline
+    etlPipeline.takeConfig(newConfig)
+
     //resolve all variables inside the xml doc.
     val doc = XML.loadString(resolve(xmlString)(newConfig))
-
-    //etl-pipeline
-    val etlPipeline = Pipeline((doc \\ "pipeline-def" \ "@name").text).takeConfig(newConfig)
-    etlPipeline.singleSparkSession = Try((doc \\ "pipeline-def" \ "settings" \ "singleSparkSession" \ "@setting").text.toBoolean).toOption.getOrElse(false)
-    etlPipeline.singleSparkSession = Try((doc \\ "pipeline-def" \ "settings" \ "globalViewAsLocal" \ "@setting").text.toBoolean).toOption.getOrElse(false)
-
-    //alias
-    val alias: Map[String, String] = (doc \\ "pipeline-def" \ "aliases" \ "alias").map(a => ((a \ "@name").text, (a \ "@type").text)).toMap
-
     //jobs
     (doc \\ "pipeline-def" \ "job").foreach(j => {
       val jobFile =(j \ "@include").text
       val jd = if (jobFile.nonEmpty) XML.loadString(resolve(FileChannel.loadAsString(jobFile))(newConfig)) else j
 
       val job = Job((jd \ "@name").text)
+      var jobConfig = newConfig
       //actions
       (jd \ "action").foreach(a => {
         val name = (a \ "@name").text
@@ -76,7 +88,7 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
         //instantiate
         val actor = Class.forName(alias.getOrElse(typ, typ)).getDeclaredConstructor().newInstance().asInstanceOf[Actor]
         (a \ "actor" \ "properties").foreach(propNode => parseProperty(propNode, "", properties))
-        actor.init(properties.map{case(k, v) => (k.replaceAll("properties.", ""), v)}, newConfig)
+        actor.init(properties.map{case(k, v) => (k.replaceAll("properties.", ""), v)}, jobConfig)(session)
 
         //input views
         val inputViews: Seq[String] = (a \ "input-views" \ "view").map(v => (v \ "@name").text)
@@ -84,18 +96,15 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
         val outputView: Option[View] = (a \ "output-view").headOption.map(v => View((v \ "@name").text, Try((v \ "@global").text.toBoolean).toOption.getOrElse(false)))
 
         //add action
+        val variables = actor.extraVariables.mapValues(v => this.evaluate(this.resolve(ConfigurationManager.quote(v))(jobConfig))(session))
+        if (variables.nonEmpty) {
+          jobConfig = ConfigurationManager.mergeVariables(jobConfig, variables)
+        }
         job.addAction(Action(name, actor, outputView, inputViews))
       })
 
       //add job
       etlPipeline.addJob(job)
-    })
-
-    //user-defined-functions
-    (doc \\ "pipeline-def" \ "udf-registration" \ "register").foreach(r => {
-      val typ = (r \ "@type").text
-      val register = Class.forName(alias.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
-      etlPipeline.addUdfRegister(UdfRegistration((r \ "@prefix").text, register))
     })
 
     //metrics logging
@@ -134,12 +143,14 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
   }
 
   //merge the variables defined
-  private def mergeVariables(xmlString: String)(implicit config: Config): Config = Try {
+  private def mergeVariables(xmlString: String)(implicit config: Config, session: SparkSession): Config = Try {
+    var newConfig = config
     val kvs: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map[String, String]()
     val variables = (XML.loadString(xmlString) \\ "pipeline-def" \ "variables" \ "variable").map(v => {
       val name = (v \ "@name").text
-      val value = ConfigurationManager.quote((v \ "@value").text)
+      val value = ConfigurationManager.quote(this.evaluate(this.resolve((v \ "@value").text)(newConfig)))
       kvs.put(name, value)
+      newConfig = ConfigurationManager.mergeVariables(newConfig, Map(name -> value))
 
       val keyString = (v \ "@decryptionKeyString").headOption.map(n => n.text)
       val keyFile = (v \ "@decryptionKeyFile").headOption.map(n => n.text)
@@ -151,7 +162,6 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
       (name, value, keyString, keyFile)
     }).filter(x => x._3.isDefined || x._4.isDefined)
 
-    val newConfig = ConfigurationManager.mergeVariables(config, kvs.toMap)
     val decryptVariables = variables.map {
       case(name: String, _, keyString: Option[String], keyFile: Option[String]) =>
         val decryptionKey = (keyString, keyFile) match {

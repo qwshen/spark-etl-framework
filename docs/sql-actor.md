@@ -75,3 +75,27 @@ or
         </properties>
     </actor>
 ```
+
+The sql-statement specified by sqlString or from sqlFile can have multiple valid sql-sub-statements separated by semi-colon (;), including set statements. For example:
+```roomsql
+  set run_date = concat('${runActor}', ' at ', '${runTime}');
+  with t as (
+    select distinct
+      u.user_id,
+      u.gender,
+      cast(u.birthyear as int) as birthyear,
+      t.timestamp,
+      t.interested,
+      concat('${application.process_date}', '-', '${run_date}') as process_date,
+      t.event as event_id
+    from train t
+      left join users u on t.user = u.user_id
+  )
+  select * from t      
+```
+
+- The ${runActor} and ${runTime} are defined in either application.conf, job-submit arguments or pipeline;
+- The ${run_date} is referenced in the next sql-statement;
+- The ${run_date} is also available in any downstream actors. 
+
+**However, with such "complex" sql-statement, only the result of the last sql-sub-statement is outputted.**

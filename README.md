@@ -28,6 +28,7 @@ The following explains the definition of each section in a pipeline:
       <variables>
           <variable name="process_date" value="${events.process_date}" />
           <variable name="staging_uri" value="/tmp/staging/events" />
+          <variable name="execution_time" value="now()" />
       </variables>
       ```
   - **When a variable is defined more than once, its value from the job submit command has the highest precedence, and its value from the pipeline definition 
@@ -61,7 +62,8 @@ The following explains the definition of each section in a pipeline:
       ```
       The ${events.db.password} is the encrypted value from the encryption step.  
     <br />
-
+  - **A value can be any valid sql-expression which may reference pre-defined variables. Such as the execution_time, its value is calculated on the fly when the job starts to run. However, this only applies for the variables defined inside a pipeline. Variables with sql-expression defined in application configuration or from job submit are not evaluated.**
+  
 - Aliases - the aliases section defines the shorthand name used for referencing various actors. However, the alias for each actor must be globally unique.
   ```yaml
   aliases:
@@ -72,6 +74,8 @@ The following explains the definition of each section in a pipeline:
     - name: hbase-writer
       type: com.qwshen.sink.HBaseWriter
     ```
+  **Please note that variables cannot be referenced in this section.**
+
 - Jobs - a pipeline may contain multiple jobs while each job may have multiple actions. A job provides a container for resource isolation (when singleSparkSession = false). The output from an action of a job may be shared across actions within the same job or jobs. Each action in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
   ```json
   {
@@ -268,6 +272,7 @@ overrides common.conf, and application.conf overrides environments.conf.
 
 ### Other Utilities
 - [SqlActor](docs/sql-actor.md)
+- [VariableSetter](docs/variable-setter.md)
 - [ViewPartitioner](docs/view-partitioner.md)
 
 ### Custom UDF Registration
@@ -293,6 +298,8 @@ Then the UDF Register can be configured at pipeline level as follows:
     ]
   }
 ```
+
+**Please note that variables cannot be referenced in this section.**
 
 Check this [UDF example](docs/udf-example.md)
 

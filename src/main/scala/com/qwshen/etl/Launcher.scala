@@ -7,7 +7,6 @@ import com.qwshen.etl.pipeline.builder.PipelineFactory
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.fs.FileSystem
-
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -35,16 +34,16 @@ class Launcher {
     val arguments = ArgumentParser.parse(args)
 
     implicit val config: Config = arguments.config
-    implicit val session: SparkSession = createSparkSession
+    val session: SparkSession = createSparkSession
     try {
       for {
-        pipeline <- PipelineFactory.fromFile(arguments.pipelineFile)
+        pipeline <- PipelineFactory.fromFile(arguments.pipelineFile)(config, session.newSession())
       } {
-        new PipelineRunner(new PipelineContext()).run(pipeline)
+        new PipelineRunner(new PipelineContext()).run(pipeline)(session)
       }
     }
     finally {
-      recycleSparkSession
+      recycleSparkSession(session)
     }
   }
 
