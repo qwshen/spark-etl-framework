@@ -1,4 +1,4 @@
-####1. Aliases can be defined inside a pipeline as follows:
+#### 1. Aliases can be defined inside a pipeline as follows:
 - In Xml:
   ```xml
   <aliases>
@@ -42,7 +42,7 @@
       type: com.qwshen.etl.transform.SqlTransformer
   ```
   
-####2. Besides, aliases can be defined in a centralized file: 
+#### 2. Besides, aliases can be defined in a centralized file: 
 - In Xml. The following content is defined in a separated file - alias.xml
   ```xml
   <aliases>
@@ -105,7 +105,7 @@
     include: ./miscellaneous/alias.yaml
   ```
 
-####3. The mixed mode - for the common aliases that are used across multiple pipelines, the aliases are better defined in a separated file, and include it in each pipeline. However, one pipeline may have a particular alias.
+#### 3. The mixed mode - for the common aliases that are used across multiple pipelines, the aliases are better defined in a separated file, and include it in each pipeline. However, one pipeline may have a particular alias.
 - In Xml. The common aliases are defined in a separated file - alias.xml
   ```xml
   <aliases>
