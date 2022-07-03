@@ -157,7 +157,7 @@ The following explains the definition of each section in a pipeline:
     ```
   - The global flag in the output-view determines whether the output of the actor (data-view) can be shared across jobs. Default is false.
 
-  Properties of an actor may reference any variables from application configuration, job-submit arguments and defined in the **Variables** section of the current pipeline. Values of the properties can also be any valid sql-expressions which may reference any pre-defined variables.
+  Properties of an actor may reference any variables from application configuration, job-submit arguments and/or defined in the **Variables** section of the current pipeline. Values of the properties can also be any valid sql-expressions which may reference any pre-defined variables.
 
   Each Actor has at most one output (as a view) which can be referenced in any downstream actors. The view can also be referenced as table in a sql statement:
   ```sql
