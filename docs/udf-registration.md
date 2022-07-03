@@ -1,5 +1,5 @@
 A custom UDF must be registered before it can be used in actors or sql-statements:
-####1. Directly inside pipeline definition:
+#### 1. Directly inside pipeline definition:
 - In Xml:
   ```xml
   <udf-registration>
@@ -29,7 +29,7 @@ A custom UDF must be registered before it can be used in actors or sql-statement
       type: com.qwshen.etl.test.udf.UserUdf
   ```
 
-####2. Besides, udf-registratioin can be defined in a centralized file:
+#### 2. Besides, udf-registratioin can be defined in a centralized file:
 - In Xml. The following content is defined in a separated file - udf-registration.xml
   ```xml
   <udf-registration>
@@ -78,7 +78,7 @@ A custom UDF must be registered before it can be used in actors or sql-statement
     include: ./miscellaneous/udf-registration.yaml
   ```
 
-####3. The mixed mode - for the common UDFs that are used across multiple pipelines, the udf-registration is better defined in a separated file, and include it in each pipeline. However, one pipeline may have a particular udf-registration.
+#### 3. The mixed mode - for the common UDFs that are used across multiple pipelines, the udf-registration is better defined in a separated file, and include it in each pipeline. However, one pipeline may have a particular udf-registration.
 - In Xml. The common udf-registration is defined in a separated file - udf-registration.xml
   ```xml
   <udf-registration>
