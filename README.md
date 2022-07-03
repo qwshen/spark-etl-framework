@@ -87,7 +87,7 @@ The following explains the definition of each section in a pipeline:
 #### 4. Variables  
   The variables defined in this section can be referenced in the definition of the current pipeline, including SQL statements, but not in the Settings, Aliases and Udf-Registration sections  
   - A variable must be given a name and value, and is referenced in the format of ${variable-name}.
-  - The value can reference any values defined in the application configuration, as well as from the job submit arguments. The following example shows that process_date is from events.process_date, which is defined in the application configuration:
+  - The value can reference any variables defined in the application configuration, as well as from the job submit arguments. The following example shows that process_date is from events.process_date, which is defined in the application configuration:
     ```xml
     <variables>
         <variable name="process_date" value="${events.process_date}" />
@@ -95,7 +95,7 @@ The following explains the definition of each section in a pipeline:
         <variable name="execution_time" value="now()" />
     </variables>
     ```
-    Please Note: a value can also be any valid sql-expression which may reference pre-defined variables. Such as the staging_uri, its value is calculated on the fly when the job starts to run. However, this only applies for the variables defined inside a pipeline. Variables with sql-expression defined in application configuration or from job submit are not evaluated.
+    Please Note: a value can also be any valid sql-expression which may reference pre-defined variables. Such as the staging_uri, its value is calculated on the fly when the job starts to run. However, this only applies for the variables defined inside a pipeline. Variables with sql-expression defined in application configuration or from job submit arguments are not evaluated.
 
   - **When a variable is defined more than once, its value from the job submit arguments overrides what from application configuration, and the value from the Variables section of a pipeline has the highest precedence.**
   - When a variable contains sensitive data, such as a password, its value can be protected by a custom key. The following describes how to encrypt the value, and how to configure the variable:  
