@@ -25,7 +25,7 @@ The following explains the definition of each section in a pipeline:
   __Please note that variables cannot be referenced in this section.__  
   <br />
   
-####2. Aliases  
+#### 2. Aliases  
   The aliases section defines the shorthand name used for referencing various actors. However, the alias for each actor must be globally unique. Aliases are optional, if not defined, then the fully-qualified-class-name of an actor must be provided when defining an action for a job.
   ```yaml
   aliases:
@@ -53,7 +53,7 @@ The following explains the definition of each section in a pipeline:
   For centralized and mixed Aliases definition, please check [here](docs/alias.md)  
   <br />
 
-####3. UDF-Registration  
+#### 3. UDF-Registration  
   If custom UDFs are required in a pipeline for transforming data, a custom UDF register needs to be provided to register the related UDFs.
 
   A UDF register must extend com.qwshen.etl.common.UdfRegister, and implement the following method:
@@ -84,7 +84,7 @@ The following explains the definition of each section in a pipeline:
   For UDF example, please check [here](docs/udf-example.md) 
   <br />
 
-####4. Variables  
+#### 4. Variables  
   The variables defined in this section can be referenced in the definition of the current pipeline, including SQL statements, but not in the Settings, Aliases and Udf-Registration sections  
   - A variable must be given a name and value, and is referenced in the format of ${variable-name}.
   - The value can reference any values defined in the application configuration, as well as from the job submit arguments. The following example shows that process_date is from events.process_date, which is defined in the application configuration:
@@ -99,7 +99,7 @@ The following explains the definition of each section in a pipeline:
 
   - **When a variable is defined more than once, its value from the job submit arguments overrides what from application configuration, and the value from the Variables section of a pipeline has the highest precedence.**
   - When a variable contains sensitive data, such as a password, its value can be protected by a custom key. The following describes how to encrypt the value, and how to configure the variable:  
-    #####- encrypt the value by running the following command:
+    ##### - encrypt the value by running the following command:
       ```shell
       java -cp spark-etl-framework-xxx.jar com.qwshen.Encryptor \
         --key-string ${key-value} --data ${password}
@@ -110,7 +110,7 @@ The following explains the definition of each section in a pipeline:
         --key-file ${file-name} --data ${password}
       ```
       The above command will print the encrypted value.  
-    #####- configure the variable:
+    ##### - configure the variable:
       ```yaml
        variables:
          - name: db.password
@@ -130,7 +130,7 @@ The following explains the definition of each section in a pipeline:
   For variables defined and used inside sql-statements, please check [here](docs/sql-actor.md)
   <br />
   
-####5. Jobs
+#### 5. Jobs
   A pipeline may contain multiple jobs while each job may have multiple actions. A job provides a container for resource isolation (when singleSparkSession = false). The output from an action of a job may be shared across actions and across jobs. Each action in a job is represented by an Actor, which is defined by its type, and may have properties for controlling its behavior.
   ```json
   {
@@ -174,7 +174,7 @@ The following explains the definition of each section in a pipeline:
       - include: jobs/job.yaml
   ```
  
-####6. Metrics Logging
+#### 6. Metrics Logging
   Metrics collection and logging can be enabled per action based on the following configuration in pipeline definition:
   ```yaml
     metrics-logging:
@@ -185,7 +185,7 @@ The following explains the definition of each section in a pipeline:
   ```
   In the above setting, the metrics of the two actions (load-events, transform user-train) will be collected and written to ${metrics_uri}. The default metrics include schema in DDL format, row-count, estimate-size and execute-time of the views. Custom metrics can be added by following this [guide](docs/custom-actor.md). _Please note: collecting metrics may impact the overall performance._ 
   
-####7. Staging
+#### 7. Staging
   For situations where the results of one or more actions need to be staged for troubleshooting or data verification. This can be achieved by adding the following section in the definition of a pipeline:
   ```yaml
     debug-staging:
@@ -197,12 +197,12 @@ The following explains the definition of each section in a pipeline:
   In the above setting, the output of the two actions (load-events, transform-user-train) will be staged at ${staging_uri}. _Please note that more actions for staging more impact on the performance_. Therefore, they should be used primarily in dev environments.  
   <br />
 
-###8. Pipeline examples:
+### Pipeline examples:
 - [template_pipeline.yaml](src/test/resources/pipelines/template_pipeline.yaml) with included [job.yaml](src/test/resources/pipelines/jobs/job.yaml) 
 - [template_pipeline.json](src/test/resources/pipelines/template_pipeline.json) with included [job.json](src/test/resources/pipelines/jobs/job.json)
 - [template_pipeline.xml](src/test/resources/pipelines/template_pipeline.xml) with included [job.xml](src/test/resources/pipelines/jobs/job.xml)
 
-###9. Configuration
+### Configuration
   One or more application configuration files can be provided when submitting a Spark job. The following is one example:
   ```
   source.events {
@@ -220,8 +220,8 @@ The following explains the definition of each section in a pipeline:
   }
   ```
   There are three approaches to providing the runtime configuration:
-  #####1. Specify runtime variables when submitting a Spark job. See below at **"Submitting a spark-job"**
-  #####2. Configure runtime variables in application configuration. See the following example:
+  ##### 1. Specify runtime variables when submitting a Spark job. See below at **"Submitting a spark-job"**
+  ##### 2. Configure runtime variables in application configuration. See the following example:
   ```
   application.runtime {
     spark {
@@ -246,7 +246,7 @@ The following explains the definition of each section in a pipeline:
   }
   ```
   <u>Note: spark configs from application configuration have the highest precedence.</u>
-  #####3. Use SparkConfActor to dynamically set spark & hadoopConfiguration. For example:
+  ##### 3. Use SparkConfActor to dynamically set spark & hadoopConfiguration. For example:
   ```yaml
   - name: set up configuration for s3-access
     actor:
@@ -263,7 +263,7 @@ The following explains the definition of each section in a pipeline:
           fs.s3a.secret.key: "s.UjEjksEnEidFehe\KdenG"
   ```
 
-###10. Submitting a spark-job
+### Submitting a spark-job
 The following is one example of how to submit a Spark job. Note that it also demonstrates how to provide the runtime configs, as well as pass variables.  
 ```shell
  spark-submit --master yarn|local --deploy-mode client|cluster \
@@ -282,8 +282,8 @@ When multiple config files are provided, configs from the next file override con
 
 [Run a live example](docs/submit-job.md), and more [tutorials](docs/tutorials.md)
 
-###11. Actors
-####- Source readers
+### Actors
+#### - Source readers
 - [DeltaReader](docs/delta-reader.md)
 - [DeltaStreamReader](docs/delta-stream-reader.md)
 - [FileReader](docs/file-reader.md)
@@ -302,15 +302,15 @@ When multiple config files are provided, configs from the next file override con
 - [IcebergReader](docs/iceberg-reader.md)
 - [IcebergStreamReader](docs/iceberg-stream-reader.md)
 
-####- Transformers
+#### - Transformers
 - [SqlTransformer](docs/sql-transformer.md)
 - [StreamStatefulTransformer](docs/stream-stateful-transformer.md)
 
-####- Validations
+#### - Validations
 - [SchemaValidator](docs/schema-validator.md)
 - [SqlDataValidator](docs/sql-data-validator.md)
 
-####- Sink writers
+#### - Sink writers
 - [DeltaWriter](docs/delta-writer.md)
 - [DeltaStreamWriter](docs/delta-stream-writer.md)
 - [FileWriter](docs/file-writer.md)
@@ -330,18 +330,18 @@ When multiple config files are provided, configs from the next file override con
 - [IcebergWriter](docs/iceberg-writer.md)
 - [IcebergStreamWriter](docs/iceberg-stream-writer.md)
 
-####- Spark-Configuration
+#### - Spark-Configuration
 - [SparkConfActor](docs/spark-conf-actor.md)
 
-####- Other Utilities
+#### - Other Utilities
 - [SqlActor](docs/sql-actor.md)
 - [VariableSetter](docs/variable-setter.md)
 - [ViewPartitioner](docs/view-partitioner.md)
 
-###12. Writing custom Actor
+### Writing custom Actor
 In cases where the logic of transforming data is very complicated, or a new reader and/or writer would be preferred, a custom Actor can be created by following this [guide](docs/custom-actor.md).
 
-###Appendix: Spark-SQL practices
+### Appendix: Spark-SQL practices
 - Limit the data size by selecting the required columns, adding filtering etc.;
 - Never use "in" key word in where clause, such as
   ```SQL
