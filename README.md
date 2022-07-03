@@ -127,7 +127,8 @@ The following explains the definition of each section in a pipeline:
       The ${events.db.password} is the encrypted value from the encryption step.
       <br />
 
-  For variables defined and used inside sql-statements, please check [here](docs/sql-actor.md)
+  For variables defined and used inside sql-statements, please check [here](docs/sql-actor.md)  
+  For setting up variables with VariableSetter actor, please check [here](docs/variable-setter.md)
   <br />
   
 #### 5. Jobs
