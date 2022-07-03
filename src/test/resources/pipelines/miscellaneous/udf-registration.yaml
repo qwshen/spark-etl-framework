@@ -1,0 +1,3 @@
+udf-registration:
+  - prefix: event_
+    type: com.qwshen.etl.test.udf.UserUdf

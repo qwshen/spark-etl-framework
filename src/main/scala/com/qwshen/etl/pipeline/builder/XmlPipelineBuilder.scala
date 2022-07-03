@@ -53,14 +53,11 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     val etlPipeline = Pipeline((docRaw \\ "pipeline-def" \ "@name").text)
     etlPipeline.singleSparkSession = Try((docRaw \\ "pipeline-def" \ "settings" \ "singleSparkSession" \ "@setting").text.toBoolean).toOption.getOrElse(false)
     etlPipeline.singleSparkSession = Try((docRaw \\ "pipeline-def" \ "settings" \ "globalViewAsLocal" \ "@setting").text.toBoolean).toOption.getOrElse(false)
+
     //alias
-    val alias: Map[String, String] = (docRaw \\ "pipeline-def" \ "aliases" \ "alias").map(a => ((a \ "@name").text, (a \ "@type").text)).toMap
+    val alias: Map[String, String] = this.parseAliases((docRaw \\ "pipeline-def" \ "aliases").headOption)(config)
     //user-defined-functions
-    (docRaw \\ "pipeline-def" \ "udf-registration" \ "register").foreach(r => {
-      val typ = (r \ "@type").text
-      val register = Class.forName(alias.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
-      etlPipeline.addUdfRegister(UdfRegistration((r \ "@prefix").text, register))
-    })
+    this.parseUdfRegistration((docRaw \\ "pipeline-def" \ "udf-registration").headOption, alias)(config).foreach(ur => etlPipeline.addUdfRegister(ur))
 
     //register UDFs
     UdfRegistration.setup(etlPipeline.udfRegistrations)(session)
@@ -88,7 +85,7 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
         //instantiate
         val actor = Class.forName(alias.getOrElse(typ, typ)).getDeclaredConstructor().newInstance().asInstanceOf[Actor]
         (a \ "actor" \ "properties").foreach(propNode => parseProperty(propNode, "", properties))
-        actor.init(properties.map{case(k, v) => (k.replaceAll("properties.", ""), v)}, jobConfig)(session)
+        actor.init(properties.map { case(k, v) => (k.replaceAll("properties.", ""), evaluate(v)(session)) }, jobConfig)(session)
 
         //input views
         val inputViews: Seq[String] = (a \ "input-views" \ "view").map(v => (v \ "@name").text)
@@ -129,6 +126,27 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     case Failure(exception) => throw new RuntimeException("Cannot parse the pipeline definition.", exception)
   }
 
+  //parse aliases
+  private def parseAliases(aliasNode: Option[scala.xml.Node])(config: Config): Map[String, String] = {
+    val includeAliases = aliasNode.flatMap(nd => (nd \ "@include").headOption).map(i => this.resolve(FileChannel.loadAsString(i.text))(config))
+      .map(s => XML.loadString(this.removeXmlHeader(s)))
+      .map(doc => (doc \\ "aliases").headOption).map(an => parseAliases(an)(config)).getOrElse(Map.empty[String, String])
+    val aliases = aliasNode.map(an => (an \ "alias").map(a => ((a \ "@name").text, (a \ "@type").text)).toMap).getOrElse(Map.empty[String, String])
+    includeAliases.++(aliases)
+  }
+
+  //parse udf-registrations
+  private def parseUdfRegistration(urNode: Option[scala.xml.Node], alias: Map[String, String])(config: Config): Seq[UdfRegistration] = {
+    val includeURs = urNode.flatMap(urn => (urn \ "@include").headOption).map(i => this.resolve(FileChannel.loadAsString(i.text))(config))
+      .map(s => XML.loadString(this.removeXmlHeader(s)))
+      .map(doc => (doc \\ "udf-registration").headOption).map(ur => parseUdfRegistration(ur, alias)(config)).getOrElse(Nil)
+    val urs = urNode.map(urn => (urn \ "register").map(r => {
+      val typ = (r \ "@type").text
+      UdfRegistration((r \ "@prefix").text, Class.forName(alias.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister])
+    })).getOrElse(Nil)
+    includeURs.++(urs)
+  }
+
   //parse the properties of an Actor
   private def parseProperty(propNode: scala.xml.Node, path: String, props: ArrayBuffer[(String, String)]): Unit = if (!propNode.isAtom) {
     val newPath = if (path.nonEmpty) s"$path.${propNode.label}" else propNode.label
@@ -148,15 +166,19 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     val kvs: scala.collection.mutable.Map[String, String] = scala.collection.mutable.Map[String, String]()
     val variables = (XML.loadString(xmlString) \\ "pipeline-def" \ "variables" \ "variable").map(v => {
       val name = (v \ "@name").text
-      val value = ConfigurationManager.quote(this.evaluate(this.resolve((v \ "@value").text)(newConfig)))
+      val value = this.evaluate(this.resolve(ConfigurationManager.quote((v \ "@value").text))(newConfig))
       kvs.put(name, value)
       newConfig = ConfigurationManager.mergeVariables(newConfig, Map(name -> value))
 
       val keyString = (v \ "@decryptionKeyString").headOption.map(n => n.text)
       val keyFile = (v \ "@decryptionKeyFile").headOption.map(n => n.text)
       (keyString, keyFile) match {
-        case (Some(ks), _) => kvs.put(s"${name}_decryptionKeyString", ks)
-        case (_, Some(kf)) => kvs.put(s"${name}_decryptionKeyFile", kf)
+        case (Some(ks), _) =>
+          kvs.put(s"${name}_decryptionKeyString", ks)
+          newConfig = ConfigurationManager.mergeVariables(newConfig, Map(s"${name}_decryptionKeyString" -> this.evaluate(this.resolve(ConfigurationManager.quote(ks)))))
+        case (_, Some(kf)) =>
+          kvs.put(s"${name}_decryptionKeyFile", kf)
+          newConfig = ConfigurationManager.mergeVariables(newConfig, Map(s"${name}_decryptionKeyFile" -> this.evaluate(this.resolve(ConfigurationManager.quote(kf)))))
         case _ =>
       }
       (name, value, keyString, keyFile)

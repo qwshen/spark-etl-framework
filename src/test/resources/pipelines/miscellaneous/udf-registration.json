@@ -1,0 +1,12 @@
+{
+  "udf-registration": [
+    {
+      "prefix": "event_",
+      "type": "com.qwshen.etl.test.udf.UserUdf"
+    },
+    {
+      "prefix": "user_",
+      "type": "com.qwshen.etl.test.udf.UserUdf"
+    }
+  ]
+}

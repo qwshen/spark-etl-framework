@@ -75,7 +75,9 @@ object VariableResolver {
   def collectFunctions(session: SparkSession): Seq[String] = {
     if (this._udFuns.isEmpty) {
       import session.implicits._
-      this._udFuns = session.sql("show functions").as[String].collect().map(s => s.toLowerCase)
+      //exclude all functions that contain operators such as +, -, *, /, etc.
+      val fnp = "[\\W]+".r
+      this._udFuns = session.sql("show functions").as[String].filter(fun => fnp.findFirstIn(fun).isEmpty).collect().map(s => s.toLowerCase)
     }
     return this._udFuns;
   }

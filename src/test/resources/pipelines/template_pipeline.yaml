@@ -5,6 +5,14 @@ pipeline-def:
   settings:
     singleSparkSession: true
     globalViewAsLocal: true
+  aliases:
+    - include: ./src/test/resources/pipelines/miscellaneous/alias.yaml
+    - name: setting
+      type: com.qwshen.etl.common.SparkConfActor
+  udf-registration:
+    - include: ./src/test/resources/pipelines/miscellaneous/udf-registration.yaml
+    - prefix: user_
+      type: com.qwshen.etl.test.udf.UserUdf
   variables:
     - name: iam_password
       value: ${events.db.password}
@@ -15,15 +23,6 @@ pipeline-def:
       value: "file:///c:/temp/staging"
     - name: metrics_uri
       value: "file:///c:/temp/metrics"
-  aliases:
-    - name: file
-      type: com.qwshen.etl.source.FileReader
-    - name: flat
-      type: com.qwshen.etl.source.FlatReader
-    - name: setting
-      type: com.qwshen.etl.common.SparkConfActor
-    - name: sql
-      type: com.qwshen.etl.transform.SqlTransformer
   jobs:
     - name: transform-user-events
       actions:

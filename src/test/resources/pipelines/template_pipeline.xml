@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<pipeline-def name="event-consolidation" description="This is the process for etl'ing event data" version="1.0.0">
+<pipeline-def name="event-consolidation" description="This is the process for transforming event data" version="1.0.0">
     <settings>
         <singleSparkSession setting="true" />
         <globalViewAsLocal setting="true" />
     </settings>
+
+    <aliases include="./src/test/resources/pipelines/miscellaneous/alias.xml">
+        <alias name="setting" type="com.qwshen.etl.common.SparkConfActor" />
+    </aliases>
+
+    <udf-registration include="./src/test/resources/pipelines/miscellaneous/udf-registration.xml">
+        <register prefix="user_" type="com.qwshen.etl.test.udf.UserUdf" />
+    </udf-registration>
 
     <variables>
         <variable name="iam_password" value="${events.db.password}" decryptionKeyString="${application.security.decryption.key}" />
@@ -11,13 +19,6 @@
         <variable name="staging_uri" value="file:///c:/temp/staging" />
         <variable name="metrics_uri" value="file:///c:/temp/metrics" />
     </variables>
-
-    <aliases>
-        <alias name="file" type="com.qwshen.etl.source.FileReader" />
-        <alias name="flat" type="com.qwshen.etl.source.FlatReader" />
-        <alias name="setting" type="com.qwshen.etl.common.SparkConfActor" />
-        <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
-    </aliases>
 
     <job include="./src/test/resources/pipelines/jobs/job.xml" />
     <job name="transform-user-events">

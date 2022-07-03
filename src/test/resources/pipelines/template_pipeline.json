@@ -7,6 +7,18 @@
       "singleSparkSession": true,
       "globalViewAsLocal": true
     },
+    "aliases": [
+      {
+        "include": "./src/test/resources/pipelines/miscellaneous/alias.json"
+      },
+      {
+        "name": "setting",
+        "type": "com.qwshen.etl.setting.SparkConfSetter"
+      }
+    ],
+    "udf-registration": {
+      "include": "./src/test/resources/pipelines/miscellaneous/udf-registration.json"
+    },
     "variables": [
       {
         "name": "iam_password",
@@ -24,24 +36,6 @@
       {
         "name": "metrics_uri",
         "value": "file:///c:/temp/metrics"
-      }
-    ],
-    "aliases": [
-      {
-        "name": "file",
-        "type": "com.qwshen.etl.source.FileReader"
-      },
-      {
-        "name": "flat",
-        "type": "com.qwshen.etl.source.FlatReader"
-      },
-      {
-        "name": "setting",
-        "type": "com.qwshen.etl.setting.SparkConfSetter"
-      },
-      {
-        "name": "sql",
-        "type": "com.qwshen.etl.transform.SqlTransformer"
       }
     ],
     "jobs": [

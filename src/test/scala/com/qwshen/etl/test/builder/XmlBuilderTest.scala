@@ -1,7 +1,6 @@
 package com.qwshen.etl.test.builder
 
 import com.qwshen.etl.pipeline.builder.XmlPipelineBuilder
-import com.typesafe.config.Config
 import scala.util.control.Exception.ultimately
 import com.qwshen.etl.test.TestApp
 

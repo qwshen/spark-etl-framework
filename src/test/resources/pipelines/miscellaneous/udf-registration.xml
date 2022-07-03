@@ -1,0 +1,3 @@
+<udf-registration>
+    <register prefix="event_" type="com.qwshen.etl.test.udf.UserUdf" />
+</udf-registration>

@@ -1,0 +1,16 @@
+{
+  "aliases": [
+    {
+      "name": "file",
+      "type": "com.qwshen.etl.source.FileReader"
+    },
+    {
+      "name": "flat",
+      "type": "com.qwshen.etl.source.FlatReader"
+    },
+    {
+      "name": "sql",
+      "type": "com.qwshen.etl.transform.SqlTransformer"
+    }
+  ]
+}

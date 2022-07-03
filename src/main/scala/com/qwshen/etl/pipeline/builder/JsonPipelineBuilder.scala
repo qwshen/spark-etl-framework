@@ -68,11 +68,13 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
             case _ =>
           }
           val aliases = kvs.get("aliases") match {
-            case Some(kvs: Seq[Map[String, Any]] @unchecked) => parseAlias(kvs)
+            case Some(kvs: Seq[Map[String, Any]] @unchecked) => parseAlias(kvs)(config)
+            case Some(kvs: Map[String, Any] @unchecked) => kvs.filter(kv => kv._1.equalsIgnoreCase("include")).values.headOption.map(v => parseIncludeAlias(this.resolve(v.toString)(config))(config)).getOrElse(Map.empty[String, String])
             case _ => Map.empty[String, String]
           }
           kvs.get("udf-registration") match {
-            case Some(kvs: Seq[Map[String, Any]] @unchecked) => pipeline.foreach(pl => parseUdfRegistrations(kvs, aliases, pl))
+            case Some(kvs: Seq[Map[String, Any]] @unchecked) => pipeline.foreach(pl => parseUdfRegistrations(kvs, aliases, pl)(config))
+            case Some(kvs: Map[String, Any] @unchecked) => pipeline.foreach(pl => kvs.filter(kv => kv._1.equalsIgnoreCase("include")).values.headOption.foreach(v => parseIncludeUdfRegistration(this.resolve(v.toString)(config), aliases, pl)(config)))
             case _ =>
           }
 
@@ -126,13 +128,14 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
         case _ =>
       }
       for (n <- name) {
-        value.foreach(v => {
+        def withKV = (k: String, v: String) => {
           val data = this.evaluate(this.resolve(ConfigurationManager.quote(v))(newConfig))(session)
-          vars.put(n, data)
-          newConfig = ConfigurationManager.mergeVariables(newConfig, Map(n -> data))
-        })
-        decryptionKeyString.foreach(v => vars.put(s"${n}_decryptionKeyString", v))
-        decryptionKeyFile.foreach(v => vars.put(s"${n}_decryptionKeyFile", v))
+          vars.put(k, data)
+          newConfig = ConfigurationManager.mergeVariables(newConfig, Map(k -> data))
+        }
+        value.foreach(v => withKV(n, v))
+        decryptionKeyString.foreach(v => withKV(s"${n}_decryptionKeyString", v))
+        decryptionKeyFile.foreach(v => withKV(s"${n}_decryptionKeyFile", v))
       }
     })
 
@@ -161,16 +164,30 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   }
 
   //parse alias defined in the pipeline
-  private def parseAlias(kvs: Seq[Map[String, Any]]): Map[String, String] = kvs.map(kvs => {
+  protected def parseAlias(kvs: Seq[Map[String, Any]])(config: Config): Map[String, String] = kvs.flatMap(kvs => {
     var n: Option[String] = None
     var t: Option[String] = None
+    var af: Option[String] = None
     kvs.foreach(kv => (kv._1, kv._2) match {
       case ("name", s: String) => n = Some(s)
-      case ("type", s: String) => t = Some(s)
+      case ("type", s: String) => t = Some(this.resolve(s)(config))
+      case ("include", s: String) => af = Some(this.resolve(s)(config))
       case _ =>
     })
-    (n, t)
+    if (af.nonEmpty) this.parseIncludeAlias(af.get)(config).map { case(k, v) => (Some(k), Some(v)) }.toSeq else Seq((n, t))
   }).filter(kv => kv._1.nonEmpty && kv._2.nonEmpty).map(kv => (kv._1.get, kv._2.get))(breakOut)
+
+  //parse udf-registration defined in the pipeline
+  protected def parseIncludeUdfRegistration(urFile: String, alias: Map[String, String], pipeline: Pipeline)(config: Config): Unit = {
+    for (properties <- {
+      JSON.parseFull(FileChannel.loadAsString(urFile)).map(x => x.asInstanceOf[Map[String, Any]])
+    }) yield {
+      properties.find(p => p._1.equalsIgnoreCase("udf-registration")).map(p => p._2 match {
+        case kvs: Seq[Map[String, Any]] @unchecked => parseUdfRegistrations(kvs, alias, pipeline)(config)
+        case _ =>
+      })
+    }
+  }
 
   //parse all jobs defined in the pipeline
   private def parseJobs(kvs: Seq[Map[String, Any]], aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = for (kv <- kvs) {
@@ -246,28 +263,34 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
       case _ =>
     })
     for (a <- actor) {
-      a.init(meta.map { case (k, v) => (k.replaceAll("properties.", ""), resolve(v)(config)) }, config)(session)
+      a.init(meta.map { case (k, v) => (k.replaceAll("properties.", ""), evaluate(resolve(v)(config))(session)) }, config)(session)
     }
     actor
   }
 
   //parse udf-registration
-  private def parseUdfRegistrations(kvs: Seq[Map[String, Any]], aliases: Map[String, String], pipeline: Pipeline): Unit = for (kv <- kvs) {
+  protected def parseUdfRegistrations(kvs: Seq[Map[String, Any]], aliases: Map[String, String], pipeline: Pipeline)(config: Config): Unit = for (kv <- kvs) {
     var udfPrefix: Option[String] = None
     var udfType: Option[String] = None
+    var udfInclude: Option[String] = None
     kv.foreach(x => {
       (x._1, x._2) match {
-        case ("prefix", s: String) => udfPrefix = Some(s)
-        case ("type", t: String) => udfType = Some(t)
+        case ("prefix", s: String) => udfPrefix = Some(this.resolve(s)(config))
+        case ("type", t: String) => udfType = Some(this.resolve(t)(config))
+        case ("include", f: String) => udfInclude = Some(this.resolve(f)(config))
         case _ =>
       }
     })
-    for {
-      prefix <- udfPrefix
-      typ <- udfType
-    } {
-      val register = Class.forName(aliases.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
-      pipeline.addUdfRegister(UdfRegistration(prefix, register))
+    if (udfInclude.nonEmpty) {
+      this.parseIncludeUdfRegistration(udfInclude.get, aliases, pipeline)(config)
+    } else {
+      for {
+        prefix <- udfPrefix
+        typ <- udfType
+      } {
+        val register = Class.forName(aliases.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
+        pipeline.addUdfRegister(UdfRegistration(prefix, register))
+      }
     }
   }
 
@@ -314,13 +337,23 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   //combine two path into one
   private def combine(s1: String, s2: String): String = if (s1.nonEmpty) s"$s1.$s2" else s2
 
-  //parse a job which is included in the definition
-  protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = {
+  //parse included alias
+  protected def parseIncludeAlias(aliasFile: String)(config: Config): Map[String, String] = (
     for (properties <- {
-      JSON.parseFull(FileChannel.loadAsString(jobFile)).map(x => x.asInstanceOf[Map[String, Any]])
-    }) {
-      parseJob(properties, aliases, pipeline)(config, session)
+      JSON.parseFull(FileChannel.loadAsString(aliasFile)).map(x => x.asInstanceOf[Map[String, Any]])
+    }) yield {
+      properties.find(p => p._1.equalsIgnoreCase("aliases")).map(p => p._2 match {
+        case kvs: Seq[Map[String, Any]] @unchecked => parseAlias(kvs)(config)
+        case _ => Map.empty[String, String]
+      })
     }
+  ).flatten.getOrElse(Map.empty[String, String])
+
+  //parse a job which is included in the definition
+  protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = for (properties <- {
+    JSON.parseFull(FileChannel.loadAsString(jobFile)).map(x => x.asInstanceOf[Map[String, Any]])
+  }) {
+    parseJob(properties, aliases, pipeline)(config, session)
   }
 
   //convert the input string to json string
