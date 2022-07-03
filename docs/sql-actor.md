@@ -1,6 +1,6 @@
 The SqlActor is a generic sql actor which can be used to execute any sql-statements, including select, insert, update, merge, delete, create, alter, etc.
 
-The sql statement can be specified by either sqlString or sqlFile property. However, one of them must be defined.
+The sql statement can be specified by either sqlString or sqlFile property. However, at least and only one of them must be defined.
 
 Actor Class: `com.qwshen.etl.common.SqlActor`
 
