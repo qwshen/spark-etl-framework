@@ -2,7 +2,6 @@ package com.qwshen.etl.configuration
 
 import com.qwshen.common.security.SecurityChannel
 import com.typesafe.config.{Config, ConfigFactory}
-import com.qwshen.common.VariableResolver
 
 /**
  * Utility class to manipulate configuration
@@ -23,10 +22,7 @@ object ConfigurationManager {
    * @param value
    * @return
    */
-  def quote(value: String): String = if (value.startsWith("\"") && value.endsWith("\"")) value else VariableResolver.getName(value) match {
-    case `value` => "[\\W]+".r.findFirstIn(value).foldLeft(value)((r, _) => "\"" + r + "\"")
-    case _ => value
-  }
+  def quote(value: String): String = if (value.startsWith("\"") && value.endsWith("\"")) value else "[\\W]+".r.findFirstIn(value).foldLeft(value)((r, _) => "\"" + r + "\"")
 
   /**
    * If the value is quoted, un-quote it
