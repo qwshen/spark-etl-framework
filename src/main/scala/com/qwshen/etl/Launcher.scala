@@ -21,10 +21,11 @@ import scala.util.Try
  *     --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
  *     --jars ./mysql-connector-jar.jar,./mongo-jara-driver-3.9.1.jar \
  *     --class com.qwshen.etl.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
- *     --pipeline-def ./test.yaml --application-conf ./application.conf \
+ *     --pipeline-def "./test.yaml#load users;transform-user-events" --application-conf ./application.conf \
  *     --var process_date=20200921 --var environment=dev \
  *     --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
- *     --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+ *     --staging off --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+ *     --metrics-logging on --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
  */
 class Launcher {
   /*
@@ -36,10 +37,26 @@ class Launcher {
     implicit val config: Config = arguments.config
     val session: SparkSession = createSparkSession
     try {
+      val (pipelineFile, jobName) = arguments.pipelineFile.split("#").toSeq match {
+        case Seq(head, tail @ _*) => (head, tail.headOption)
+        case _ => (arguments.pipelineFile, None)
+      }
       for {
-        pipeline <- PipelineFactory.fromFile(arguments.pipelineFile)(config, session.newSession())
+        pipeline <- PipelineFactory.fromFile(pipelineFile)(config, session.newSession())
       } {
-        new PipelineRunner(new PipelineContext()).run(pipeline)(session)
+        //customize staging behavior
+        if (!arguments.staging) {
+          pipeline.disableStaging()
+        } else {
+          arguments.stagingBehavior.foreach(behavior => pipeline.takeStagingBehavior(behavior))
+        }
+        //customize metrics logging
+        if (!arguments.metricsLogging) {
+          pipeline.disableMetricsLogging()
+        } else {
+          arguments.metricsLoggingBehavior.foreach(behavior => pipeline.takeMetricsLogging(behavior))
+        }
+        new PipelineRunner(new PipelineContext()).run(pipeline, jobName.map(x => x.split("[;|,]").toSeq).getOrElse(Nil))(session)
       }
     }
     finally {

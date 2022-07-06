@@ -4,7 +4,7 @@ import com.qwshen.common.io.FileChannel
 
 import java.io.File
 import com.qwshen.common.logging.Loggable
-import com.qwshen.etl.pipeline.definition.StagingBehavior
+import com.qwshen.etl.pipeline.definition.{MetricsLogging, StagingBehavior}
 import com.typesafe.config.{Config, ConfigFactory}
 import scopt.OptionParser
 
@@ -14,7 +14,7 @@ import scopt.OptionParser
 object ArgumentParser extends Loggable {
   //to describe what are in the arguments
   private case class Configuration(pipelineDef: String, applicationConf: String,
-    variables: Map[String, String] = Map.empty[String, String], stagingUri: Option[String] = None, stagingActions: Seq[String] = Nil)
+    variables: Map[String, String] = Map.empty[String, String], staging: Option[String] = None, stagingUri: Option[String] = None, stagingActions: Seq[String] = Nil, metricsLogging: Option[String] = None, metricsLoggingUri: Option[String] = None, metricsLoggingActions: Seq[String] = Nil)
 
   //the parser
   private val scoptParser: OptionParser[Configuration] = new OptionParser[Configuration]("spark-etl-framework") {
@@ -39,6 +39,10 @@ object ArgumentParser extends Loggable {
       .valueName("k1=v1,k2=v2...")
       .action((x, c) => c.copy(variables = c.variables ++ x))
       .text("The variables")
+    opt[String]("staging")
+      .optional()
+      .action((x, c) => c.copy(staging = Option(x)))
+      .text("The staging flag")
     opt[String]("staging-uri")
       .optional()
       .action((x, c) => c.copy(stagingUri = Option(x)))
@@ -48,6 +52,19 @@ object ArgumentParser extends Loggable {
       .unbounded()
       .action((x, c) => c.copy(stagingActions = c.stagingActions ++ x.split(",")))
       .text("The staging actions")
+    opt[String]("metrics-logging")
+      .optional()
+      .action((x, c) => c.copy(metricsLogging = Option(x)))
+      .text("The metrics-logging flag")
+    opt[String]("metrics-logging-uri")
+      .optional()
+      .action((x, c) => c.copy(metricsLoggingUri = Option(x)))
+      .text("The metrics-logging-uri")
+    opt[String]("metrics-logging-actions")
+      .optional()
+      .unbounded()
+      .action((x, c) => c.copy(metricsLoggingActions = c.metricsLoggingActions ++ x.split(",")))
+      .text("The metrics-logging actions")
   }
 
   /**
@@ -63,14 +80,26 @@ object ArgumentParser extends Loggable {
         .map(cfgFile => ConfigFactory.parseString(FileChannel.loadAsString(cfgFile))).reduce((cfg1, cfg2) => cfg2.withFallback(cfg1))
       val config: Config = ConfigurationManager.mergeVariables(appConfig, cfg.variables)
 
+      //staging flag
+      val staging = cfg.staging match {
+        case Some(s) => !s.equalsIgnoreCase("off") && !s.equalsIgnoreCase("disabled")
+        case _ => true
+      }
       //staging behavior
       val stagingBehavior: Option[StagingBehavior] = (cfg.stagingUri, cfg.stagingActions) match {
         case (Some(_), Seq(_, _ @ _*)) => Some(StagingBehavior(cfg.stagingUri, cfg.stagingActions))
         case _ => None
       }
 
+      //metrics-logging flag
+      val noMetricsLogging = cfg.metricsLogging.exists(x => x.equalsIgnoreCase("off") || x.equalsIgnoreCase("disabled"))
+      //metrics-logging-behavior
+      val metricsLoggingBehavior: Option[MetricsLogging] = (cfg.metricsLoggingUri, cfg.metricsLoggingActions) match {
+        case (Some(_), Seq(_, _ @ _*)) => Some(MetricsLogging(cfg.metricsLoggingUri, cfg.metricsLoggingActions))
+        case _ => None
+      }
       //arguments
-      Arguments(config, cfg.pipelineDef, stagingBehavior)
+      Arguments(config, cfg.pipelineDef, staging, !noMetricsLogging, stagingBehavior, metricsLoggingBehavior)
     }
     case _ => throw new RuntimeException("Cannot parse the arguments or load the config-file.")
   }

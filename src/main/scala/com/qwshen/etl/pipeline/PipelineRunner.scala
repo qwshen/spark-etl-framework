@@ -20,11 +20,12 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
    * Execute the etl-pipeline
    *
    * @param pipeline
+   * @param runJob
    * @param session
    */
-  def run(pipeline: Pipeline)(implicit session: SparkSession): Unit = {
+  def run(pipeline: Pipeline, runJobs: Seq[String] = Nil)(implicit session: SparkSession): Unit = {
     val metrics = new ArrayBuffer[MetricEntry]()
-    pipeline.jobs.foreach(job => {
+    runJobs.foldLeft(pipeline.jobs)((jobs, runJob) => jobs.filter(job => job.name.equalsIgnoreCase(runJob.trim))).foreach(job => {
       //logging
       if (this.logger.isDebugEnabled()) {
         this.logger.info(s"Starting running job - ${job.name} ...")

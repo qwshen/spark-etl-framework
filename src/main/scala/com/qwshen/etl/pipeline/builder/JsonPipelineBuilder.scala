@@ -285,11 +285,10 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
       this.parseIncludeUdfRegistration(udfInclude.get, aliases, pipeline)(config)
     } else {
       for {
-        prefix <- udfPrefix
         typ <- udfType
       } {
         val register = Class.forName(aliases.getOrElse(typ, typ)).getConstructor().newInstance().asInstanceOf[UdfRegister]
-        pipeline.addUdfRegister(UdfRegistration(prefix, register))
+        pipeline.addUdfRegister(UdfRegistration(udfPrefix.getOrElse(""), register))
       }
     }
   }

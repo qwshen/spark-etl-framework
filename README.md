@@ -274,12 +274,17 @@ The following is one example of how to submit a Spark job. Note that it also dem
    --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
    --jars ./mysql-connector-jar.jar \
    --class com.qwshen.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
-   --pipeline-def ./test.yaml --application-conf ./common.conf,./environment.conf,./application.conf \
+   --pipeline-def "./test.yaml#load users;load train" --application-conf ./common.conf,./environment.conf,./application.conf \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
-   --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events
+   --staging disabled --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+   --metrics-logging enabled --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
 ```
-When multiple config files are provided, configs from the next file override configs from the previous file. In above example, environment.conf overrides common.conf, and application.conf overrides environments.conf.
+- If it is to run particular jobs from a pipeline, put the name of jobs separated by comma or semi-colon after the pipeline file, such as "test.yaml#load users;loading train". If no job name specified, it runs through all jobs.
+- When multiple config files are provided, configs from the next file override configs from the previous file. In above example, environment.conf overrides common.conf, and application.conf overrides environments.conf.
+- When the staging flag is set to off/disabled, no data will be staged even the staging uri and actions are specified or configuration in the pipeline. If the staging flag is not set, the staging behavior is controlled by the configuration - staging uri & actions.
+- When the staging-uri & staging actions are specified, they override the staging-configuration defined in the configuration.
+- When the metrics-logging flag is set to off/disabled, no metrics will be collected and persisted even the metrics-logging uri & actions are provided or configured in the pipeline. If the metrics-logging flag is not set, the metrics-logging behavior is controlled by the configuration - metrics logging uri and actions.
 
 [Run a live example](docs/submit-job.md), and more [tutorials](docs/tutorials.md)
 

@@ -86,6 +86,13 @@ case class Pipeline(name: String) {
    * @return
    */
   def takeMetricsLogging(metricsLogging: MetricsLogging): Pipeline = { this._metricsLogging = Some(metricsLogging); this }
+
+  /**
+   * Disable metrics-logging
+   * @return
+   */
+  def disableMetricsLogging(): Pipeline = { this._metricsLogging = None; this }
+
   /**
    * The metrics logging
    * @return
@@ -100,6 +107,13 @@ case class Pipeline(name: String) {
    * @return
    */
   def takeStagingBehavior(stagingBehavior: StagingBehavior): Pipeline = { this._stagingBehavior = Some(stagingBehavior); this }
+
+  /**
+   * Disable staging-behavior
+   * @return
+   */
+  def disableStaging(): Pipeline = { this._stagingBehavior = None; this }
+
   /**
    * The logging behavior
    * @return
