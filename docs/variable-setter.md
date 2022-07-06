@@ -48,4 +48,4 @@ Two variables are defined in above examples:
 - runActor
 - runDate
 
-In the downstream actors or sql-statements of sql actors, these two variables ${runActor} and ${runDate} can be referenced.
+In the downstream actors or sql-statements of sql actors, these two variables ```${runActor}``` and ```${runDate}``` can be referenced.
