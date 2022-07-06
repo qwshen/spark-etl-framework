@@ -24,8 +24,8 @@ import scala.util.Try
  *     --pipeline-def "./test.yaml#load users;transform-user-events" --application-conf ./application.conf \
  *     --var process_date=20200921 --var environment=dev \
  *     --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
- *     --staging off --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
- *     --metrics-logging on --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
+ *     --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+ *     --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
  */
 class Launcher {
   /*
@@ -45,17 +45,10 @@ class Launcher {
         pipeline <- PipelineFactory.fromFile(pipelineFile)(config, session.newSession())
       } {
         //customize staging behavior
-        if (!arguments.staging) {
-          pipeline.disableStaging()
-        } else {
-          arguments.stagingBehavior.foreach(behavior => pipeline.takeStagingBehavior(behavior))
-        }
+        arguments.stagingBehavior.foreach(behavior => pipeline.takeStagingBehavior(behavior))
         //customize metrics logging
-        if (!arguments.metricsLogging) {
-          pipeline.disableMetricsLogging()
-        } else {
-          arguments.metricsLoggingBehavior.foreach(behavior => pipeline.takeMetricsLogging(behavior))
-        }
+        arguments.metricsLoggingBehavior.foreach(behavior => pipeline.takeMetricsLogging(behavior))
+
         new PipelineRunner(new PipelineContext()).run(pipeline, jobName.map(x => x.split("[;|,]").toSeq).getOrElse(Nil))(session)
       }
     }

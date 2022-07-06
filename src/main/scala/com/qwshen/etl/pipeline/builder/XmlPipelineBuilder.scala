@@ -106,18 +106,20 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
 
     //metrics logging
     (doc \\ "metrics-logging").headOption.map(l => {
+      var loggingEnabled: Boolean = (l \ "@enabled").headOption.exists(e => e.text.equalsIgnoreCase("true"))
       val loggingUri: Option[String] = (l \ "uri").headOption.map(s => s.text)
       val loggingActions: Seq[String] = (l \ "actions" \ "action").map(a => (a \ "@name").text)
       //add the metrics logging
-      etlPipeline.takeMetricsLogging(MetricsLogging(loggingUri, loggingActions))
+      etlPipeline.takeMetricsLogging(MetricsLogging(loggingEnabled, loggingUri, loggingActions))
     })
 
     //logging behavior
     (doc \\ "debug-staging").headOption.map(l => {
+      var stagingEnabled: Boolean = (l \ "@enabled").headOption.exists(e => e.text.equalsIgnoreCase("true"))
       val stagingUri: Option[String] = (l \ "uri").headOption.map(s => s.text)
       val stagingActions: Seq[String] = (l \ "actions" \ "action").map(a => (a \ "@name").text)
       //add the logging behavior
-      etlPipeline.takeStagingBehavior(StagingBehavior(stagingUri, stagingActions))
+      etlPipeline.takeStagingBehavior(StagingBehavior(stagingEnabled, stagingUri, stagingActions))
     })
 
     etlPipeline

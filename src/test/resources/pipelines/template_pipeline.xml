@@ -67,14 +67,14 @@
         </action>
     </job>
 
-    <metrics-logging>
+    <metrics-logging enabled="true">
         <uri>${metrics_uri}</uri>
         <actions>
             <action name="load-events" />
         </actions>
     </metrics-logging>
 
-    <debug-staging>
+    <debug-staging enabled="true">
         <uri>${staging_uri}</uri>
         <actions>
             <action name="transform-events" />

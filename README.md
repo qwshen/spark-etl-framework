@@ -179,7 +179,8 @@ The following explains the definition of each section in a pipeline:
   Metrics collection and logging can be enabled per action based on the following configuration in pipeline definition:
   ```yaml
     metrics-logging:
-      uri: "${metrics_uri}"
+      enabled: "${metrics_logging_enabled}"
+      uri: "${metrics_logging_uri}"
       actions:
         - load-events
         - transform user-train
@@ -190,6 +191,7 @@ The following explains the definition of each section in a pipeline:
   For situations where the results of one or more actions need to be staged for troubleshooting or data verification. This can be achieved by adding the following section in the definition of a pipeline:
   ```yaml
     debug-staging:
+      enabled: "${staging_enabled}"
       uri: "${staging_uri}"
       actions:
         - load-events
@@ -244,6 +246,9 @@ The following explains the definition of each section in a pipeline:
     filesystem.skip.write.checksum = true
     # support hive integration
     hiveSupport = true
+    
+    # please check how validation run works in the "Submitting a Spark Job" section.
+    validationRun: 3
   }
   ```
   <u>Note: spark configs from application configuration have the highest precedence.</u>
@@ -275,16 +280,21 @@ The following is one example of how to submit a Spark job. Note that it also dem
    --jars ./mysql-connector-jar.jar \
    --class com.qwshen.Launcher spark-etl-framework-0.1-SNAPSHOT.jar \
    --pipeline-def "./test.yaml#load users;load train" --application-conf ./common.conf,./environment.conf,./application.conf \
+   --var application.runtime.validationRun=true \
    --var process_date=20200921 --var environment=dev \
    --vars encryption_key=/tmp/app.key,password_key=/tmp/pwd.key \
-   --staging disabled --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
-   --metrics-logging enabled --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
+   --staging-uri hdfs://tmp/staging --staging-actions load-events,combine-users-events \
+   --metrics-logging-uri hdfs://tmp/metrics-logging --metrics-logging-actions load-events,combine-users-events
 ```
 - If it is to run particular jobs from a pipeline, put the name of jobs separated by comma or semi-colon after the pipeline file, such as "test.yaml#load users;loading train". If no job name specified, it runs through all jobs.
 - When multiple config files are provided, configs from the next file override configs from the previous file. In above example, environment.conf overrides common.conf, and application.conf overrides environments.conf.
-- When the staging flag is set to off/disabled, no data will be staged even the staging uri and actions are specified or configuration in the pipeline. If the staging flag is not set, the staging behavior is controlled by the configuration - staging uri & actions.
-- When the staging-uri & staging actions are specified, they override the staging-configuration defined in the configuration.
-- When the metrics-logging flag is set to off/disabled, no metrics will be collected and persisted even the metrics-logging uri & actions are provided or configured in the pipeline. If the metrics-logging flag is not set, the metrics-logging behavior is controlled by the configuration - metrics logging uri and actions.
+- If the application.runtime.validationRun is specified, it is to run through a validation across all jobs and actions from the pipeline, such as validating all columns are valid in a sql actor, etc. Values of application.runtime.validationRun could be:
+  - true - the validation run will be conducted, data is truncated from input, and no data is outputted;
+  - false - the validation run is disabled. This is the default value.
+  - position number => the validation run will be conducted, but for each action, only the number of records are selected from its output and moves forward for any downstream actions.
+  - negative number => equivalent as false. the validation run is turned off.
+- When the staging-uri & staging actions are specified, they override the staging-configuration defined in the pipeline.
+- When the metrics-logging-uri & metrics-logging-actions are specified, they override the metrics-logging configuration defined in the pipeline.
 
 [Run a live example](docs/submit-job.md), and more [tutorials](docs/tutorials.md)
 

@@ -68,10 +68,12 @@ pipeline-def:
             global: true
     - include: ./src/test/resources/pipelines/jobs/job.yaml
   metrics-logging:
+    enabled: true
     uri: "${metrics_uri}"
     actions:
       - load-events
   debug-staging:
+    enabled: true
     uri: "${staging_uri}"
     actions:
       - transform-events

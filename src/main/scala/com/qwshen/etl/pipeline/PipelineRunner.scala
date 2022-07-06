@@ -11,20 +11,33 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
+import com.typesafe.config.Config
 
 final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   //to describe the content of metric entry
   private case class MetricEntry(jobName: String, actionName: String, key: String, value: String)
 
+  //check if it is a validation-run
+  private val validationRun: Config => Option[Int] = (config) => Try(config.getString("application.runtime.validationRun")).toOption match {
+    case Some(s) if s.equalsIgnoreCase("true") => Some(0)
+    case Some(s) if s.equalsIgnoreCase("false") => None
+    case Some(s) => Try(s.toInt).toOption match {
+      case Some(n) => if (n >= 0) Some(n) else None
+      case _ => None
+    }
+    case _ => None
+  }
+
   /**
    * Execute the etl-pipeline
    *
    * @param pipeline
-   * @param runJob
+   * @param runJobs
    * @param session
    */
   def run(pipeline: Pipeline, runJobs: Seq[String] = Nil)(implicit session: SparkSession): Unit = {
     val metrics = new ArrayBuffer[MetricEntry]()
+    val validation = pipeline.config.flatMap(cfg => this.validationRun(cfg))
     runJobs.foldLeft(pipeline.jobs)((jobs, runJob) => jobs.filter(job => job.name.equalsIgnoreCase(runJob.trim))).foreach(job => {
       //logging
       if (this.logger.isDebugEnabled()) {
@@ -57,7 +70,7 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
           //check if metrics collection is required, so to give the hint to the actor before running
           ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
           //execute
-          action.actor.run(ctx)(curSession) collect { case r: DataFrame => r } foreach (df => {
+          action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
             promoteView(df, action, pipeline.globalViewAsLocal, viewsReferenced)
             collectMetrics(job.name, action, pipeline.metricsLogging, df).foreach(me => metrics.append(me))
             stageView(df, action, pipeline.stagingBehavior)
@@ -133,11 +146,12 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
     })
   }
 
-  //collect matrics for the action
+  //collect metrics for the action
   private def collectMetrics(jobName: String, action: Action, metricsLogging: Option[MetricsLogging], df: DataFrame)(implicit session: SparkSession): Seq[MetricEntry] = Try {
     for {
       ml <- metricsLogging
-      _ <- ml.loggingActions.find(a => a.equalsIgnoreCase(action.name)) if !df.isStreaming
+      _ <- ml.loggingActions.find(a => a.equalsIgnoreCase(action.name))
+      if ml.loggingEnabled && !df.isStreaming
     } yield {
       val customMetrics = action.actor.collectMetrics(df)
         .map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
@@ -162,6 +176,7 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   private def logMetrics(pipelineName: String, entries: Seq[MetricEntry], metricsLogging: Option[MetricsLogging])(implicit session: SparkSession): Unit = for {
     ml <- metricsLogging
     uri <- ml.loggingUri
+    if ml.loggingEnabled
   } Try {
     val jobsJsonString = entries.map(e => (e.jobName, e.actionName, String.format(""""%s": "%s"""", e.key, e.value)))
       .groupBy(_._1)
@@ -186,7 +201,8 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   private def stageView(df: DataFrame, action: Action, stagingBehavior: Option[StagingBehavior]): Unit = Try {
     for {
       behavior <- stagingBehavior
-      uri <- behavior.stagingUri if !df.isStreaming
+      uri <- behavior.stagingUri
+      if behavior.stagingEnabled && !df.isStreaming
     } {
       behavior.stagingActions.find(a => a.equalsIgnoreCase(action.name)).foreach(_ => {
         if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {

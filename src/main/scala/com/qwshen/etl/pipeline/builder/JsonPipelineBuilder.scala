@@ -295,26 +295,30 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
 
   //parse metrics-logging
   private def parseMetricsLogging(kv: Map[String, Any], pipeline: Pipeline)(config: Config): Unit = {
+    var loggingEnabled: Boolean = true
     var loggingUri: Option[String] = None
     var loggingActions: Seq[String] = Nil
     kv.foreach(x => (x._1, x._2) match {
+      case ("enabled", e: String) => loggingEnabled = resolve(e)(config).equalsIgnoreCase("true")
       case ("uri", s: String) => loggingUri = Some(resolve(s)(config))
       case ("actions", ss: Seq[String] @unchecked) => loggingActions = ss
       case _ =>
     })
-    pipeline.takeMetricsLogging(MetricsLogging(loggingUri, loggingActions))
+    pipeline.takeMetricsLogging(MetricsLogging(loggingEnabled, loggingUri, loggingActions))
   }
 
   //parse debug-staging
   private def parseStagingBehavior(kv: Map[String, Any], pipeline: Pipeline)(config: Config): Unit = {
+    var stagingEnabled: Boolean = true
     var stagingUri: Option[String] = None
     var stagingActions: Seq[String] = Nil
     kv.foreach(x => (x._1, x._2) match {
+      case ("enabled", e: String) => stagingEnabled = resolve(e)(config).equalsIgnoreCase("true")
       case ("uri", s: String) => stagingUri = Some(resolve(s)(config))
       case ("actions", ss: Seq[String] @unchecked) => stagingActions = ss
       case _ =>
     })
-    pipeline.takeStagingBehavior(StagingBehavior(stagingUri, stagingActions))
+    pipeline.takeStagingBehavior(StagingBehavior(stagingEnabled, stagingUri, stagingActions))
   }
 
   //Parse a Map element

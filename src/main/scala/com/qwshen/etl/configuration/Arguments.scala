@@ -12,4 +12,4 @@ import com.typesafe.config.Config
  * @param stagingBehavior
  * @param metricsLoggingBehavior
  */
-case class Arguments(config: Config, pipelineFile: String, staging: Boolean, metricsLogging: Boolean, stagingBehavior: Option[StagingBehavior] = None, metricsLoggingBehavior: Option[MetricsLogging])
+case class Arguments(config: Config, pipelineFile: String, stagingBehavior: Option[StagingBehavior] = None, metricsLoggingBehavior: Option[MetricsLogging])
