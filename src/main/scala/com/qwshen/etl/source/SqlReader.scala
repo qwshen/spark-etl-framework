@@ -15,10 +15,8 @@ class SqlReader extends SqlBase[SqlReader] {
     super.init(properties, config)
 
     //verify the sql-statement is a select.
-    for (stmt <- this._stmts.map(s => s.trim.replaceAll("[\r|\n]", " ").toLowerCase)) {
-      if (Seq("^select.+", "^with.+select.+from.+").map(e => e.r.findFirstIn(stmt).isEmpty).reduce((x, y) => x & y)) {
-        throw new RuntimeException("The sqlString or sqlFile in SqlReader is not a sql select or with-select-statement.")
-      }
+    if (!this._stmts.map(s => s.text.trim.replaceAll("[\r|\n]", " ").toLowerCase).map(s => this.isQuery(s)).reduce((x, y) => x | y)) {
+      throw new RuntimeException("The sqlString or sqlFile in SqlReader is not a sql select or with-select-statement.")
     }
   }
 }

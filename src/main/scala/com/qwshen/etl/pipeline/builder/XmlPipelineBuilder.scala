@@ -4,7 +4,7 @@ import com.qwshen.common.io.FileChannel
 import com.qwshen.common.logging.Loggable
 import com.qwshen.etl.configuration.ConfigurationManager
 import com.qwshen.etl.pipeline.definition._
-import com.qwshen.etl.common.{Actor, UdfRegister}
+import com.qwshen.etl.common.{Actor, UdfRegister, VariableSetter}
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
@@ -93,9 +93,13 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
         val outputView: Option[View] = (a \ "output-view").headOption.map(v => View((v \ "@name").text, Try((v \ "@global").text.toBoolean).toOption.getOrElse(false)))
 
         //add action
-        val variables = actor.extraVariables.mapValues(v => this.evaluate(this.resolve(ConfigurationManager.quote(v))(jobConfig))(session))
-        if (variables.nonEmpty) {
-          jobConfig = ConfigurationManager.mergeVariables(jobConfig, variables)
+        actor match {
+          case setter: VariableSetter =>
+            val variables = setter.variables.mapValues(v => this.evaluate(this.resolve(ConfigurationManager.quote(v))(jobConfig))(session))
+            if (variables.nonEmpty) {
+              jobConfig = ConfigurationManager.mergeVariables(jobConfig, variables)
+            }
+          case _ =>
         }
         job.addAction(Action(name, actor, outputView, inputViews))
       })

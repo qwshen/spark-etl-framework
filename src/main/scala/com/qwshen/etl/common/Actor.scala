@@ -9,12 +9,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  */
 abstract class Actor extends PropertyComponent with Serializable {
   /**
-   * Extra Variables exposed for any down-stream actions of the current job.
-   * @return - any variables defined in the current actor
-   */
-  def extraVariables: Map[String, String] = Map.empty[String, String]
-
-  /**
    * Extra Views except the input views specified in the pipeline definition that are referenced/used by current actor, such as tables in a sql-join.
    * @return - any views referenced by the current actor
    */

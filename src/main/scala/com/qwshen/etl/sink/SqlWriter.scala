@@ -14,11 +14,9 @@ class SqlWriter extends SqlBase[SqlWriter] {
   override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
     super.init(properties, config)
 
-    //verify the sql-statement is an insert.
-    for (stmt <- this._stmts.map(s => s.trim.replaceAll("[\r|\n]", " ").toLowerCase)) {
-      if (Seq("^[insert|update|merge|delete].+", "^with.+[insert|update|merge|delete].+").map(e => e.r.findFirstIn(stmt).isEmpty).reduce((x, y) => x & y)) {
-        throw new RuntimeException("The sqlString or sqlFile in SqlWriter is not a sql insert/update/merge/delete-statement.")
-      }
+    //verify the sql-statement is an insert/update/merge/delete.
+    if (!this._stmts.map(s => s.text.trim.replaceAll("[\r|\n]", " ").toLowerCase).map(s => this.isDML(s)).reduce((x, y) => x | y)) {
+      throw new RuntimeException("The sqlString or sqlFile in SqlWriter is not a sql insert/update/merge/delete-statement.")
     }
   }
 }

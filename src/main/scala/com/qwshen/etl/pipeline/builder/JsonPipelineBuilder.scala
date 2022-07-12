@@ -2,11 +2,12 @@ package com.qwshen.etl.pipeline.builder
 
 import com.qwshen.common.io.FileChannel
 import com.qwshen.common.logging.Loggable
-import com.qwshen.etl.common.{Actor, UdfRegister}
+import com.qwshen.etl.common.{Actor, UdfRegister, VariableSetter}
 import com.qwshen.etl.configuration.ConfigurationManager
 import com.qwshen.etl.pipeline.definition._
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
+
 import scala.collection.breakOut
 import scala.util.parsing.json.JSON
 import scala.collection.mutable.{Map => mMap}
@@ -242,9 +243,13 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
         n <- name
         a <- actor
       } {
-        val variables = a.extraVariables.mapValues(v => this.evaluate(this.resolve(ConfigurationManager.quote(v))(newConfig))(session))
-        if (variables.nonEmpty) {
-          newConfig = ConfigurationManager.mergeVariables(newConfig, variables)
+        a match {
+          case vs: VariableSetter =>
+            val variables = vs.variables.mapValues(v => this.evaluate(this.resolve(ConfigurationManager.quote(v))(newConfig))(session))
+            if (variables.nonEmpty) {
+              newConfig = ConfigurationManager.mergeVariables(newConfig, variables)
+            }
+          case _ =>
         }
         job.addAction(Action(n, a, outputView, inputViews))
       }

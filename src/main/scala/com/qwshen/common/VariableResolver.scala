@@ -11,7 +11,7 @@ import scala.util.matching.Regex
  */
 trait VariableResolver {
   //the name of variable used for calculating the value of a sql-variable
-  private final val _sys_var = "v_._s_y_._s_t__e_m_._"
+  private final val _sys_var = "qwshen.s__y_s.v___ar__nam_e____"
 
   /**
    * calculate the value of the variable in case the variable calls one sql-function.
@@ -34,16 +34,20 @@ trait VariableResolver {
 
   /**
    * Resolve a variable with configuration
-   * @param s
-   * @param config
-   * @return
+   * @param input - the input string with variables to be resolved
+   * @param config - the configuration container which has values of variables
+   * @return - output string with variables resolved.
    */
-  def resolve(s: String)(implicit config: Config): String = VariableResolver.varPattern.findAllIn(s).toSeq.foldLeft(s)((r, v) => {
-    Try(config.getAnyRef(VariableResolver.getName(v))) match {
-      case Success(cv) => r.replace(v, cv.toString)
-      case _ => throw new RuntimeException(s"$v is not defined. Please check the configuration & pipeline definition.")
-    }
-  })
+  def resolve(input: String, exclusion: Seq[String] = Nil)(implicit config: Config): String = {
+    val variables = exclusion.map(e => String.format("${%s}", e))
+    def isExcluded: String => Boolean = s => variables.foldLeft(false)((r, v) => r | s.equalsIgnoreCase(v))
+    VariableResolver.varPattern.findAllIn(input).toSeq.filter(s => !isExcluded(s)).foldLeft(input)((r, v) => {
+      Try(config.getAnyRef(VariableResolver.getName(v))) match {
+        case Success(cv) => r.replace(v, cv.toString)
+        case _ => throw new RuntimeException(s"$v is not defined. Please check the configuration & pipeline definition.")
+      }
+    })
+  }
 }
 
 object VariableResolver {

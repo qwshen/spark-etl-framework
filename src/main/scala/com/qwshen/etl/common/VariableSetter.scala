@@ -15,7 +15,7 @@ private[etl] class VariableSetter extends Actor with VariableResolver {
    * Extra Variables exposed for any down-stream actions of the current job.
    * @return - any variables defined in the current actor
    */
-  override def extraVariables: Map[String, String] = this._variables
+  def variables: Map[String, String] = this._variables
 
   /**
    * Run the actor

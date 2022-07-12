@@ -1,13 +1,13 @@
 package com.qwshen.etl.common
 
-import com.qwshen.common.PropertyKey
+import com.qwshen.common.{PropertyKey, VariableResolver}
 import com.qwshen.common.io.FileChannel
-import com.qwshen.etl.configuration.ConfigurationManager
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
-import scala.collection.mutable.ArrayBuffer
+import org.apache.spark.sql.types.NumericType
+
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -19,14 +19,42 @@ class SqlActor extends SqlBase[SqlActor]
  * The base class for SQL actors
  * @tparam T
  */
-private[etl] class SqlBase[T] extends VariableSetter { self: T =>
+private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
+  private final val _sql_variables = "qwshen.s__q_l.v___ar__i_ables____"
+  /**
+   * The statement trait
+   */
+  trait Statement {
+    def text: String
+  }
+
+  /**
+   * The regular sql-statement
+   * @param text
+   */
+  case class SqlStatement(text: String) extends Statement { }
+
+  /**
+   * The regular set statement
+   * @param variable - the name of the variable with value set
+   * @param text - the value expression of the variable
+   */
+  case class SetStatement(variable: String, text: String) extends Statement { }
+
+  /**
+   * The set statement with select statement
+   * @param variable - the name of the variable
+   * @param text - the select statement from which the value of the variable is calcualted.
+   */
+  case class SetWithSelect(variable: String, text: String) extends Statement { }
+
   @PropertyKey("sqlString", false)
   protected var _sqlStmt: Option[String] = None
   @PropertyKey("sqlFile", false)
   protected var _sqlFile: Option[String] = None
 
   //statements
-  protected val _stmts = new ArrayBuffer[String]()
+  protected val _stmts = new scala.collection.mutable.ArrayBuffer[Statement]()
 
   //tables
   protected var _views: Seq[String] = Nil
@@ -43,21 +71,32 @@ private[etl] class SqlBase[T] extends VariableSetter { self: T =>
    * @param session - the spark-session
    *  @return - the dataframe from the last statement
    */
-  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = this._stmts match {
-    case Seq(_, _ @ _*) => this._stmts.tail.foldLeft(this.execute(this._stmts.head))((_, stmt) => this.execute(stmt))
-    case _ => None
+  override def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = {
+    //log the sql statement in debug mode
+    if (this.logger.isDebugEnabled) {
+      this.logger.info(s"Starting to execute sql statement - ${this._sqlStmt}.")
+    }
+    this._stmts match {
+      case Seq(_, _ @ _*) => this._stmts.tail.foldLeft(this.execute(this._stmts.head))((_, stmt) => this.execute(stmt))
+      case _ => None
+    }
   }
 
   //execute one statement
-  private def execute(stmt: String)(implicit session: SparkSession): Option[DataFrame] = {
-    //log the sql statement in debug mode
-    if (this.logger.isDebugEnabled) {
-      this.logger.info(s"Starting to execute sql statement - $stmt.")
+  private def execute(stmt: Statement)(implicit session: SparkSession): Option[DataFrame] = Try {
+    stmt match {
+      case SetWithSelect(vn, text) =>
+        val df = session.sql(text)
+        val vv = df.first().get(0) match {
+          case n: java.lang.Number => n.toString
+          case a: Any => String.format("'%s'", a.toString)
+        }
+        session.sql(String.format("set %s = %s", vn, vv))
+      case _ => session.sql(stmt.text)
     }
-    Try(session.sql(stmt)) match {
-      case Success(df) => Some(df)
-      case Failure(ex) => throw new RuntimeException(s"Running the sql-statement failed - $stmt.", ex)
-    }
+  } match {
+    case Success(df) => Some(df)
+    case Failure(ex) => throw new RuntimeException(s"Running the sql-statement failed - $stmt.", ex)
   }
 
   /**
@@ -79,29 +118,40 @@ private[etl] class SqlBase[T] extends VariableSetter { self: T =>
       case (_, Some(sf)) => this._sqlStmt = Some(FileChannel.loadAsString(sf))
       case _ => throw new RuntimeException("The sql-string & sql-file cannot be both empty in a sql actor.")
     }
+
+    var sqlVars = this.getSqlVariables.map(v => (v, v)).toMap
     for (stmt <- this._sqlStmt) {
-      var newConfig = config
-      stmt.split(";").foreach(s => {
+      stmt.split(";").map(s => s.stripPrefix("[\r|\n]").stripSuffix("[\r|\n]").trim).foreach(s => {
         if (s.trim.replaceAll("[\r|\n]", " ").toLowerCase.startsWith("set ")) {
-          val kv = s.substring(4).split("=")
-          if (kv.length != 2) {
+          val idx = s.substring(4).indexOf("=")
+          if (idx < 0) {
             throw new RuntimeException("The set statement is invalid - $s");
           }
-          val varName = kv(0).trim
-          val varValue = this.evaluate(this.resolve(ConfigurationManager.quote(kv(1).trim))(newConfig))
-          newConfig = ConfigurationManager.mergeVariables(newConfig, Map(varName -> varValue))
-          this._variables += varName -> varValue
+          val varName = s.substring(4, idx + 4).trim
+          val varValue = this.resolve(s.substring(idx + 5).trim, sqlVars.keys.toSeq)(config)
+          this._stmts.append(SetStatement(varName, String.format("set %s = %s", varName, varValue)))
+          sqlVars += varName -> varValue
+        } else if (s.trim.replaceAll("[\r|\n]", " ").toLowerCase.startsWith("setrun ")) {
+          val idx = s.substring(7).indexOf("=")
+          if (idx < 0) {
+            throw new RuntimeException("The setrun statement is invalid - $s");
+          }
+          val varName = s.substring(7, idx + 7).trim
+          val varValue = this.resolve(s.substring(idx + 8).trim, sqlVars.keys.toSeq)(config)
+          this._stmts.append(if (isQuery(varValue)) SetWithSelect(varName, varValue) else SetStatement(varName, String.format("set %s = %s", varName, varValue)))
+          sqlVars += varName -> varValue
         } else {
-          this._stmts.append(this.resolve(s)(newConfig))
+          this._stmts.append(SqlStatement(this.resolve(s, sqlVars.keys.toSeq)(config)))
         }
       })
     }
+    this.setSqlVariables(sqlVars.keys.toSeq)
 
     //extract all tables in the sql-statement
     val alias = scala.collection.mutable.Set[String]()
     val relations = scala.collection.mutable.Set[String]()
-    for (s <- this._stmts) {
-      val lp = session.sessionState.sqlParser.parsePlan(s)
+    for (stmt <- this._stmts) Try {
+      val lp = session.sessionState.sqlParser.parsePlan(stmt.text)
       var i = 0
       while (lp(i) != null) {
         lp(i) match {
@@ -111,8 +161,53 @@ private[etl] class SqlBase[T] extends VariableSetter { self: T =>
         }
         i = i + 1
       }
+    } match {
+      case Failure(t) => this.error(t)
+      case _ =>
     }
     this._views = relations.diff(alias).toSeq
+  }
+
+  /**
+   * Retrieve sql-variables defined by set statements
+   * @param session - the spark-session object
+   * @return - all sql variables defined in current session
+   */
+  protected def getSqlVariables(implicit session: SparkSession): Seq[String] = Try {
+    import session.implicits._
+    session.sql(String.format("select ${%s}", this._sql_variables)).as[String].first
+  }match {
+    case Success(s) => s.split(";")
+    case _ => Nil
+  }
+
+  /**
+   * Set combined sql-variables into a system-variable
+   * @param variables - all sql-variables
+   * @param session - the spark-session object
+   */
+  protected def setSqlVariables(variables: Seq[String])(implicit session: SparkSession): Unit = {
+    session.sql(String.format("set %s = `'%s'`", this._sql_variables, variables.mkString(";")))
+  }
+
+  /**
+   * Check if a statement is select or with ... select ... from
+   * @param stmt - the input sql-statement
+   * @return - true if it is a select
+   */
+  protected def isQuery(stmt: String): Boolean = {
+    val s =  stmt.trim.replaceAll("[\r|\n]", " ").toLowerCase
+    Seq("^\\(?select.+\\)?$", "^\\(?with.+select.+from.+\\)?$").map(e => e.r.findFirstIn(s).nonEmpty).reduce((x, y) => x | y)
+  }
+
+  /**
+   * Check if a statement is a DML operation
+   * @param stmt - the input sql-statement
+   * @return - true if it is a DML
+   */
+  protected def isDML(stmt: String): Boolean = {
+    val s =  stmt.trim.replaceAll("[\r|\n]", " ").toLowerCase
+    Seq("^[insert|update|merge|delete].+", "^with.+[insert|update|merge|delete].+").map(e => e.r.findFirstIn(s).nonEmpty).reduce((x, y) => x | y)
   }
 
   /**
