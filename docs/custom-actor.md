@@ -56,12 +56,7 @@ If the _sourcePath is not provided a value in the pipeline definition, a runtime
 ```
 Make sure the **super.init(properties, config)** is called at the beginning of the method.
 
-####4. If additional variables need to export for the downstream actors/actions, please provide:
-```scala
-  override def extraVariables: Map[String, String]
-```
-
-####5. Implement the data read/write/transformation logic:
+####4. Implement the data read/write/transformation logic:
 ```scala
   def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = {
     //custom implementation here
@@ -81,7 +76,7 @@ The following code is to retrieve an existing view by name:
   }
 ```
 
-####6. If custom metrics need to be added during the execution of the actor, override the following method:
+####5. If custom metrics need to be added during the execution of the actor, override the following method:
 ```scala
 def collectMetrics(df: DataFrame)(implicit session: SparkSession): Seq[(String, String)] = {
   //custom implementation here

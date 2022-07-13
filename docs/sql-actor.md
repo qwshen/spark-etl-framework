@@ -79,6 +79,8 @@ or
 The sql-statement specified by sqlString or from sqlFile can have multiple valid sql-sub-statements separated by semi-colon (;), including set statements. For example:
 ```roomsql
   set run_date = concat('${runActor}', ' at ', '${runTime}');
+  set view_users = (select * from users);
+  setrun count_users = (select count(*) from users);
   with t as (
     select distinct
       u.user_id,
@@ -86,17 +88,20 @@ The sql-statement specified by sqlString or from sqlFile can have multiple valid
       cast(u.birthyear as int) as birthyear,
       t.timestamp,
       t.interested,
-      concat('${application.process_date}', '-', '${run_date}') as process_date,
+      concat('${application.process_date}', '-', concat('${run_date}', '-', '${count_users}')) as process_date,
       t.event as event_id
     from train t
-      left join users u on t.user = u.user_id
+      left join ${view_users} u on t.user = u.user_id
   )
   select * from t      
 ```
 
 In the above example:
 - The ```${runActor}``` and ```${runTime}``` are defined in either application.conf, job-submit arguments or pipeline;
-- The ```${run_date}``` is referenced in the next sql-statement;
-- The ```${run_date}``` is also available in any downstream actors. 
+- The expression - ```concat('${runActor}', ' at ', '${runTime}')``` is calculated and assigned to ```${run_date}```, which is referenced later;
+- The expression - ```(select * from users)``` is not executed but as an alias simply assigned to ```${view_usres}```, which later used for a join.
+- The expression - ```(select count(*) from users)``` is calculated, and the value is assigned to ```${count_users}```.
+
+The above example also shows the difference between set and setrun.
 
 **However, with such "complex" sql-statement, only the result of the last sql-sub-statement is outputted.**

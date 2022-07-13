@@ -1,7 +1,7 @@
 package com.qwshen.etl.pipeline
 
 import com.qwshen.common.logging.Loggable
-import com.qwshen.etl.common.{JobContext, PipelineContext}
+import com.qwshen.etl.common.{JobContext, PipelineContext, SqlBase}
 import com.qwshen.etl.pipeline.definition._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
@@ -45,19 +45,15 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
       }
       //create a new session
       val curSession: SparkSession = if (pipeline.singleSparkSession) session else session.newSession()
+      //create execution context
+      val ctx: JobContext = new JobContext(appCtx, pipeline.config)(curSession)
       try {
-        //create execution context
-        val ctx: JobContext = new JobContext(appCtx, pipeline.config)(curSession)
-
         //register UDFs if any
         UdfRegistration.setup(pipeline.udfRegistrations)(curSession)
         //localize global views
         if (pipeline.globalViewAsLocal) {
           localizeGlobalViews(curSession)
         }
-
-        //scan all referenced views
-        val viewsReferenced: Map[String, Int] = scanReferencedViews(job)
 
         //execute jobs
         job.actions.foreach(action => {
@@ -66,12 +62,17 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
             this.logger.info(s"Starting running the action - ${action.name} ...")
           }
           //check if all referenced view exist
-          ensureViewsExist(scanReferencedViews(action))(curSession)
+          ensureViewsExist(action.inputViews)(curSession)
+          //flag all input views are referenced
+          action.actor match {
+            case _: SqlBase[_] =>
+            case _ => action.inputViews.foreach(view => ctx.viewReferenced(view))
+          }
           //check if metrics collection is required, so to give the hint to the actor before running
           ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
           //execute
           action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
-            promoteView(df, action, pipeline.globalViewAsLocal, viewsReferenced)
+            promoteView(df, action, pipeline.globalViewAsLocal)
             collectMetrics(job.name, action, pipeline.metricsLogging, df).foreach(me => metrics.append(me))
             stageView(df, action, pipeline.stagingBehavior)
           })
@@ -84,6 +85,8 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
         //log metrics
         logMetrics(pipeline.name, metrics.toSeq, pipeline.metricsLogging)
       } finally {
+        //dispose the context
+        ctx.dispose()
         //clean up
         if (!pipeline.singleSparkSession) {
           discardSession(curSession)
@@ -102,11 +105,6 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
     session.catalog.listTables(appCtx.global_db).filter('isTemporary).select('name)
       .collect.map(r => r.getString(0)).foreach(tbl => session.table(s"${appCtx.global_db}.$tbl").createOrReplaceTempView(tbl))
   }
-
-  //scan all referenced views for the job
-  private def scanReferencedViews(job: Job): Map[String, Int] = job.actions.flatMap(action => scanReferencedViews(action)).groupBy(x => x).map(x => (x._1, x._2.length))
-  //scan all referenced view for the action
-  private def scanReferencedViews(action: Action): Seq[String] = action.inputViews.union(action.actor.extraViews).distinct
 
   //to ensure all referenced views have been already created, otherwise error out.
   private def ensureViewsExist(views: Seq[String])(implicit session: SparkSession): Boolean = {
@@ -127,21 +125,15 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   }
 
   //promote the data-frame as a view
-  private def promoteView(df: DataFrame, action: Action, globalViewAsLocal: Boolean, viewsReferenced: Map[String, Int]): Unit = {
-    action.output.foreach(v => {
-      //if the view is global or referenced multiple times, cache it
-      viewsReferenced.get(v.name) match {
-        case Some(count) if (count > 1 && !df.isStreaming) => df.persist(StorageLevel.MEMORY_AND_DISK)
-        case _ => if (v.global && !df.isStreaming) df.persist(StorageLevel.MEMORY_AND_DISK)
-      }
-
+  private def promoteView(df: DataFrame, action: Action, globalViewAsLocal: Boolean): Unit = {
+    action.output.foreach(view => {
       //create a global view if it is required
-      if (v.global) {
-        df.createOrReplaceGlobalTempView(v.name)
+      if (view.global) {
+        df.createOrReplaceGlobalTempView(view.name)
       }
       //create a local view if it is required.
-      if (!v.global || globalViewAsLocal) {
-        df.createOrReplaceTempView(v.name)
+      if (!view.global || globalViewAsLocal) {
+        df.createOrReplaceTempView(view.name)
       }
     })
   }

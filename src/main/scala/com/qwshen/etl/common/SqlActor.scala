@@ -6,8 +6,6 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
-import org.apache.spark.sql.types.NumericType
-
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -56,14 +54,6 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
   //statements
   protected val _stmts = new scala.collection.mutable.ArrayBuffer[Statement]()
 
-  //tables
-  protected var _views: Seq[String] = Nil
-  /**
-   * Extra Views except the input views specified in the pipeline definition that are referenced/used by current actor
-   * @return
-   */
-  override def extraViews: Seq[String] = this._views
-
   /**
    * Run the sql-statement
    *
@@ -77,13 +67,14 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
       this.logger.info(s"Starting to execute sql statement - ${this._sqlStmt}.")
     }
     this._stmts match {
-      case Seq(_, _ @ _*) => this._stmts.tail.foldLeft(this.execute(this._stmts.head))((_, stmt) => this.execute(stmt))
+      case Seq(_, _ @ _*) => this._stmts.tail.foldLeft(this.execute(this._stmts.head, ctx))((_, stmt) => this.execute(stmt, ctx))
       case _ => None
     }
   }
 
   //execute one statement
-  private def execute(stmt: Statement)(implicit session: SparkSession): Option[DataFrame] = Try {
+  private def execute(stmt: Statement, ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = Try {
+    this.flagReference(stmt, ctx)
     stmt match {
       case SetWithSelect(vn, text) =>
         val df = session.sql(text)
@@ -99,11 +90,28 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
     case Failure(ex) => throw new RuntimeException(s"Running the sql-statement failed - $stmt.", ex)
   }
 
+  //collect view-references
+  private def flagReference(stmt: Statement, ctx: JobContext)(implicit session: SparkSession): Unit = {
+    //extract all tables in the sql-statement
+    val alias = scala.collection.mutable.Set[String]()
+    val relations = scala.collection.mutable.Set[String]()
+    val lp = session.sessionState.sqlParser.parsePlan(stmt.text)
+    var i = 0
+    while (lp(i) != null) {
+      lp(i) match {
+        case sa: SubqueryAlias => alias += sa.alias
+        case r: UnresolvedRelation => relations += r.tableName
+        case _ =>
+      }
+      i = i + 1
+    }
+    relations.diff(alias).toSeq.foreach(view => ctx.viewReferenced(view))
+  }
+
   /**
    * Collect metrics of current actor
-   * @param df
-   * @param session
-   * @return
+   * @param df - the data-frame against it to collect metrics
+   * @return - the metrics
    */
   override def collectMetrics(df: DataFrame): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
 
@@ -146,26 +154,6 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
       })
     }
     this.setSqlVariables(sqlVars.keys.toSeq)
-
-    //extract all tables in the sql-statement
-    val alias = scala.collection.mutable.Set[String]()
-    val relations = scala.collection.mutable.Set[String]()
-    for (stmt <- this._stmts) Try {
-      val lp = session.sessionState.sqlParser.parsePlan(stmt.text)
-      var i = 0
-      while (lp(i) != null) {
-        lp(i) match {
-          case sa: SubqueryAlias => alias += sa.alias
-          case r: UnresolvedRelation => relations += r.tableName
-          case _ =>
-        }
-        i = i + 1
-      }
-    } match {
-      case Failure(t) => this.error(t)
-      case _ =>
-    }
-    this._views = relations.diff(alias).toSeq
   }
 
   /**
