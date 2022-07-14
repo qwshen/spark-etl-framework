@@ -104,4 +104,6 @@ In the above example:
 
 The above example also shows the difference between set and setrun.
 
-**However, with such "complex" sql-statement, only the result of the last sql-sub-statement is outputted.**
+Please note:
+- **Any variables defined through set or setrun statements can only be referenced in sql-related actors, such as sql-actor, sql-transformer, sql-readers & sql-writer. They cannot be referenced in any other actors.**
+- **When a sql-actor handling multiple sql-statement in its sql-string or sql-file, only the result of the last sql-statement is outputted.**
