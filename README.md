@@ -359,7 +359,7 @@ In cases where the logic of transforming data is very complicated, or a new read
 
 ### Appendix: Spark-SQL practices
 - Limit the data size by selecting the required columns, adding filtering etc.;
-- Never use "in" key word in where clause, such as
+- Do not use "in" key word in where clause when comparing with another dataset, such as
   ```SQL
   select * from orders where user_id in (select id from users)
   ```
