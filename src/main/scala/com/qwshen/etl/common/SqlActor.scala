@@ -18,7 +18,6 @@ class SqlActor extends SqlBase[SqlActor]
  * @tparam T
  */
 private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
-  private final val _sql_variables = "qwshen.s__q_l.v___ar__i_ables____"
   /**
    * The statement trait
    */
@@ -154,28 +153,6 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
       })
     }
     this.setSqlVariables(sqlVars.keys.toSeq)
-  }
-
-  /**
-   * Retrieve sql-variables defined by set statements
-   * @param session - the spark-session object
-   * @return - all sql variables defined in current session
-   */
-  protected def getSqlVariables(implicit session: SparkSession): Seq[String] = Try {
-    import session.implicits._
-    session.sql(String.format("select ${%s}", this._sql_variables)).as[String].first
-  }match {
-    case Success(s) => s.split(";")
-    case _ => Nil
-  }
-
-  /**
-   * Set combined sql-variables into a system-variable
-   * @param variables - all sql-variables
-   * @param session - the spark-session object
-   */
-  protected def setSqlVariables(variables: Seq[String])(implicit session: SparkSession): Unit = {
-    session.sql(String.format("set %s = `'%s'`", this._sql_variables, variables.mkString(";")))
   }
 
   /**

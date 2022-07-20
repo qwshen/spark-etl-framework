@@ -1,6 +1,6 @@
 package com.qwshen.common
 
-trait PropertyValidater {
+trait PropertyValidator {
   /**
    * Validate one variable - not empty
    * @param variable

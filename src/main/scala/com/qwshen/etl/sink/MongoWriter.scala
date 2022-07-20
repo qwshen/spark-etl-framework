@@ -2,7 +2,7 @@ package com.qwshen.etl.sink
 
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.WriteConfig
-import com.qwshen.common.{PropertyKey, PropertyUse}
+import com.qwshen.common.{PropertyKey, PropertyStatus}
 import com.qwshen.etl.common.{JobContext, MongoActor}
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}

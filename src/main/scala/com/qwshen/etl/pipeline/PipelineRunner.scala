@@ -70,7 +70,8 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
           }
           //check if metrics collection is required, so to give the hint to the actor before running
           ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
-          //execute
+          //before run
+          action.actor.beforeRun
           action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
             promoteView(df, action, pipeline.globalViewAsLocal)
             collectMetrics(job.name, action, pipeline.metricsLogging, df).foreach(me => metrics.append(me))
