@@ -3,7 +3,10 @@ The FileWriter is for writing a data-frame to files in a local or hdfs file syst
 - The support formats are csv, json, avro & parquet.
 - The write mode can only be overwrite or append
 - The partition-by is optional. If provided, it must be the names of one or more columns separated by comma.
-- The empty-write is optional, which controls whether to write out an empty view. It must be either yes/no or disabled/enabled. Default: yes.
+- The empty-write is optional, which controls whether to write out an empty view. This only applies when the view is empty. It must be one of:
+  - yes/enabled - write out the empty view.
+  - no/disabled - no write happens with the empty view.
+  - default/smart - write out the empty view only when the target location doesn't exist.
 
 Actor Class: `com.qwshen.etl.sink.FileWriter`
 

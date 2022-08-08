@@ -179,7 +179,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org..apache.iceberg</groupId>
+            <groupId>org.apache.iceberg</groupId>
             <artifactId>iceberg-spark-runtime-${spark.compact.version}_${scala.compact.version}</artifactId>
             <version>${iceberg.runtime.version}</version>
             <scope>provided</scope>

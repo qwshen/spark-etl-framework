@@ -13,7 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 import com.typesafe.config.Config
 
-final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
+final class PipelineRunner(pc: PipelineContext) extends Loggable {
   //to describe the content of metric entry
   private case class MetricEntry(jobName: String, actionName: String, key: String, value: String)
 
@@ -31,9 +31,9 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   /**
    * Execute the etl-pipeline
    *
-   * @param pipeline
-   * @param runJobs
-   * @param session
+   * @param pipeline - the pipeline object
+   * @param runJobs - jobs from the pipeline to be run
+   * @param session - the spark-session object
    */
   def run(pipeline: Pipeline, runJobs: Seq[String] = Nil)(implicit session: SparkSession): Unit = {
     val metrics = new ArrayBuffer[MetricEntry]()
@@ -46,7 +46,7 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
       //create a new session
       val curSession: SparkSession = if (pipeline.singleSparkSession) session else session.newSession()
       //create execution context
-      val ctx: JobContext = new JobContext(appCtx, pipeline.config)(curSession)
+      val ctx: JobContext = new JobContext(pc, pipeline.config)(curSession)
       try {
         //register UDFs if any
         UdfRegistration.setup(pipeline.udfRegistrations)(curSession)
@@ -90,7 +90,7 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
         ctx.dispose()
         //clean up
         if (!pipeline.singleSparkSession) {
-          discardSession(curSession)
+          cleanupSession(curSession)
         }
       }
       //logging
@@ -103,8 +103,8 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
   //localize global views so they can be used without specifying the global database.
   private def localizeGlobalViews(implicit session: SparkSession): Unit = {
     import session.implicits._
-    session.catalog.listTables(appCtx.global_db).filter('isTemporary).select('name)
-      .collect.map(r => r.getString(0)).foreach(tbl => session.table(s"${appCtx.global_db}.$tbl").createOrReplaceTempView(tbl))
+    session.catalog.listTables(pc.global_db).filter('isTemporary).select('name)
+      .collect.map(r => r.getString(0)).foreach(tbl => session.table(s"${pc.global_db}.$tbl").createOrReplaceTempView(tbl))
   }
 
   //to ensure all referenced views have been already created, otherwise error out.
@@ -210,8 +210,8 @@ final class PipelineRunner(appCtx: PipelineContext) extends Loggable {
     case _ =>
   }
 
-  //discard a spark-session by cleaning up its cache
-  private def discardSession(session: SparkSession): Unit = {
+  //clean up the cache and meta data of the spark-session
+  private def cleanupSession(session: SparkSession): Unit = {
     import session.implicits._
     //clean up all cached tables
     session.catalog.listTables.filter('isTemporary).select('name).collect.map(r => r.getString(0)).foreach(tbl => {

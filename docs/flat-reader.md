@@ -25,6 +25,10 @@ The FlatReader is for reading flat files from local or hdfs file system.
 
 - If addInputFile property is enabled, a column called input_file is added in the output dataframe, which indicates which file the current record is from. By default it is disabled.
 
+- The fallbackRead tells the FlatReader to load an alternative dataframe when the regular load fails. The following properties determine the schema and content of the alternative dataframe:
+  - The ddlSchemaString/ddlSchemaFile or ddlFallbackSchemaString/ddlFallbackSchemaFile
+  - The fallbackSqlString/fallbackSqlFile
+
 Actor Class: `com.qwshen.etl.source.FlatReader`
 
 The definition of the FlatReader:

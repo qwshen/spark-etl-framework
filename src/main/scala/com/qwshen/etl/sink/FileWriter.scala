@@ -1,9 +1,11 @@
 package com.qwshen.etl.sink
 
 import com.qwshen.common.PropertyKey
+import com.qwshen.common.io.FileChannel
 import com.qwshen.etl.common.{FileWriteActor, JobContext}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
+
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -29,13 +31,17 @@ class FileWriter extends FileWriteActor[FileWriter] {
     uri <- this._fileUri
     df <- this._view.flatMap(name => ctx.getView(name))
   } yield Try {
-    val goWrite = if (this._emptyWrite.exists(ew => ew.equalsIgnoreCase("no") || ew.equalsIgnoreCase("disabled"))) {
+    val hasData: () => Boolean = () => {
       if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
         df.persist(StorageLevel.MEMORY_AND_DISK)
       }
       df.count > 0
-    } else true
-
+    }
+    val goWrite: Boolean = this._emptyWrite match {
+      case Some(ew) if ew.equalsIgnoreCase("no") || ew.equalsIgnoreCase("disabled") => hasData()
+      case Some(ew) if ew.equalsIgnoreCase("smart") || ew.equalsIgnoreCase("default") => hasData() || !FileChannel.exists(uri)
+      case _ => true
+    }
     if (goWrite) {
       val initWriter = this._options.foldLeft(df.write.format(fmt))((s, o) => s.option(o._1, o._2))
       //with partitionBy

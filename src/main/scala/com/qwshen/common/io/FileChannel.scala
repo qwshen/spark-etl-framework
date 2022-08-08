@@ -1,5 +1,7 @@
 package com.qwshen.common.io
 
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.SparkSession
 import scala.util._
 import scala.io.Source
 
@@ -19,4 +21,12 @@ object FileChannel {
       source.close()
     }
   }
+
+  /**
+   * Check if the path already there
+   * @param path - the path of a file or directory
+   * @param session - the Spark-Session object
+   * @return - true if the path exists, otherwise false
+   */
+  def exists(path: String)(implicit session: SparkSession): Boolean = FileSystem.get(session.sparkContext.hadoopConfiguration).exists(new Path(path))
 }
