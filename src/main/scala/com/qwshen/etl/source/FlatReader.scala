@@ -121,7 +121,7 @@ class FlatReader extends FlatReadActor[FlatReader] {
         case (Some(schema), _, _) => dfEmpty(schema)
         case (_, Some(schema), _) => dfEmpty(schema)
         case (_, _, Some(stmt)) => session.sql(stmt)
-          throw new RuntimeException(s"Cannot load the flat file - $uri", ex)
+        case _ => throw new RuntimeException(s"Cannot load the flat file - $uri", ex)
       }
     } else {
       throw new RuntimeException(s"Cannot load the flat file - $uri", ex)
