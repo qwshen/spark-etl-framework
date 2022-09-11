@@ -97,4 +97,4 @@ The definition of the FlightReader:
   </actor>
 ```
 
-Import Note: when this reader is used in a pipeline, the [spark-flight-connector](https://github.com/qwshen/spark-flight-connector) is required when submitting a job. Please download the jar and make it available for the job.
+Import Note: when this reader is used in a pipeline, the [spark-flight-connector](https://github.com/qwshen/spark-flight-connector) is required when submitting a job for the pipeline. Please download the jar and make it available for the job.
