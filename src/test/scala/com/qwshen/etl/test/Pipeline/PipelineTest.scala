@@ -71,4 +71,26 @@ class PipelineTest extends TestApp {
     //Note: please run mysql_setup.sh before running this test case
     this.run(s"${resourceRoot}pipelines/pipeline_fileStreamRead-arbitraryState-jdbcStreamWrite.yaml")
   }
+
+  test("Pipeline test - file read / flight write") {
+    //The run this test, please add the following dependency:
+    //<dependency>
+    //  <groupId>com.qwshen</groupId>
+    //  <artifactId>spark-flight-connector_${spark.version}</artifactId>
+    //  <version>1.0.0</version>
+    //  <scope>test</scope>
+    //</dependency>
+    this.run(s"${resourceRoot}pipelines/pipeline_fileRead-flightWrite.yaml")
+  }
+
+  test("Pipeline test - flight read / file write") {
+    //The run this test, please add the following dependency:
+    //<dependency>
+    //  <groupId>com.qwshen</groupId>
+    //  <artifactId>spark-flight-connector_${spark.version}</artifactId>
+    //  <version>1.0.0</version>
+    //  <scope>test</scope>
+    //</dependency>
+    this.run(s"${resourceRoot}pipelines/pipeline_flightRead-fileWrite.json")
+  }
 }

@@ -1,0 +1,79 @@
+{
+    "pipeline-def": {
+        "name": "event-consolidation",
+        "description": "This is the process for transforming event data",
+        "version": "1.0.0",
+        "settings": {
+            "singleSparkSession": false,
+            "globalViewAsLocal": true
+        },
+        "variables": [
+            {
+                "name": "export_dir",
+                "value": "${events.output_dir}"
+            },
+            {
+                "name": "flight.password",
+                "value": "${events.flight.password}",
+                "decryptionKeyString": "${application.security.decryption.key}"
+            }
+        ],
+        "aliases": [
+            {
+                "name": "flight-reader",
+                "type": "com.qwshen.etl.source.FlightReader"
+            },
+            {
+                "name": "sql",
+                "type": "com.qwshen.etl.transform.SqlTransformer"
+            },
+            {
+                "name": "file-writer",
+                "type": "com.qwshen.etl.sink.FileWriter"
+            }
+        ],
+        "jobs": [
+            {
+                "name": "prepare events-features",
+                "actions": [
+                    {
+                        "name": "load events",
+                        "actor": {
+                            "type": "flight-reader",
+                            "properties": {
+                                "connection": {
+                                    "host": "192.168.0.22",
+                                    "port": "32010",
+                                    "user": "test",
+                                    "password": "${flight.password}",
+                                    "table": "\"local-iceberg\".\"iceberg_db\".\"iceberg_events\""
+                                }
+                            }
+                        },
+                        "output-view": {
+                            "name": "events",
+                            "global": "false"
+                        }
+                    },
+                    {
+                        "name": "write events",
+                        "actor": {
+                            "type": "file-writer",
+                            "properties": {
+                                "format": "csv",
+                                "options": {
+                                    "header": "true",
+                                    "maxRecordsPerFile": "300"
+                                },
+                                "mode": "overwrite",
+                                "fileUri": "${export_dir}",
+                                "view": "events"
+                            }
+                        },
+                        "input-views": ["events"]
+                    }
+                ]
+            }
+        ]
+    }
+}

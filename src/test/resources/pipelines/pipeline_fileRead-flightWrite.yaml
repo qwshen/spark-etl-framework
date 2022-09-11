@@ -1,0 +1,53 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: flight.password
+      value: ${events.flight.password}
+      decryptionKeyString: ${application.security.decryption.key}
+  aliases:
+    - name: file-reader
+      type: com.qwshen.etl.source.FileReader
+    - name: sql
+      type: com.qwshen.etl.transform.SqlTransformer
+    - name: flight-writer
+      type: com.qwshen.etl.sink.FlightWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: load events
+          actor:
+            type: file-reader
+            properties:
+              format: csv
+              options:
+                header: true
+              fileUri: ${events.events_input}
+          output-view:
+            name: events
+        - name: transform events
+          actor:
+            type: sql
+            properties:
+              sqlString: select event_id, user_id, start_time, city, province as state, '' as zip, country, '' as remark from events
+          output-view:
+            name: r_events
+        - name: write events
+          actor:
+            type: flight-writer
+            properties:
+              connection:
+                host: "192.168.0.22"
+                port: "32010"
+                user: test
+                password: ${flight.password}
+                table: "\"local-iceberg\".\"iceberg_db\".\"iceberg_events\""
+              options:
+                batch.size: "64"
+              mode: overwrite
+              view: r_events
+          input-view: [r_events]
