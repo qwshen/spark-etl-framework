@@ -1,4 +1,4 @@
-The FlightWriter is for writing Spark dataframes to an arrow-flight end-points by using [spark-flight-connector](https://github.com/qwshen/spark-flight-connector).
+The FlightWriter is for writing Spark dataframes to an arrow-flight end-point by using [spark-flight-connector](https://github.com/qwshen/spark-flight-connector).
 
 The following properties are mandatory:
 - `host` - the full-name or ip of an arrow-flight end-point host.
