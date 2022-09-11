@@ -35,11 +35,11 @@ The definition of the FlightWriter:
     type: flight-writer
     properties:
       connection:
-        host: 192.168.0.26
+        host: "192.168.0.26"
         port: 32101
         user: test
         password: password123
-        table: \"e-commerce\".orders
+        table: "\"e-commerce\".orders"
       options:
         tls.enabled: true
         tls.verifyServer: true
