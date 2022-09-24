@@ -13,7 +13,7 @@ import com.qwshen.etl.pipeline.builder.PipelineFactory
 import scala.util.control.Exception.ultimately
 
 class TestApp extends FunSuite with Matchers {
-  protected val resourceRoot: String = getClass.getClassLoader.getResource("").getPath
+  protected val resourceRoot: String = "file://" + java.net.URLDecoder.decode(getClass.getClassLoader.getResource("").getPath, "UTF-8")
 
   protected val config: Config = loadConfig()
   protected val runner = new PipelineRunner(new PipelineContext())
