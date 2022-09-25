@@ -54,7 +54,7 @@ class MongoStreamWriter extends MongoActor[MongoStreamWriter] {
     val wc = WriteConfig(Map("uri" -> uri) ++ this._options.filter(!_._1.equals("checkpointLocation")), Some(WriteConfig(session)))
     val writer = (df: DataFrame, id: Long) => MongoSpark.save(df.write.mode("append"), wc)
 
-    val streamQuery = df.writeStream.option("checkLocation", checkpointLocation).outputMode(mode).foreachBatch { writer }
+    val streamQuery = df.writeStream.option("checkpointLocation", checkpointLocation).outputMode(mode).foreachBatch { writer }
     val triggerQuery = (this._triggerMode, this._triggerInterval) match {
       case (Some(m), Some(t)) if (m == "continuous") => streamQuery.trigger(Trigger.Continuous(t))
       case (Some(m), Some(t)) if (m == "processingTime") => streamQuery.trigger(Trigger.ProcessingTime(t))
