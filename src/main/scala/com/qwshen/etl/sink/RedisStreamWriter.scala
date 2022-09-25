@@ -55,7 +55,7 @@ class RedisStreamWriter extends RedisActor[RedisStreamWriter] {
     val writer = (df: DataFrame, id: Long) => options
       .foldLeft(df.write.format("org.apache.spark.sql.redis"))((w, o) => w.option(o._1, o._2.toString)).mode("append").save
 
-    val streamQuery = df.writeStream.option("checkLocation", checkpointLocation).outputMode(mode).foreachBatch { writer }
+    val streamQuery = df.writeStream.option("checkpointLocation", checkpointLocation).outputMode(mode).foreachBatch { writer }
     val triggerQuery = (this._triggerMode, this._triggerInterval) match {
       case (Some(m), Some(t)) if (m == "continuous") => streamQuery.trigger(Trigger.Continuous(t))
       case (Some(m), Some(t)) if (m == "processingTime") => streamQuery.trigger(Trigger.ProcessingTime(t))
