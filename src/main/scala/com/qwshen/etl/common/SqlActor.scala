@@ -112,7 +112,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
    * @param df - the data-frame against it to collect metrics
    * @return - the metrics
    */
-  override def collectMetrics(df: DataFrame): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
+  override def collectMetrics(df: Option[DataFrame]): Seq[(String, String)] = this._sqlStmt.map(stmt => Seq(("sql-stmt", stmt))).getOrElse(Nil)
 
   /**
    * Initialize the actor with the properties & config

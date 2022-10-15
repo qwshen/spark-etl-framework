@@ -103,5 +103,5 @@ abstract class Actor extends PropertyInitializer with PropertyValidator with Ser
    * @param session
    * @return
    */
-  def collectMetrics(df: DataFrame): Seq[(String, String)] = Nil
+  def collectMetrics(df: Option[DataFrame]): Seq[(String, String)] = Nil
 }

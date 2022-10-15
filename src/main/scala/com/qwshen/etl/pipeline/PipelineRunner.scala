@@ -37,6 +37,8 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
    */
   def run(pipeline: Pipeline, runJobs: Seq[String] = Nil)(implicit session: SparkSession): Unit = {
     val metrics = new ArrayBuffer[MetricEntry]()
+    val dtStart = LocalDateTime.now.toString
+
     val validation = pipeline.config.flatMap(cfg => this.validationRun(cfg))
     runJobs.foldLeft(pipeline.jobs)((jobs, runJob) => jobs.filter(job => job.name.equalsIgnoreCase(runJob.trim))).foreach(job => {
       //logging
@@ -72,20 +74,27 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
           ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
           //before run
           action.actor.beforeRun
-          action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
-            promoteView(df, action, pipeline.globalViewAsLocal)
-            collectMetrics(job.name, action, pipeline.metricsLogging, df).foreach(me => metrics.append(me))
-            stageView(df, action, pipeline.stagingBehavior)
-          })
+          Try {
+            action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
+              promoteView(df, action, pipeline.globalViewAsLocal)
+              collectMetrics(job.name, action, pipeline.metricsLogging, Left(df)).foreach(me => metrics.append(me))
+              stageView(df, action, pipeline.stagingBehavior)
+            })
+          } match {
+            case Success(_) =>
+            case Failure(t) =>
+              collectMetrics(job.name, action, pipeline.metricsLogging, Right(t)).foreach(me => metrics.append(me))
+              throw t
+          }
           //logging
           if (this.logger.isDebugEnabled()) {
             this.logger.info(s"Finished the action - ${action.name}.")
           }
         })
-
-        //log metrics
-        logMetrics(pipeline.name, metrics.toSeq, pipeline.metricsLogging)
       } finally {
+        //log metrics
+        logMetrics(pipeline.name, dtStart, LocalDateTime.now.toString, metrics, pipeline.metricsLogging)
+
         //dispose the context
         ctx.dispose()
         //clean up
@@ -140,33 +149,46 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
   }
 
   //collect metrics for the action
-  private def collectMetrics(jobName: String, action: Action, metricsLogging: Option[MetricsLogging], df: DataFrame)(implicit session: SparkSession): Seq[MetricEntry] = Try {
+  private def collectMetrics(jobName: String, action: Action, metricsLogging: Option[MetricsLogging], data: Either[DataFrame, Throwable])(implicit session: SparkSession): Seq[MetricEntry] = Try {
     for {
       ml <- metricsLogging
       _ <- ml.loggingActions.find(a => a.equalsIgnoreCase(action.name))
-      if ml.loggingEnabled && !df.isStreaming
+      if ml.loggingEnabled
     } yield {
-      val customMetrics = action.actor.collectMetrics(df)
-        .map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
+      data match {
+        case Left(df) if !df.isStreaming =>
+          val customMetrics = action.actor.collectMetrics(Some(df))
+            .map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
 
-      if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
-        df.persist(StorageLevel.MEMORY_AND_DISK)
+          if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
+            df.persist(StorageLevel.MEMORY_AND_DISK)
+          }
+          Seq(
+            MetricEntry(jobName, action.name, "ddl-schema", df.schema.toDDL),
+            MetricEntry(jobName, action.name, "row-count", df.count.toString),
+            MetricEntry(jobName, action.name, "estimate-size", String.format("%s bytes", df.sparkSession.sessionState.executePlan(df.queryExecution.logical).optimizedPlan.stats.sizeInBytes.toString())),
+            MetricEntry(jobName, action.name, "execute-time", LocalDateTime.now.toString),
+            MetricEntry(jobName, action.name, "status", "success")
+          ) ++ customMetrics
+
+        case Right(ex) =>
+          val customMetrics = action.actor.collectMetrics(None)
+            .map(x => MetricEntry(jobName, action.name, x._1, x._2.replace("\"", "\\\"").replaceAll("[\r|\n| ]+", " ").replace("\r", "").replace("\n", " ")))
+          Seq(
+            MetricEntry(jobName, action.name, "status", "failure"),
+            MetricEntry(jobName, action.name, "error", ex.getMessage)
+          ) ++ customMetrics
+
+        case _ => Nil
       }
-      val systemMetrics = Seq(
-        MetricEntry(jobName, action.name, "ddl-schema", df.schema.toDDL),
-        MetricEntry(jobName, action.name, "row-count", df.count.toString),
-        MetricEntry(jobName, action.name, "estimate-size", String.format("%s bytes", df.sparkSession.sessionState.executePlan(df.queryExecution.logical).optimizedPlan.stats.sizeInBytes.toString())),
-        MetricEntry(jobName, action.name, "execute-time", LocalDateTime.now.toString)
-      )
-      systemMetrics ++ customMetrics
     }
   } match {
     case Success(r) => r.getOrElse(Nil)
-    case Failure(t) => this.logger.warn(s"Cannot collect metrics for action - $jobName.${action.name}."); Nil
+    case Failure(t) => this.logger.warn(s"Cannot collect metrics for action - $jobName.${action.name} - [${t.getMessage}]."); Nil
   }
 
   //write the metrics
-  private def logMetrics(pipelineName: String, entries: Seq[MetricEntry], metricsLogging: Option[MetricsLogging])(implicit session: SparkSession): Unit = for {
+  private def logMetrics(pipelineName: String, dtStart: String, dtEnd: String, entries: Seq[MetricEntry], metricsLogging: Option[MetricsLogging])(implicit session: SparkSession): Unit = for {
     ml <- metricsLogging
     uri <- ml.loggingUri
     if ml.loggingEnabled
@@ -181,7 +203,7 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
 
     val writer = new PrintWriter(FileSystem.get(session.sparkContext.hadoopConfiguration).create(new Path(targetFileUri)))
     try {
-      writer.write(s"""{ "pipeline-name": "$pipelineName", "jobs:": [ $jobsJsonString ] }""")
+      writer.write(s"""{ "pipeline-name": "$pipelineName", "start-time": "$dtStart", "end-time": "$dtEnd", "jobs": [ $jobsJsonString ] }""")
     } finally {
       writer.close()
     }

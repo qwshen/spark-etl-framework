@@ -100,7 +100,7 @@ class FileReader extends FileReadActor[FileReader] {
    * @param df
    *  @return
    */
-  override def collectMetrics(df: DataFrame): Seq[(String, String)] = {
+  override def collectMetrics(df: Option[DataFrame]): Seq[(String, String)] = df.map(df => {
     if (!(df.storageLevel.useMemory || df.storageLevel.useDisk || df.storageLevel.useOffHeap)) {
       df.persist(StorageLevel.MEMORY_AND_DISK)
     }
@@ -109,8 +109,8 @@ class FileReader extends FileReadActor[FileReader] {
       .agg(count(lit(1)).as(this._clmnFileCnt))
     .select(col(this._clmnFileName), col(this._clmnFileCnt)).collect().zipWithIndex
       .map { case(r, i) => ((r(0).toString, String.format("%s", r(1).toString)), i) }
-      .flatMap { case(r, i) => Seq((s"input-file${i + 1}-name", r._1), (s"input-file${i + 1}-row-count", r._2)) }
-  }
+      .flatMap { case(r, i) => Seq((s"input-file${i + 1}-name", r._1), (s"input-file${i + 1}-row-count", r._2)) }.toSeq
+  }).getOrElse(Nil)
 
   /**
    * The URI separator

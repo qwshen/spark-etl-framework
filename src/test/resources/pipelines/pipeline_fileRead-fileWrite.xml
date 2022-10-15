@@ -86,7 +86,7 @@
         </action>
     </job>
 
-    <metrics-logging>
+    <metrics-logging enabled="true">
         <uri>${metrics_uri}</uri>
         <actions>
             <action name="load users" />
@@ -95,7 +95,7 @@
         </actions>
     </metrics-logging>
 
-    <debug-staging>
+    <debug-staging enabled="false">
         <uri>${staging_uri}</uri>
         <actions>
             <action name="transform users-train" />
