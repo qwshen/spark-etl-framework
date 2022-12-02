@@ -32,7 +32,7 @@
     </properties>
 
     <groupId>com.qwshen</groupId>
-    <artifactId>spark-etl-framework_${scala.compact.version}_${spark.version}</artifactId>
+    <artifactId>spark-etl-framework_${scala.compact.version}_${spark.compact.version}</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
 
