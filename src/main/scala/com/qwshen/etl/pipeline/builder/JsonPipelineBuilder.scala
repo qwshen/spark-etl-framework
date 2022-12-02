@@ -83,7 +83,6 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
             case Some(variables: Seq[Map[String, Any]] @unchecked) => for (pl <- pipeline) {
               UdfRegistration.setup(pl.udfRegistrations)(session)
               newConfig = parseVariables(variables)(newConfig, session)
-              pl.takeConfig(newConfig)
             }
             case _ =>
           }
@@ -106,7 +105,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
       }
       case _ =>
     }
-    pipeline
+    pipeline.map(pl => pl.takeConfig(newConfig))
   }
 
   //parse variables
