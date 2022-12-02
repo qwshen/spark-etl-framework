@@ -131,6 +131,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
         def withKV = (k: String, v: String) => {
           val data = this.evaluate(this.resolve(ConfigurationManager.quote(v))(newConfig))(session)
           vars.put(k, data)
+          //update the config
           newConfig = ConfigurationManager.mergeVariables(newConfig, Map(k -> data))
         }
         value.foreach(v => withKV(n, v))
