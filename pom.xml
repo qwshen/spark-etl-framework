@@ -9,7 +9,7 @@
         <scala.version>2.12.15</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
 
-        <spark.version>3.0.0</spark.version>
+        <spark.version>3.4.0</spark.version>
         <spark.compact.version>3.0</spark.compact.version>
 
         <hadoop.version>3.2.4</hadoop.version>
