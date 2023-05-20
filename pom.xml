@@ -10,7 +10,7 @@
         <scala.compact.version>2.12</scala.compact.version>
 
         <spark.version>3.4.0</spark.version>
-        <spark.compact.version>3.0</spark.compact.version>
+        <spark.compact.version>3.4</spark.compact.version>
 
         <hadoop.version>3.2.4</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
