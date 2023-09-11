@@ -6,7 +6,6 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
-
 import scala.util.matching.Regex
 import scala.util.{Failure, Properties, Success, Try}
 
