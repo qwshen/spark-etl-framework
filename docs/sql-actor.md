@@ -103,8 +103,8 @@ In the above example:
 - The expression - ```(select count(*) from users)``` is calculated, and the value is assigned to ```${count_users}```.
 
 The above example also shows the difference between set and setrun:
-- setrun gets evaluation immediately.
-- set is lazy evaluation.
+- setrun statements get evaluated immediately.
+- set statements are lazily evaluated.
 
 Please note:
 - **Any variables defined through set or setrun statements can be referenced by any down-stream actors.**
