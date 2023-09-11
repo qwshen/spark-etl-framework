@@ -6,7 +6,9 @@ import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.analysis.UnresolvedRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
-import scala.util.{Failure, Success, Try}
+
+import scala.util.matching.Regex
+import scala.util.{Failure, Properties, Success, Try}
 
 /**
  * The general SqlActor
@@ -127,9 +129,9 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
     }
 
     var sqlVars = this.getSqlVariables.map(v => (v, v)).toMap
-    for (stmt <- this._sqlStmt) {
-      stmt.split(";").map(s => s.stripPrefix("[\r|\n]").stripSuffix("[\r|\n]").trim).foreach(s => {
-        if (s.trim.replaceAll("[\r|\n]", " ").toLowerCase.startsWith("set ")) {
+    for (stmt <- this.refineStmt(this._sqlStmt)) {
+      stmt.split(";").foreach(s => {
+        if (s.trim.toLowerCase.startsWith("set ")) {
           val idx = s.substring(4).indexOf("=")
           if (idx < 0) {
             throw new RuntimeException("The set statement is invalid - $s");
@@ -138,7 +140,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
           val varValue = this.resolve(s.substring(idx + 5).trim, sqlVars.keys.toSeq)(config)
           this._stmts.append(SetStatement(varName, String.format("set %s = %s", varName, varValue)))
           sqlVars += varName -> varValue
-        } else if (s.trim.replaceAll("[\r|\n]", " ").toLowerCase.startsWith("setrun ")) {
+        } else if (s.trim.toLowerCase.startsWith("setrun ")) {
           val idx = s.substring(7).indexOf("=")
           if (idx < 0) {
             throw new RuntimeException("The setrun statement is invalid - $s");
@@ -153,6 +155,23 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
       })
     }
     this.setSqlVariables(sqlVars.keys.toSeq)
+  }
+
+  /**
+   Remove any comments from a sql-statement
+   */
+  private def refineStmt(stmt: Option[String]): Option[String] = {
+    def refine(stmt: String, start: Regex, end: String): String = start
+      .findAllMatchIn(stmt).map(idx => (idx.start, stmt.indexOf(end, idx.start) + end.length))
+      .foldLeft(stmt.toCharArray)((r, i) => { (i._1 until i._2).foreach(r(_) = ' '); r })
+      .mkString
+
+    val boundaries = Seq(
+      ("/\\*[^+]".r, "*/"),
+      ("--".r, Properties.lineSeparator)
+    )
+    stmt.map(s => boundaries.foldLeft(s + Properties.lineSeparator)((r, b) => refine(r, b._1, b._2)))
+      .map(s => s.replace(Properties.lineSeparator, " ").replaceAll(" +", " "))
   }
 
   /**
