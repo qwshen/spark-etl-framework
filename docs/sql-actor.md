@@ -102,7 +102,9 @@ In the above example:
 - The expression - ```(select * from users)``` is not executed but as an alias simply assigned to ```${view_usres}```, which later used for a join.
 - The expression - ```(select count(*) from users)``` is calculated, and the value is assigned to ```${count_users}```.
 
-The above example also shows the difference between set and setrun.
+The above example also shows the difference between set and setrun:
+- setrun statements get evaluated immediately.
+- set statements are lazily evaluated.
 
 Please note:
 - **Any variables defined through set or setrun statements can be referenced by any down-stream actors.**
