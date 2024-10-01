@@ -2,7 +2,7 @@ The FlatReader is for reading complex delimited or fixed-length flat files with 
 
 - The header, body and trailer may be in different format and have different number of fields for each record. The format property must be in one of the following values (with text as the default):
   - delimited
-  - fix-length
+  - fixed-length
   - text
 
 - The header and body may be delimited with different delimiters while the trailer is in fixed-length.
