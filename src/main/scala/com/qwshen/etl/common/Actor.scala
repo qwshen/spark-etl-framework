@@ -1,10 +1,13 @@
 package com.qwshen.etl.common
 
 import com.qwshen.common.{PropertyInitializer, PropertyStatus, PropertyValidator}
+import com.qwshen.etl.pipeline.definition.View
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import scala.collection.breakOut
-import scala.util.{Success, Try, Failure}
+import scala.util.{Failure, Success, Try}
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * The common behavior of all Actors
@@ -13,6 +16,14 @@ abstract class Actor extends PropertyInitializer with PropertyValidator with Ser
   private final val _keySqlVariables = "qwshen.s__q_l.v___ar__i_ables____"
   //to record the variables that don't have value assigned yet during the initialization phase
   private var _unassignedVariables: Seq[String] = Nil
+
+  //to record all extra-views that current actor handles
+  private val _extraViews = ArrayBuffer.empty[View]
+  /**
+   * Get all extra-views
+   * @return
+   */
+  def extraView: Seq[View] = this._extraViews.toSeq
 
   /**
    * Initialize the actor with the properties & config
@@ -104,4 +115,16 @@ abstract class Actor extends PropertyInitializer with PropertyValidator with Ser
    * @return
    */
   def collectMetrics(df: Option[DataFrame]): Seq[(String, String)] = Nil
+
+  /**
+   * Register extra view handled by current actor
+   * @param df
+   * @param viewName
+   * @param global
+   */
+  protected def registerView(df: DataFrame, view: View): Unit = {
+    if (view.global) df.createOrReplaceGlobalTempView(view.name) else df.createOrReplaceTempView(view.name)
+    this._extraViews.append(view)
+  }
+  protected def registerView(df: DataFrame, viewName: String, global: Boolean): Unit = this.registerView(df, View(viewName, global))
 }

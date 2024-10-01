@@ -82,17 +82,23 @@ class FileReader extends FileReadActor[FileReader] {
     if (ctx.metricsRequired) df.withColumn(this._clmnFileName, input_file_name()) else df
   } match {
     case Success(df) => df
-    case Failure(ex) => if (this._fallbackRead) {
-      val dfEmpty: StructType => DataFrame = (schema: StructType) => session.createDataFrame(session.sparkContext.emptyRDD[Row], schema)
-      (this._schema, this._fallbackSchema, this._fallbackSqlString) match {
-        case (Some(schema), _, _) => dfEmpty(schema)
-        case (_, Some(schema), _) => dfEmpty(schema)
-        case (_, _, Some(stmt)) => session.sql(stmt)
-        case _ => throw new RuntimeException(this._multiUriSeparator.foldLeft(s"Cannot load the file into data-frame - ${this._fileUri}")((r, s) => String.format("%s. [with uri-separator - %s].", r, s)), ex)
-      }
-    } else {
-      throw new RuntimeException(this._multiUriSeparator.foldLeft(s"Cannot load the file into data-frame - ${this._fileUri}")((r, s) => String.format("%s. [with uri-separator - %s].", r, s)), ex)
+    case Failure(ex) => loadFallback(ex)
+  }
+
+  /**
+   * Load a fallback empty dataframe
+   * @return
+   */
+  protected def loadFallback(ex: Throwable)(implicit session: SparkSession): DataFrame = if (this._fallbackRead) {
+    val dfEmpty: StructType => DataFrame = (schema: StructType) => session.createDataFrame(session.sparkContext.emptyRDD[Row], schema)
+    (this._schema, this._fallbackSchema, this._fallbackSqlString) match {
+      case (Some(schema), _, _) => dfEmpty(schema)
+      case (_, Some(schema), _) => dfEmpty(schema)
+      case (_, _, Some(stmt)) => session.sql(stmt)
+      case _ => throw new RuntimeException(this._multiUriSeparator.foldLeft(s"Cannot load the file into data-frame - ${this._fileUri}")((r, s) => String.format("%s. [with uri-separator - %s].", r, s)), ex)
     }
+  } else {
+    throw new RuntimeException(this._multiUriSeparator.foldLeft(s"Cannot load the file into data-frame - ${this._fileUri}")((r, s) => String.format("%s. [with uri-separator - %s].", r, s)), ex)
   }
 
   /**

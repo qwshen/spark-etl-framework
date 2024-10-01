@@ -49,7 +49,7 @@ class JdbcWriter extends JdbcActor[JdbcWriter] with VariableResolver {
       case "merge" => new JdbcMicroBatchWriter(this._connection ++ this._options, this._sinkSqlString).write(df, 0L)
       case _ => for (numPartitions <- this._options.get("numPartitions").map(_.toInt)) {
         //write
-        import com.qwshen.etl.utils.DataframeSplitter._
+        import com.qwshen.etl.utils.DataframeHelper._
         df.split(numPartitions).foreach(x => x.write.format("jdbc").options(this._connection ++ this._options).mode(mode).save())
       }
     }

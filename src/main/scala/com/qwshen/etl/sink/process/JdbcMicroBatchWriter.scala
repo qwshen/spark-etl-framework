@@ -22,7 +22,7 @@ private[etl] final class JdbcMicroBatchWriter(options: Map[String, String], sink
     val bcSinkStmt = batchDf.sparkSession.sparkContext.broadcast(this.sinkStmt)
     val bcBatchId = batchDf.sparkSession.sparkContext.broadcast(batchId)
     //write the batch data-frame
-    import com.qwshen.etl.utils.DataframeSplitter._
+    import com.qwshen.etl.utils.DataframeHelper._
     batchDf.split(numPartitions).foreach(df => df.rdd.foreachPartition(rows => {
       //create the writer
       val writer = new JdbcContinuousWriter(bcDbOptions.value, bcSinkStmt.value)

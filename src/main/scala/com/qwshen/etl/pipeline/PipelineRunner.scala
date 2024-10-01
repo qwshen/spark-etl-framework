@@ -78,7 +78,7 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
             action.actor.run(ctx)(curSession) collect { case r: DataFrame => validation.foldLeft(r)((v, n) => v.limit(n)) } foreach (df => {
               promoteView(df, action, pipeline.globalViewAsLocal)
               collectMetrics(job.name, action, pipeline.metricsLogging, Left(df)).foreach(me => metrics.append(me))
-              stageView(df, action, pipeline.stagingBehavior)
+              stageView(df, action, ctx, pipeline.stagingBehavior)
             })
           } match {
             case Success(_) =>
@@ -213,7 +213,7 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
   }
 
   //stage the current view
-  private def stageView(df: DataFrame, action: Action, stagingBehavior: Option[StagingBehavior]): Unit = Try {
+  private def stageView(df: DataFrame, action: Action, ctx: JobContext, stagingBehavior: Option[StagingBehavior]): Unit = Try {
     for {
       behavior <- stagingBehavior
       uri <- behavior.stagingUri
@@ -225,6 +225,14 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
         }
         val targetUri = s"${uri.stripSuffix("/")}/${action.name.replace(" ", "_")}"
         df.write.format("csv").mode("overwrite").option("header", "true").save(targetUri)
+        action.actor.extraView.foreach(view =>
+          ctx.getView(view).foreach(dfView => {
+            if (!(dfView.storageLevel.useMemory || dfView.storageLevel.useDisk || dfView.storageLevel.useOffHeap)) {
+              dfView.persist(StorageLevel.MEMORY_AND_DISK)
+            }
+            dfView.write.format("csv").mode("append").option("header", "true").save(targetUri)
+          })
+        )
       })
     }
   } match {

@@ -1,10 +1,13 @@
 package com.qwshen.etl.source
 
 import com.qwshen.common.PropertyKey
-import com.qwshen.etl.common.{JobContext, FlatReadActor}
+import com.qwshen.etl.common.{FlatReadActor, JobContext}
+import com.qwshen.etl.common.FlatReadActor.PositionalField
+import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import scala.util.{Failure, Success, Try}
-import org.apache.spark.sql.functions.current_timestamp
+import org.apache.spark.sql.functions.{current_timestamp, col}
 
 /**
  * To load a text file in streaming mode.
@@ -25,6 +28,23 @@ class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
   @PropertyKey("addTimestamp", false)
   protected var _addTimestamp: Boolean = false
 
+  //fields
+  protected var _fields: Seq[PositionalField] = Nil
+
+  /**
+   * Initialize the flat reader
+   *
+   * @param config - the configuration object
+   * @param session - the spark-session object
+   */
+  override def init(properties: Seq[(String, String)], config: Config)(implicit session: SparkSession): Unit = {
+    super.init(properties, config)
+
+    val (schema, fields) = FlatReadActor.parsePositionalFields(this._ddlFieldsString, this._ddlFieldsFile)
+    this._schema = schema
+    this._fields = fields
+  }
+
   /**
    * Run the flat-stream-reader
    *
@@ -36,17 +56,14 @@ class FlatStreamReader extends FlatReadActor[FlatStreamReader] {
     uri <- this._fileUri
   } yield Try {
     import session.implicits._
-    val dfInit = this._options.foldLeft(session.readStream.format("text"))((r, o) => r.option(o._1, o._2)).load(uri).as[String]
+    val dfInit = this._options.foldLeft(session.readStream.format("text"))((r, o) => r.option(o._1, o._2)).schema(this._defaultSchema).load(uri)
 
     val getType = (name: String) => this._schema.flatMap(_.fields.find(_.name.equals(name)).map(x => x.dataType)).getOrElse(
       throw new RuntimeException(s"The data type is unknown for column - $name")
     )
-    val df = this._format match {
-      case Seq(_, _ @ _*) => dfInit.select(this._format.map(f => $"value".substr(f.startPos, f.length).as(f.name).cast(getType(f.name))): _*)
-      case _ => this._valueField match {
-          case Some(value) => dfInit.withColumnRenamed("value", value)
-          case _ => dfInit.withColumnRenamed("value", "row_value")
-        }
+    val df = this._fields match {
+      case Seq(_, _ @ _*) => dfInit.select(this._fields.map(f => col(this._valueField).substr(f.startPos, f.length).as(f.name).cast(getType(f.name))): _*)
+      case _ => dfInit
     }
 
     val dfResult = if (this._addTimestamp) df.withColumn("__timestamp", current_timestamp) else df

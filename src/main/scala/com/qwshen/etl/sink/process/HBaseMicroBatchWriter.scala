@@ -3,7 +3,7 @@ package com.qwshen.etl.sink.process
 import com.qwshen.etl.common.stream.MicroBatchWriter
 import org.apache.spark.sql.DataFrame
 import scala.util.{Failure, Success, Try}
-import com.qwshen.etl.utils.DataframeSplitter._
+import com.qwshen.etl.utils.DataframeHelper._
 
 /**
  * Write the rows into HBase.

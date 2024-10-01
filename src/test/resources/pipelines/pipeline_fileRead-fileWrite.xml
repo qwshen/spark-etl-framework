@@ -48,7 +48,29 @@
         <action name="load train">
             <actor type="flat-reader">
                 <properties>
+                    <fileHeader>
+                        <identifier>
+                            <matchRgPtn>^HDR</matchRgPtn>
+                        </identifier>
+                        <format>fixed-length</format>
+                        <ddlFieldsString>id:1-3 string, data_date:4-8 string</ddlFieldsString>
+                        <output-view>
+                            <name>train_header</name>
+                            <global>true</global>
+                        </output-view>
+                    </fileHeader>
+                    <format>fixed-length</format>
                     <ddlFieldsString>user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int</ddlFieldsString>
+                    <fileTrailer>
+                        <identifier>
+                            <endNRows>1</endNRows>
+                        </identifier>
+                        <format>fixed-length</format>
+                        <ddlFieldsString>id:1-3 string, rec_count:4-7 int</ddlFieldsString>
+                        <output-view>
+                            <name>train_trailer</name>
+                        </output-view>
+                    </fileTrailer>
                     <fileUri>${events.train_input}</fileUri>
                 </properties>
             </actor>
@@ -95,9 +117,10 @@
         </actions>
     </metrics-logging>
 
-    <debug-staging enabled="false">
+    <debug-staging enabled="true">
         <uri>${staging_uri}</uri>
         <actions>
+            <action name="load train" />
             <action name="transform users-train" />
         </actions>
     </debug-staging>
