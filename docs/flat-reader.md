@@ -69,7 +69,7 @@ The definition of the FlatReader:
       identifier:
         matchRgPtn: "^Dta"
       ddlFieldsString: "user:1-8 string, event:9-10 long, timestamp:19-32 string, interested:51-1 int"
-      fileHeader:
+      header:
         format: fixed-length
         identifier:
           beginNRows: 1
@@ -77,7 +77,7 @@ The definition of the FlatReader:
         output-view:
           name: "user_header"
           global: false
-      fileTrailer:
+      trailer:
         format: fixed-length
         identifier:
           matchRgPtn: "^TRL"
@@ -99,8 +99,37 @@ or
   actor:
     type: flat-reader
     properties:
-      ddlFieldsFile: schema/train.txt 
-      fileUri: "${events.train_input}" 
+      format: delimited
+      options:
+        header: false
+        delimitor: |
+      identifier:
+        matchRgPtn: "^Dta"
+      ddlFieldsString: "user:0 string, event:1 long, timestamp:5 string, interested:11 int"
+      header:
+        format: delimited
+        options:
+          delimiter: ,
+        identifier:
+          beginNRows: 1
+        ddlFieldsString: "id:0 string, data_date:1 string"
+        output-view:
+          name: "user_header"
+          global: false
+      trailer:
+        format: fixed-length
+        identifier:
+          matchRgPtn: "^TRL"
+        ddlFieldsString: "id:1-3 string, rec_count:4-7 int"
+        output-view:
+          name: "user_trailer"
+          global: true
+      addInputFile: true
+      fileUri: "${events.train_input}"
+      multiUriSeparator: ";"
+      output-view:
+        name: train
+        global: true
 ```
 
 - In JSON format
@@ -109,6 +138,7 @@ or
     "actor": {
       "type": "flat-reader",
       "properties": {
+        "format": "text",
         "row": {
           "noField": "key",
           "valueField": "text"

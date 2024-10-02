@@ -31,7 +31,7 @@ object DataframeHelper {
 
   implicit class IndexDecorator(df: DataFrame) {
     def zipWithIndex(clnIndexName: String, partitionBy: Seq[String] = Nil): DataFrame = {
-      var dfId = df.withColumn(DataframeHelper.CN_INCREASE_ID, monotonically_increasing_id())
+      var dfId = df.cache().withColumn(DataframeHelper.CN_INCREASE_ID, monotonically_increasing_id())
       partitionBy match {
         case Seq(_, _ @ _*) =>
           val clnPartitionBy = partitionBy.map(cln => col(cln))

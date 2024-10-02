@@ -71,7 +71,7 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
             case _ => action.inputViews.foreach(view => ctx.viewReferenced(view))
           }
           //check if metrics collection is required, so to give the hint to the actor before running
-          ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
+          ctx.metricsRequired = pipeline.metricsLogging.exists(ml => ml.loggingEnabled && ml.loggingActions.exists(a => a.equalsIgnoreCase(action.name)))
           //before run
           action.actor.beforeRun
           Try {

@@ -20,13 +20,13 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
 
   @PropertyKey("row.valueField", false)
   protected var _valueField: String = "value"
-  //default schema
-  protected var _defaultSchema: StructType = _
 
   //the source path
   @PropertyKey("fileUri", true)
   protected var _fileUri: Option[String] = None
 
+  //default schema
+  protected var _defaultSchema: StructType = _
   //body schema
   protected var _schema: Option[StructType] = None
 
@@ -56,6 +56,14 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
    * @return
    */
   def ddlFieldsFile(ddlFile: String): T = { this._ddlFieldsFile = Some(ddlFile); this }
+
+  /**
+   * The load options
+   *
+   * @param options
+   * @return
+   */
+  def options(opts: Map[String, String]): T = { this._options = this._options ++ opts; this }
 
   /**
    * The custom value field name

@@ -45,10 +45,57 @@
             </actor>
             <output-view name="users" global="false" />
         </action>
+        <action name="load train_csv">
+            <actor type="flat-reader">
+                <properties>
+                    <header>
+                        <identifier>
+                            <matchRgPtn>^HDR</matchRgPtn>
+                        </identifier>
+                        <format>delimited</format>
+                        <options>
+                            <header>false</header>
+                            <delimiter>,</delimiter>
+                        </options>
+                        <ddlFieldsString>id:0 string, data_date:1 string</ddlFieldsString>
+                        <output-view>
+                            <name>train_header_csv</name>
+                            <global>true</global>
+                        </output-view>
+                    </header>
+                    <format>delimited</format>
+                    <options>
+                        <header>false</header>
+                        <delimiter>,</delimiter>
+                    </options>
+                    <ddlFieldsString>user:0 string, event:1 string, timestamp:3 string, interested:4 int</ddlFieldsString>
+                    <row>
+                        <noField>seq_number</noField>
+                    </row>
+                    <trailer>
+                        <identifier>
+                            <endNRows>1</endNRows>
+                        </identifier>
+                        <format>delimited</format>
+                        <options>
+                            <header>false</header>
+                            <delimiter>|</delimiter>
+                        </options>
+                        <ddlFieldsString>id:0 string, rec_count:1 int</ddlFieldsString>
+                        <output-view>
+                            <name>train_trailer_csv</name>
+                        </output-view>
+                    </trailer>
+                    <addInputFile>true</addInputFile>
+                    <fileUri>${events.train_input}/train.csv</fileUri>
+                </properties>
+            </actor>
+            <output-view name="train_csv" />
+        </action>
         <action name="load train">
             <actor type="flat-reader">
                 <properties>
-                    <fileHeader>
+                    <header>
                         <identifier>
                             <matchRgPtn>^HDR</matchRgPtn>
                         </identifier>
@@ -58,10 +105,10 @@
                             <name>train_header</name>
                             <global>true</global>
                         </output-view>
-                    </fileHeader>
+                    </header>
                     <format>fixed-length</format>
                     <ddlFieldsString>user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int</ddlFieldsString>
-                    <fileTrailer>
+                    <trailer>
                         <identifier>
                             <endNRows>1</endNRows>
                         </identifier>
@@ -70,8 +117,8 @@
                         <output-view>
                             <name>train_trailer</name>
                         </output-view>
-                    </fileTrailer>
-                    <fileUri>${events.train_input}</fileUri>
+                    </trailer>
+                    <fileUri>${events.train_input}/train.txt</fileUri>
                 </properties>
             </actor>
             <output-view name="train" />
@@ -108,7 +155,7 @@
         </action>
     </job>
 
-    <metrics-logging enabled="true">
+    <metrics-logging enabled="false">
         <uri>${metrics_uri}</uri>
         <actions>
             <action name="load users" />
@@ -120,6 +167,7 @@
     <debug-staging enabled="true">
         <uri>${staging_uri}</uri>
         <actions>
+            <action name="load train_csv" />
             <action name="load train" />
             <action name="transform users-train" />
         </actions>

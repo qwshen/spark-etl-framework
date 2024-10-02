@@ -40,38 +40,38 @@ class FlatReader extends FlatReadActor[FlatReader] {
   @PropertyKey("identifier.matchRgPtn", false)
   protected var _idMatchRgPtn: Option[String] = None
 
-  @PropertyKey("fileHeader.identifier.beginNRows", false)
+  @PropertyKey("header.identifier.beginNRows", false)
   protected var _fhIdBeginNRows: Option[Int] = None
-  @PropertyKey("fileHeader.identifier.matchRgPtn", false)
+  @PropertyKey("header.identifier.matchRgPtn", false)
   protected var _fhIdMatchRgPtn: Option[String] = None
-  @PropertyKey("fileHeader.format", false)
+  @PropertyKey("header.format", false)
   protected var _fhFormat: String = FLAT_TEXT
-  @PropertyKey("fileHeader.options", false)
+  @PropertyKey("header.options.*", false)
   protected var _fhOptions: Map[String, String] =Map.empty[String, String]
-  @PropertyKey("fileHeader.ddlFieldsString", false)
+  @PropertyKey("header.ddlFieldsString", false)
   protected var _fhDdlFieldsString: Option[String] = None
-  @PropertyKey("fileHeader.ddlFieldsFile", false)
+  @PropertyKey("header.ddlFieldsFile", false)
   protected var _fhDdlFieldsFile: Option[String] = None
-  @PropertyKey("fileHeader.output-view.name", false)
+  @PropertyKey("header.output-view.name", false)
   protected var _fhViewName: Option[String] = None
-  @PropertyKey("fileHeader.output-view.global", false)
+  @PropertyKey("header.output-view.global", false)
   protected var _fhViewGlobal: Boolean = false
 
-  @PropertyKey("fileTrailer.identifier.endNRows", false)
+  @PropertyKey("trailer.identifier.endNRows", false)
   protected var _ftIdEndNRows: Option[Int] = None
-  @PropertyKey("fileTrailer.identifier.matchRgPtn", false)
+  @PropertyKey("trailer.identifier.matchRgPtn", false)
   protected var _ftIdMatchRgPtn: Option[String] = None
-  @PropertyKey("fileTrailer.format", false)
+  @PropertyKey("trailer.format", false)
   protected var _ftFormat: String = FLAT_TEXT
-  @PropertyKey("fileTrailer.options", false)
+  @PropertyKey("trailer.options.*", false)
   protected var _ftOptions: Map[String, String] =Map.empty[String, String]
-  @PropertyKey("fileTrailer.ddlFieldsString", false)
+  @PropertyKey("trailer.ddlFieldsString", false)
   protected var _ftDdlFieldsString: Option[String] = None
-  @PropertyKey("fileTrailer.ddlFieldsFile", false)
+  @PropertyKey("trailer.ddlFieldsFile", false)
   protected var _ftDdlFieldsFile: Option[String] = None
-  @PropertyKey("fileTrailer.output-view.name", false)
+  @PropertyKey("trailer.output-view.name", false)
   protected var _ftViewName: Option[String] = None
-  @PropertyKey("fileTrailer.output-view.global", false)
+  @PropertyKey("trailer.output-view.global", false)
   protected var _ftViewGlobal: Boolean = false
 
   @PropertyKey("fallbackRead", false)
@@ -148,28 +148,25 @@ class FlatReader extends FlatReadActor[FlatReader] {
   def run(ctx: JobContext)(implicit session: SparkSession): Option[DataFrame] = for {
     uri <- this._fileUri
   } yield Try {
-    import session.implicits._
     val dfReader = this._options.foldLeft(session.read.format("text"))((r, o) => r.option(o._1, o._2)).schema(this._defaultSchema)
-    var dfRaw = this._multiUriSeparator match {
-      case Some(separator) => dfReader.load(uri.split(separator): _*)
-      case _ => dfReader.load(uri)
-    }
-    if (this._addInputFile || ctx.metricsRequired)
-      dfRaw = dfRaw.withColumn(this._clmnFileName, input_file_name())
+    var dfRaw = this._multiUriSeparator.map(separator => dfReader.load(uri.split(separator): _*)).getOrElse(dfReader.load(uri))
+      .withColumn(this._clmnFileName, input_file_name())
     dfRaw = this._noField.map(nf => dfRaw.zipWithIndex(nf)).getOrElse(dfRaw)
-    dfRaw.cache()
 
     //extract header & trailer data-frames
-    val (dfBody: DataFrame, dfHeader: Option[DataFrame], dfTrailer: Option[DataFrame]) = split(dfRaw)
+    var (dfBody: DataFrame, dfHeader: Option[DataFrame], dfTrailer: Option[DataFrame]) = split(dfRaw)
     //formalize data-frames
     for (fhViewName <- this._fhViewName) {
-      dfHeader.map(dfHead => formalize(dfHead, this._fhFormat, this._fhOptions, this._fileheaderSchema, this._fileheaderFields))
+      dfHeader.map(dfHead => if (!this._addInputFile && !ctx.metricsRequired) dfHead.drop(this._clmnFileName) else dfHead)
+        .map(dfHead => formalize(dfHead, this._fhFormat, this._fhOptions, this._fileheaderSchema, this._fileheaderFields))
         .foreach(dfHead => this.registerView(dfHead, fhViewName, this._fhViewGlobal))
     }
     for (ftViewName <- this._ftViewName) {
-      dfTrailer.map(dfTrail => formalize(dfTrail, this._ftFormat, this._ftOptions, this._filetrailerSchema, this._filetrailerFields))
+      dfTrailer.map(dfTrail => if (!this._addInputFile && !ctx.metricsRequired) dfTrail.drop(this._clmnFileName) else dfTrail)
+        .map(dfTrail => formalize(dfTrail, this._ftFormat, this._ftOptions, this._filetrailerSchema, this._filetrailerFields))
         .foreach(dfTrail => this.registerView(dfTrail, ftViewName, this._ftViewGlobal))
     }
+    dfBody = if (!this._addInputFile && !ctx.metricsRequired) dfBody.drop(this._clmnFileName) else dfBody
     formalize(dfBody, this._format, this._options, this._schema, this._fields)
   } match {
     case Success(df) => df
@@ -200,9 +197,9 @@ class FlatReader extends FlatReadActor[FlatReader] {
 
   private def split(df: DataFrame): (DataFrame, Option[DataFrame], Option[DataFrame]) = {
     var (dfBody: DataFrame, dfHeader: Option[DataFrame], dfTrailer: Option[DataFrame]) = (df, Option.empty[DataFrame], Option.empty[DataFrame])
-    val hasFileColumn = df.columns.contains(this._clmnFileName)
     if (this._fhIdBeginNRows.nonEmpty || this._ftIdEndNRows.nonEmpty) {
-      var dfData = (if (hasFileColumn) dfBody else dfBody.withColumn(this._clmnFileName, input_file_name())).zipWithIndex("___file_seq_no__", Seq(this._clmnFileName))
+      val columns = dfBody.columns.map(column => col(column))
+      var dfData = dfBody.zipWithIndex("___file_seq_no__", Seq(this._clmnFileName))
       val dfFileNo = dfData.groupBy(col(this._clmnFileName)).agg(
         min(col("___file_seq_no__")).as("___min_file_seq_no__"),
         max(col("___file_seq_no__")).as("___max_file_seq_no__")
@@ -210,24 +207,20 @@ class FlatReader extends FlatReadActor[FlatReader] {
       dfData = dfData.alias("d").join(
         dfFileNo.alias("fn"), col(s"d.${this._clmnFileName}") === col(s"fn.${this._clmnFileName}"), "inner"
       ).select(
-        col(s"d.${this._valueField}"),
-        col(s"d.${this._clmnFileName}"),
-        col("___file_seq_no__"),
-        col("___min_file_seq_no__"),
-        col("___max_file_seq_no__")
+        col("d.*"),
+        col("fn.___min_file_seq_no__"),
+        col("fn.___max_file_seq_no__")
       )
       var dfTmpBody = dfData
-      val dfTmpHeader = this._fhIdBeginNRows.map(nr => {
+      dfHeader = this._fhIdBeginNRows.map(nr => {
         dfTmpBody = dfTmpBody.filter(col("___file_seq_no__") >= col("___min_file_seq_no__") + nr)
-        dfData.filter(col("___file_seq_no__") < col("___min_file_seq_no__") + nr).select(col(this._valueField), col(this._clmnFileName))
+        dfData.filter(col("___file_seq_no__") < col("___min_file_seq_no__") + nr).select(columns: _*)
       })
-      val dfTmpTrailer = this._ftIdEndNRows.map(nr => {
+      dfTrailer = this._ftIdEndNRows.map(nr => {
         dfTmpBody = dfTmpBody.filter(col("___file_seq_no__") <= col("___max_file_seq_no__") - nr)
-        dfData.filter(col("___file_seq_no__") > col("___max_file_seq_no__") - nr).select(col(this._valueField), col(this._clmnFileName))
+        dfData.filter(col("___file_seq_no__") > col("___max_file_seq_no__") - nr).select(columns: _*)
       })
-      dfBody = if (hasFileColumn) dfTmpBody.select(col(this._valueField), col(this._clmnFileName)) else dfTmpBody.select(this._valueField)
-      dfHeader = if (hasFileColumn) dfTmpHeader else dfTmpHeader.map(h => h.select(this._valueField))
-      dfTrailer = if (hasFileColumn) dfTmpTrailer else dfTmpTrailer.map(t => t.select(this._valueField))
+      dfBody = dfTmpBody.select(columns: _*)
     }
 
     if (this._fhIdMatchRgPtn.nonEmpty || this._ftIdMatchRgPtn.nonEmpty) {
@@ -252,7 +245,7 @@ class FlatReader extends FlatReadActor[FlatReader] {
   }
 
   private def formalize(df: DataFrame, format: String, options: Map[String, String], schema: Option[StructType], fields: Option[Either[Seq[PositionalField], Seq[DelimitedField]]]): DataFrame = {
-    val hasFileColumn = df.columns.contains(this._clmnFileName)
+    val nvColumns = df.columns.filter(!_.equalsIgnoreCase(this._valueField)).map(column => col(column))
     format match {
       case FLAT_DELIMITED => fields match {
         case Some(Right(dfs)) => schema.map(s => {
@@ -261,9 +254,9 @@ class FlatReader extends FlatReadActor[FlatReader] {
             case _ => s"__dummy_${idx}__ string"
           }).reduce((x, y) => s"${x}, ${y}")
           val ddlSchema = StructType.fromDDL(ddlString)
-          val dfDelimited = df.alias("m").withColumn("__csv_", from_csv(col("value"), ddlSchema, options))
+          val dfDelimited = df.alias("m").withColumn("__csv_", from_csv(col(this._valueField), ddlSchema, options))
             .select("m.*", "__csv_.*")
-          dfDelimited.select((if (hasFileColumn) col(this._clmnFileName) +: s.fields.map(field => col(field.name)) else s.fields.map(field => col(field.name))): _*)
+          dfDelimited.select(nvColumns ++ s.fields.map(field => col(field.name)): _*)
         }).getOrElse(df)
         case _ => df
       }
@@ -271,7 +264,7 @@ class FlatReader extends FlatReadActor[FlatReader] {
         case Some(Left(pfs)) =>schema.map(s => {
           val getType = (name: String) => s.fields.find(_.name.equals(name)).head.dataType
           val posColumns = pfs.map(f => col(this._valueField).substr(f.startPos, f.length).as(f.name).cast(getType(f.name)))
-          df.select((if (hasFileColumn) col(this._clmnFileName) +: posColumns else posColumns): _*)
+          df.select(nvColumns ++ posColumns: _*)
         }).getOrElse(df)
         case _ => df
       }
@@ -297,11 +290,153 @@ class FlatReader extends FlatReadActor[FlatReader] {
   }).getOrElse(Nil)
 
   /**
+   * The separator for splitting multiple files in FileUri
+   * @param separator
+   * @return
+   */
+  def multiUriSeparator(separator: String): FlatReader = { this._multiUriSeparator = Some(separator); this }
+
+  /**
    * The custom noField name
    * @param field
    * @return
    */
   def noField(field: String): FlatReader = { this._noField = Some(field); this }
+
+  /**
+   * Flag to indicate whether or not to add the input file name in the output dataframe
+   * @param flag
+   * @return
+   */
+  def addInputFile(flag: Boolean): FlatReader = { this._addInputFile = flag; this }
+
+  /**
+   * The format of body rows
+   * @param fmt
+   * @return
+   */
+  def format(fmt: String): FlatReader = { this._format = fmt; this }
+
+  /**
+   * The regular expression for identifying body rows
+   * @param pattern
+   * @return
+   */
+  def identifierPattern(pattern: String): FlatReader = { this._idMatchRgPtn = Some(pattern); this }
+
+  /**
+   * Set the number of rows for header
+   * @param num
+   * @return
+   */
+  def headerBeginNRows(num: Int): FlatReader = { this._fhIdBeginNRows = Some(num); this }
+
+  /**
+   * Set regular expression for identifying header rows
+   * @param pattern
+   * @return
+   */
+  def headerIdentifierPattern(pattern: String): FlatReader = { this._fhIdMatchRgPtn = Some(pattern); this }
+
+  /**
+   * The format of header rows
+   * @param fmt
+   * @return
+   */
+  def headerFormat(fmt: String): FlatReader = { this._fhFormat = fmt; this }
+
+  /**
+   * The load options for header rows
+   *
+   * @param options
+   * @return
+   */
+  def headerOptions(opts: Map[String, String]): FlatReader = { this._fhOptions = this._fhOptions ++ opts; this }
+
+  /**
+   * The fields definition for header rows
+   * @param ddlString
+   * @return
+   */
+  def headerDdlFieldsString(ddlString: String): FlatReader = { this._fhDdlFieldsString = Some(ddlString); this }
+
+  /**
+   * The fields definition from a file for header rows.
+   * @param ddlFile
+   * @return
+   */
+  def headerDdlFieldsFile(ddlFile: String): FlatReader = { this._fhDdlFieldsFile = Some(ddlFile); this }
+
+  /**
+   * Set the view name for the header dataframe
+   * @param view
+   * @return
+   */
+  def headerViewName(view: String): FlatReader = { this._fhViewName = Some(view); this }
+
+  /**
+   * Flag whether or not the header dataframe would be global
+   * @param global
+   * @return
+   */
+  def headerViewGlobal(global: Boolean): FlatReader = { this._fhViewGlobal = global; this }
+
+  /**
+   * Set the number of rows for trailer
+   * @param num
+   * @return
+   */
+  def trailerEndNRows(num: Int): FlatReader = { this._ftIdEndNRows = Some(num); this }
+
+  /**
+   * Set regular expression for identifying trailer rows
+   * @param pattern
+   * @return
+   */
+  def trailerIdentifierPattern(pattern: String): FlatReader = { this._ftIdMatchRgPtn = Some(pattern); this }
+
+  /**
+   * The format of trailer rows
+   * @param fmt
+   * @return
+   */
+  def trailerFormat(fmt: String): FlatReader = { this._ftFormat = fmt; this }
+
+  /**
+   * The load options for trailer rows
+   *
+   * @param opts
+   * @return
+   */
+  def trailerOptions(opts: Map[String, String]): FlatReader = { this._ftOptions = this._ftOptions ++ opts; this }
+
+  /**
+   * The fields definition for trailer rows
+   * @param ddlString
+   * @return
+   */
+  def trailerDdlFieldsString(ddlString: String): FlatReader = { this._ftDdlFieldsString = Some(ddlString); this }
+
+  /**
+   * The fields definition from a file for trailer rows.
+   * @param ddlFile
+   * @return
+   */
+  def trailerDdlFieldsFile(ddlFile: String): FlatReader = { this._ftDdlFieldsFile = Some(ddlFile); this }
+
+  /**
+   * Set the view name for the trailer dataframe
+   * @param view
+   * @return
+   */
+  def trailerViewName(view: String): FlatReader = { this._ftViewName = Some(view); this }
+
+  /**
+   * Flag whether or not the trailer dataframe would be global
+   * @param global
+   * @return
+   */
+  def trailerViewGlobal(global: Boolean): FlatReader = { this._ftViewGlobal = global; this }
 
   /**
    * Flag to indicate whether or not the fallback read is enabled
