@@ -7,6 +7,10 @@ class PipelineTest extends TestApp {
     this.run(s"${resourceRoot}pipelines/pipeline_fileRead-fileWrite.xml")
   }
 
+  test("Pipeline test - binary read / file write") {
+    this.run(s"${resourceRoot}pipelines/pipeline_binaryRead-fileWrite.yaml")
+  }
+
   test("Pipeline test - file read / kafka write") {
     this.run(s"${resourceRoot}pipelines/pipeline_fileRead-kafkaWrite.yaml")
   }

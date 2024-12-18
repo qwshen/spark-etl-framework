@@ -15,7 +15,7 @@
 
     <aliases>
         <alias name="file-reader" type="com.qwshen.etl.source.FileReader" />
-        <alias name="flat-reader" type="com.qwshen.etl.source.FlatReader" />
+        <alias name="flat-reader" type="com.qwshen.etl.source.FlatFileReader" />
         <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
         <alias name="var-setter" type="com.qwshen.etl.common.VariableSetter" />
         <alias name="file-writer" type="com.qwshen.etl.sink.FileWriter" />
@@ -50,7 +50,7 @@
                 <properties>
                     <header>
                         <identifier>
-                            <matchRgPtn>^HDR</matchRgPtn>
+                            <matchRegex>^HDR</matchRegex>
                         </identifier>
                         <format>delimited</format>
                         <options>
@@ -97,7 +97,7 @@
                 <properties>
                     <header>
                         <identifier>
-                            <matchRgPtn>^HDR</matchRgPtn>
+                            <matchRegex>^HDR</matchRegex>
                         </identifier>
                         <format>fixed-length</format>
                         <ddlFieldsString>id:1-3 string, data_date:4-8 string</ddlFieldsString>

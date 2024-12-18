@@ -7,17 +7,13 @@ import com.qwshen.etl.pipeline.definition._
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 
-import scala.util.parsing.json.JSON
-
 /**
  * Build a pipeline from a yaml file
  */
 final class YamlPipelineBuilder extends JsonPipelineBuilder {
   //parse a job which is included in the definition
   override protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = for (properties <- {
-    val data = new ObjectMapper(new YAMLFactory()).readValue(FileChannel.loadAsString(jobFile), classOf[Any])
-    val jsonString = new ObjectMapper().writeValueAsString(data)
-    JSON.parseFull(jsonString).map(x => x.asInstanceOf[Map[String, Any]])
+    this.parseFull(getJsonString(FileChannel.loadAsString(jobFile))).map(x => x.asInstanceOf[Map[String, Any]])
   }) {
     properties.foreach {
       case (k, v) => (k, v) match {
@@ -30,9 +26,7 @@ final class YamlPipelineBuilder extends JsonPipelineBuilder {
   //parse included alias
   override protected def parseIncludeAlias(aliasFile: String)(config: Config): Map[String, String] = (
     for (properties <- {
-      val data = new ObjectMapper(new YAMLFactory()).readValue(FileChannel.loadAsString(aliasFile), classOf[Any])
-      val jsonString = new ObjectMapper().writeValueAsString(data)
-      JSON.parseFull(jsonString).map(x => x.asInstanceOf[Map[String, Any]])
+      this.parseFull(getJsonString(FileChannel.loadAsString(aliasFile))).map(x => x.asInstanceOf[Map[String, Any]])
     }) yield {
       properties.map {
         case (k, v) => (k, v) match {
@@ -45,9 +39,7 @@ final class YamlPipelineBuilder extends JsonPipelineBuilder {
 
   //parse included udf-registration
   override protected def parseIncludeUdfRegistration(urFile: String, alias: Map[String, String], pipeline: Pipeline)(config: Config): Unit = for (properties <- {
-    val data = new ObjectMapper(new YAMLFactory()).readValue(FileChannel.loadAsString(urFile), classOf[Any])
-    val jsonString = new ObjectMapper().writeValueAsString(data)
-    JSON.parseFull(jsonString).map(x => x.asInstanceOf[Map[String, Any]])
+    this.parseFull(getJsonString(FileChannel.loadAsString(urFile))).map(x => x.asInstanceOf[Map[String, Any]])
   }) {
     properties.foreach {
       case (k, v) => (k, v) match {
@@ -56,7 +48,6 @@ final class YamlPipelineBuilder extends JsonPipelineBuilder {
       }
     }
   }
-
 
   //convert the yaml string to json string
   override protected def getJsonString(str: String): String = {

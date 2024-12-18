@@ -59,8 +59,6 @@ final class XmlPipelineBuilder extends PipelineBuilder with Loggable {
     //user-defined-functions
     this.parseUdfRegistration((docRaw \\ "pipeline-def" \ "udf-registration").headOption, alias)(config).foreach(ur => etlPipeline.addUdfRegister(ur))
 
-    //register UDFs
-    UdfRegistration.setup(etlPipeline.udfRegistrations)(session)
     //merge the variables defined in thE etl-pipeline into the config object
     val newConfig: Config = mergeVariables(xmlString)(config, session)
     //set the config for the pipeline

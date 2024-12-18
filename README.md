@@ -53,7 +53,8 @@ The following explains the definition of each section in a pipeline:
   For centralized and mixed Aliases definition, please check [here](docs/alias.md)  
   <br />
 
-#### 3. UDF-Registration  
+#### 3. User Defined Functions
+- UDF-Registration  
   If custom UDFs are required in a pipeline for transforming data, a custom UDF register needs to be provided to register the related UDFs.
 
   A UDF register must extend com.qwshen.etl.common.UdfRegister, and implement the following method:
@@ -83,6 +84,10 @@ The following explains the definition of each section in a pipeline:
   For centralized and mixed UDF-registration, please check [here](docs/udf-registration.md)  
   For UDF example, please check [here](docs/udf-example.md) 
   <br />
+  <br />
+
+- System UDFs
+  For existing system UDFs, please check [here](docs/system-udfs.md)
 
 #### 4. Variables  
   The variables defined in this section can be referenced in the definition of the current pipeline, including SQL statements, but not in the Settings, Aliases and Udf-Registration sections  
@@ -304,7 +309,8 @@ The following is one example of how to submit a Spark job. Note that it also dem
 - [DeltaStreamReader](docs/delta-stream-reader.md)
 - [FileReader](docs/file-reader.md)
 - [FileStreamReader](docs/file-stream-reader.md)
-- [FlatReader](docs/flat-reader.md)
+- [FlatFileReader](docs/flat-file-reader.md)
+- [BinaryFileReader](docs/binary-file-reader.md)
 - [FlatStreamReader](docs/flat-stream-reader.md)
 - [FlightReader](docs/flight-reader.md)
 - [HBaseReader](docs/hbase-reader.md)

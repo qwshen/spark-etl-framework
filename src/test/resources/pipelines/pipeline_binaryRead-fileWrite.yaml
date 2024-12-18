@@ -1,0 +1,220 @@
+pipeline-def:
+  name: event-consolidation
+  description: This is the process for transforming event data
+  version: 1.0.0
+  settings:
+    singleSparkSession: false
+    globalViewAsLocal: true
+  variables:
+    - name: process_date
+      value: ${events.process_date}
+    - name: staging_uri
+      value: "file:///tmp/staging/events"
+    - name: metrics_uri
+      value: "file:///tmp/metrics/events"
+    - name: export_dir
+      value: ${events.output_dir}
+    - name: execution_date
+      value: "current_date()"
+  aliases:
+    - name: file-reader
+      type: com.qwshen.etl.source.FileReader
+    - name: binary-reader
+      type: com.qwshen.etl.source.BinaryFileReader
+    - name: sql
+      type: com.qwshen.etl.transform.SqlTransformer
+    - name: var-setter
+      type: com.qwshen.etl.common.VariableSetter
+    - name: file-writer
+      type: com.qwshen.etl.sink.FileWriter
+  jobs:
+    - name: prepare events-features
+      actions:
+        - name: set variables
+          actor:
+            type: var-setter
+            properties:
+              variables:
+                runActor: System
+                runTime: "now()"
+        - name: load users
+          actor:
+            type: file-reader
+            properties:
+              format: csv
+              options:
+                header: true
+                delimiter: ","
+              fileUri: ${events.users_input}
+            output-view:
+              name: users
+              global: false
+        - name: load train_csv_without_rowTransformatioin
+          actor:
+            type: binary-reader
+            properties:
+              row:
+                noField: seq_number
+              recordLength: 57
+              header:
+                identifier:
+                  matchExpr: "bytes_to_string(substring($., 1, 3), 'cp037') = 'HDR'"
+                format: delimited
+                options:
+                  header: false
+                  delimiter: "0x6b"
+                ddlFieldsString: "id:0 string, data_date:1 string"
+                fieldTransformation:
+                  default: "bytes_to_string($., 'cp037')"
+                output-view:
+                  name: train_header_csv
+                  global: true
+              format: delimited
+              options:
+                header: false
+                delimiter: "107"
+              ddlFieldsString: "user:0 string, event:1 string, timestamp:3 string, interested:4 string"
+              fieldTransformation:
+                default: "bytes_to_string($., 'cp037')"
+              trailer:
+                identifier:
+                  endNRows: 1
+                format: delimited
+                options:
+                  header: false
+                  delimiter: "0x4f"
+                ddlFieldsString: "id:0 string, rec_count:1 string"
+                fieldTransformation:
+                  default: "bytes_to_string($., 'cp037')"
+                  rec_count: "cast(trim(bytes_to_string(rec_count, 'cp037')) as int)"
+                output-view:
+                  name: train_trailer_csv
+              addInputFile: true
+              fileUri: ${events.train_input}/train_csv.bin
+            output-view:
+              name: train_csv
+        - name: load train_fixed_length_with_rowTransformation
+          actor:
+            type: binary-reader
+            properties:
+              recordLength: 52
+              row:
+                transformation: "bytes_to_string($., 'cp037')"
+              header:
+                identifier:
+                  matchRegex: "^HDR"
+                format: fixed-length
+                ddlFieldsString: "id:1-3 string, data_date:4-8 string"
+                output-view:
+                  name: train_header
+                  global: true
+              format: fixed-length
+              ddlFieldsString: "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int"
+              trailer:
+                identifier:
+                  endNRows: 1
+                format: fixed-length
+                ddlFieldsString: "id:1-3 string, rec_count:4-7 string"
+                fieldTransformation:
+                  rec_count: "com3_to_int(substring($., 4, 7))"
+                output-view:
+                  name: train_trailer
+              fileUri: ${events.train_input}/train_txt.bin
+            output-view:
+              name: train
+        - name: load train_fixed_length_without_rowTransformation
+          actor:
+            type: binary-reader
+            properties:
+              recordLength: 52
+              header:
+                identifier:
+                  matchExpr: "bytes_to_string(substring($., 1, 3), 'cp037') = 'HDR'"
+                format: fixed-length
+                ddlFieldsString: "id:1-3 string, data_date:4-8 string"
+                fieldTransformation:
+                  default: "bytes_to_string($., 'cp037')"
+                output-view:
+                  name: train_header
+                  global: true
+              format: fixed-length
+              ddlFieldsString: "user:1-9 string, event:10-10 long, timestamp:20-32 string, interested:52-1 int"
+              fieldTransformation:
+                default: "bytes_to_string($., 'cp037')"
+              trailer:
+                identifier:
+                  endNRows: 1
+                format: fixed-length
+                ddlFieldsString: "id:1-3 string, rec_count:4-7 string"
+                fieldTransformation:
+                  default: "bytes_to_string($., 'cp037')"
+                  rec_count: "com3_to_int(rec_count)"
+                output-view:
+                  name: train_trailer
+              fileUri: ${events.train_input}/train_txt.bin
+            output-view:
+              name: train
+        - name: load train_csv_with_rowTransformatioin
+          actor:
+            type: binary-reader
+            properties:
+              recordLength: 57
+              row:
+                noField: seq_number
+                transformation: "bytes_to_string($., 'cp037')"
+              header:
+                identifier:
+                  matchRegex: "^HDR"
+                format: delimited
+                options:
+                  header: false
+                  delimiter: ","
+                ddlFieldsString: "id:0 string, data_date:1 string"
+                output-view:
+                  name: train_header_csv
+                  global: true
+              format: delimited
+              options:
+                header: false
+                delimiter: ","
+              ddlFieldsString: "user:0 string, event:1 string, timestamp:3 string, interested:4 string"
+              trailer:
+                identifier:
+                  endNRows: 1
+                format: delimited
+                options:
+                  header: false
+                  delimiter: "|"
+                ddlFieldsString: "id:0 string, rec_count:1 string"
+                fieldTransformation:
+                  rec_count: "cast(trim(rec_count) as int)"
+                output-view:
+                  name: train_trailer_csv
+              addInputFile: true
+              fileUri: ${events.train_input}/train_csv.bin
+            output-view:
+              name: train_csv
+        - name: transform users-train
+          actor:
+            type: sql
+            properties:
+              sqlFile: "${application.scripts_uri}/transform-user-train.sql"
+            input-views:
+              - users
+              - train
+            output-view:
+              name: features
+        - name: write features
+          actor:
+            type: file-writer
+            properties:
+              format: csv
+              options:
+                header: true
+                maxRecordsPerFile: 30000
+              partitionBy: "gender,interested"
+              mode: overwrite
+              fileUri: ${export_dir}
+              view: features
+            input-views:
+              - features

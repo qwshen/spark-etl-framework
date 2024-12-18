@@ -3,7 +3,7 @@
   ```xml
   <aliases>
       <alias name="file" type="com.qwshen.etl.source.FileReader" />
-      <alias name="flat" type="com.qwshen.etl.source.FlatReader" />
+      <alias name="flat" type="com.qwshen.etl.source.FlatFileReader" />
       <alias name="setting" type="com.qwshen.etl.common.SparkConfActor" />
       <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
   </aliases>
@@ -47,7 +47,7 @@
   ```xml
   <aliases>
       <alias name="file" type="com.qwshen.etl.source.FileReader" />
-      <alias name="flat" type="com.qwshen.etl.source.FlatReader" />
+      <alias name="flat" type="com.qwshen.etl.source.FlatFileReader" />
       <alias name="setting" type="com.qwshen.etl.common.SparkConfActor" />
       <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
   </aliases>
@@ -110,7 +110,7 @@
   ```xml
   <aliases>
       <alias name="file" type="com.qwshen.etl.source.FileReader" />
-      <alias name="flat" type="com.qwshen.etl.source.FlatReader" />
+      <alias name="flat" type="com.qwshen.etl.source.FlatFileReader" />
       <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
   </aliases>
   ```

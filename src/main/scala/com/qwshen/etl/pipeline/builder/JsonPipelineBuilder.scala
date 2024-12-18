@@ -7,18 +7,20 @@ import com.qwshen.etl.configuration.ConfigurationManager
 import com.qwshen.etl.pipeline.definition._
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
-
 import scala.collection.breakOut
-import scala.util.parsing.json.JSON
+import com.fasterxml.jackson.core.{JsonParser, JsonToken}
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import scala.annotation.tailrec
 import scala.collection.mutable.{Map => mMap}
-import scala.collection.mutable.{ArrayBuffer => sMap}
-import scala.util.Try
+import scala.collection.mutable.{ArrayBuffer => mArray}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.Breaks._
 
 /**
  * Build a pipeline from a yaml file
  */
-class JsonPipelineBuilder extends PipelineBuilder with Loggable {
+class JsonPipelineBuilder() extends PipelineBuilder with Loggable {
   /**
    * Build an etl-pipeline from the Json definition
    *
@@ -27,7 +29,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
    */
   def build(definition: String)(implicit config: Config, session: SparkSession): Option[Pipeline] = for (
     properties <- {
-      JSON.parseFull(getJsonString(definition)).map(x => x.asInstanceOf[Map[String, Any]])
+      this.parseFull(getJsonString(definition)).map(x => x.asInstanceOf[Map[String, Any]])
     }) yield {
     var pipeline: Option[Pipeline] = None
     breakable(
@@ -81,7 +83,6 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
 
           kvs.get("variables") match {
             case Some(variables: Seq[Map[String, Any]] @unchecked) => for (pl <- pipeline) {
-              UdfRegistration.setup(pl.udfRegistrations)(session)
               newConfig = parseVariables(variables)(newConfig, session)
             }
             case _ =>
@@ -181,7 +182,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   //parse udf-registration defined in the pipeline
   protected def parseIncludeUdfRegistration(urFile: String, alias: Map[String, String], pipeline: Pipeline)(config: Config): Unit = {
     for (properties <- {
-      JSON.parseFull(FileChannel.loadAsString(urFile)).map(x => x.asInstanceOf[Map[String, Any]])
+      this.parseFull(FileChannel.loadAsString(urFile)).map(x => x.asInstanceOf[Map[String, Any]])
     }) yield {
       properties.find(p => p._1.equalsIgnoreCase("udf-registration")).map(p => p._2 match {
         case kvs: Seq[Map[String, Any]] @unchecked => parseUdfRegistrations(kvs, alias, pipeline)(config)
@@ -259,7 +260,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   //parse one actor in a job
   private def parseActor(kv: Map[String, Any], aliases: Map[String, String])(config: Config, session: SparkSession): Option[Actor] = {
     var actor: Option[Actor] = None
-    val meta = sMap[(String, String)]()
+    val meta = mArray[(String, String)]()
     kv.foreach(x => (x._1, x._2) match {
       case ("type", s: String) => actor = Some(Class.forName(aliases.getOrElse(s, s)).getDeclaredConstructor().newInstance().asInstanceOf[Actor])
       case ("properties", properties: Map[String, Any] @unchecked) => actor.foreach(a => {
@@ -327,7 +328,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   }
 
   //Parse a Map element
-  private def parseMap(itemsMap: Map[String, Any], path: String, meta: sMap[(String, String)]): Unit = itemsMap.foreach {
+  private def parseMap(itemsMap: Map[String, Any], path: String, meta: mArray[(String, String)]): Unit = itemsMap.foreach {
     case (k, v) => (k, v) match {
       case (s: String, kvs: Map[String, Any] @unchecked) => parseMap(kvs, combine(path, s), meta)
       case (s: String, items: Seq[Any] @unchecked) => parseSeq(items, combine(path, s), meta)
@@ -336,7 +337,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   }
 
   //Parse a sequence element
-  private def parseSeq(itemsSeq: Seq[Any], path: String, meta: sMap[(String, String)]): Unit = itemsSeq.foreach {
+  private def parseSeq(itemsSeq: Seq[Any], path: String, meta: mArray[(String, String)]): Unit = itemsSeq.foreach {
     case kvs: Map[String, Any] @unchecked => parseMap(kvs, combine(path, "/"), meta)
     case items: Seq[Any] @unchecked => parseSeq(items, combine(path, "/"), meta)
     case any: Any => meta.append((combine(path, any.toString), any.toString))
@@ -348,7 +349,7 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
   //parse included alias
   protected def parseIncludeAlias(aliasFile: String)(config: Config): Map[String, String] = (
     for (properties <- {
-      JSON.parseFull(FileChannel.loadAsString(aliasFile)).map(x => x.asInstanceOf[Map[String, Any]])
+      this.parseFull(FileChannel.loadAsString(aliasFile)).map(x => x.asInstanceOf[Map[String, Any]])
     }) yield {
       properties.find(p => p._1.equalsIgnoreCase("aliases")).map(p => p._2 match {
         case kvs: Seq[Map[String, Any]] @unchecked => parseAlias(kvs)(config)
@@ -359,13 +360,76 @@ class JsonPipelineBuilder extends PipelineBuilder with Loggable {
 
   //parse a job which is included in the definition
   protected def parseIncludeJob(jobFile: String, aliases: Map[String, String], pipeline: Pipeline)(config: Config, session: SparkSession): Unit = for (properties <- {
-    JSON.parseFull(FileChannel.loadAsString(jobFile)).map(x => x.asInstanceOf[Map[String, Any]])
+    this.parseFull(FileChannel.loadAsString(jobFile)).map(x => x.asInstanceOf[Map[String, Any]])
   }) {
     parseJob(properties, aliases, pipeline)(config, session)
   }
 
   //convert the input string to json string
   protected def getJsonString(str: String): String = str;
+
+  /**
+   * Parse a json document
+   * @param json
+   * @return
+   */
+  protected def parseFull(json: String): Option[Any] = Try {
+    val parser = JsonMapper.builder().addModule(DefaultScalaModule).build().createParser(json)
+    parser.nextToken()
+    val jsTree = process(parser)
+    jsTree
+  } match {
+    case Success(v) => Some(v)
+    case Failure(e) => throw e
+  }
+
+  private def process(parser: JsonParser): Any = parser.currentToken() match {
+    case JsonToken.START_OBJECT =>
+      val jsObject = mMap.empty[String, Any]
+      parser.nextToken()
+      processObject(parser, jsObject)
+      jsObject.toMap
+    case JsonToken.START_ARRAY =>
+      val jsArray = mArray[Any]()
+      parser.nextToken()
+      processArray(parser, jsArray)
+      jsArray
+    case _ => throw new RuntimeException("Invalid Json document")
+  }
+
+  @tailrec
+  private def processObject(parser: JsonParser, jsObject: mMap[String, Any]): Unit = parser.currentToken() match {
+    case JsonToken.END_OBJECT =>
+    case _ =>
+      parser.currentToken() match {
+        case JsonToken.VALUE_STRING => jsObject(parser.currentName) = parser.getValueAsString
+        case JsonToken.VALUE_FALSE | JsonToken.VALUE_TRUE => jsObject(parser.currentName) = parser.getValueAsBoolean
+        case JsonToken.VALUE_NUMBER_INT => jsObject(parser.currentName) = parser.getValueAsInt
+        case JsonToken.VALUE_NUMBER_FLOAT => jsObject(parser.currentName) = parser.getValueAsDouble
+
+        case JsonToken.START_OBJECT | JsonToken.START_ARRAY => jsObject(parser.currentName) = process(parser)
+        case JsonToken.FIELD_NAME =>
+        case _ => throw new RuntimeException("Un-processed token met in processObject.")
+      }
+      parser.nextToken()
+      processObject(parser, jsObject)
+  }
+
+  @tailrec
+  private def processArray(parser: JsonParser, jsArray: mArray[Any]): Unit = parser.currentToken() match {
+    case JsonToken.END_ARRAY =>
+    case _ =>
+      parser.currentToken() match {
+        case JsonToken.VALUE_STRING => jsArray.append(parser.getValueAsString)
+        case JsonToken.VALUE_FALSE | JsonToken.VALUE_TRUE => jsArray.append(parser.getValueAsBoolean)
+        case JsonToken.VALUE_NUMBER_INT => jsArray.append(parser.getValueAsInt)
+        case JsonToken.VALUE_NUMBER_FLOAT => jsArray.append(parser.getValueAsDouble)
+        case JsonToken.VALUE_NULL => jsArray.append(null)
+
+        case JsonToken.START_OBJECT | JsonToken.START_ARRAY => jsArray.append(process(parser))
+        case _ => throw new RuntimeException("Un-processed token met in processArray.")
+      }
+      parser.nextToken()
+      processArray(parser, jsArray)
+  }
 }
-
-

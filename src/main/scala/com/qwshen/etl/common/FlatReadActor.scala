@@ -19,7 +19,7 @@ private[etl] abstract class FlatReadActor[T] extends Actor { self: T =>
   protected var _options: Map[String, String] = Map.empty[String, String]
 
   @PropertyKey("row.valueField", false)
-  protected var _valueField: String = "value"
+  protected var _valueField: String = "__value_"
 
   //the source path
   @PropertyKey("fileUri", true)

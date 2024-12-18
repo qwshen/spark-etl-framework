@@ -13,7 +13,7 @@
 
     <aliases>
         <alias name="file-reader" type="com.qwshen.etl.source.FileReader" />
-        <alias name="flat-reader" type="com.qwshen.etl.source.FlatReader" />
+        <alias name="flat-reader" type="com.qwshen.etl.source.FlatFileReader" />
         <alias name="sql" type="com.qwshen.etl.transform.SqlTransformer" />
         <alias name="iceberg-writer" type="com.qwshen.etl.sink.IcebergWriter" />
     </aliases>

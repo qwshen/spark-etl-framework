@@ -3,7 +3,7 @@
 - [DeltaStreamReader](//delta-stream-reader.md)
 - [FileReader](./file-reader.md)
 - [FileStreamReader](./file-stream-reader.md)
-- [FlatReader](./flat-reader.md)
+- [FlatReader](./flat-file-reader.md)
 - [FlatStreamReader](./flat-stream-reader.md)
 - [HBaseReader](./hbase-reader.md)
 - [SqlReader](./sql-reader.md)
