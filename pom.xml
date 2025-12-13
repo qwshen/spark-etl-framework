@@ -9,17 +9,17 @@
         <scala.version>2.12.16</scala.version>
         <scala.compact.version>2.12</scala.compact.version>
 
-        <spark.version>3.5.3</spark.version>
+        <spark.version>3.5.7</spark.version>
         <spark.compact.version>3.5</spark.compact.version>
 
-        <hadoop.version>3.4.0</hadoop.version>
+        <hadoop.version>3.3.4</hadoop.version>
         <hbase.version>1.7.1</hbase.version>
 
         <scala.collection.compat.version>2.8.0</scala.collection.compat.version>
         <spark.avro.version>3.0.1</spark.avro.version>
         <delta.lake.version>1.2.1</delta.lake.version>
-        <iceberg.spark.version>3.3</iceberg.spark.version>
-        <iceberg.runtime.version>1.2.1</iceberg.runtime.version>
+        <iceberg.spark.version>3.5</iceberg.spark.version>
+        <iceberg.runtime.version>1.10.0</iceberg.runtime.version>
         <io.confluent.version>4.1.2</io.confluent.version>
         <mongo.spark.version>3.0.1</mongo.spark.version>
 
@@ -35,7 +35,7 @@
     </properties>
 
     <groupId>com.qwshen</groupId>
-    <artifactId>spark-etl-framework_${scala.compact.version}_${spark.compact.version}</artifactId>
+    <artifactId>spark-etl-framework_${spark.compact.version}_${scala.compact.version}</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
 
@@ -196,7 +196,7 @@
         <dependency>
             <groupId>org.apache.iceberg</groupId>
             <artifactId>iceberg-hive-runtime</artifactId>
-            <version>${iceberg.runtime.version}</version>
+            <version>1.2.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

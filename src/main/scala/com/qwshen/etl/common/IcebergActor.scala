@@ -21,7 +21,7 @@ abstract class IcebergActor[T] extends Actor { self: T =>
    * @param value
    * @return
    */
-  def location(value: String): T = { this._table = Some(value); this }
+  def table(value: String): T = { this._table = Some(value); this }
 
   /**
    * The load option

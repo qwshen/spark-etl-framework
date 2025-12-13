@@ -129,7 +129,7 @@ private[etl] class SqlBase[T] extends Actor with VariableResolver { self: T =>
 
     var sqlVars = this.getSqlVariables.map(v => (v, v)).toMap
     for (stmt <- this.refineStmt(this._sqlStmt)) {
-      stmt.split(";").foreach(s => {
+      stmt.split(";").filter(s => s.trim().nonEmpty).foreach(s => {
         if (s.trim.toLowerCase.startsWith("set ")) {
           val idx = s.substring(4).indexOf("=")
           if (idx < 0) {

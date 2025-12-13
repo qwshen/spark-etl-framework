@@ -112,8 +112,7 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
   //localize global views so they can be used without specifying the global database.
   private def localizeGlobalViews(implicit session: SparkSession): Unit = {
     import session.implicits._
-    session.catalog.listTables(pc.global_db).filter('isTemporary).select('name)
-      .collect.map(r => r.getString(0)).foreach(tbl => session.table(s"${pc.global_db}.$tbl").createOrReplaceTempView(tbl))
+    session.sharedState.globalTempViewManager.listViewNames("*").foreach(tbl => session.table(s"global_temp.$tbl").createOrReplaceTempView(tbl))
   }
 
   //to ensure all referenced views have been already created, otherwise error out.
@@ -242,13 +241,18 @@ final class PipelineRunner(pc: PipelineContext) extends Loggable {
 
   //clean up the cache and meta data of the spark-session
   private def cleanupSession(session: SparkSession): Unit = {
-    import session.implicits._
     //clean up all cached tables
-    session.catalog.listTables.filter('isTemporary).select('name).collect.map(r => r.getString(0)).foreach(tbl => {
+    session.sessionState.catalog.getTempViewNames().foreach(tbl => {
       if (session.catalog.isCached(tbl)) {
         session.catalog.uncacheTable(tbl)
       }
     })
+    session.sessionState.catalog.globalTempViewManager.listViewNames("*").foreach(tbl => {
+      if (session.catalog.isCached(s"global_temp.$tbl")) {
+        session.catalog.uncacheTable(s"global_temp.$tbl")
+      }
+    })
+
     //clean up any catalog cache
     session.catalog.clearCache()
   }

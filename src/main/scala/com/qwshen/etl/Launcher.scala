@@ -7,6 +7,8 @@ import com.qwshen.etl.pipeline.builder.PipelineFactory
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.fs.FileSystem
+import org.apache.spark.{SparkConf, SparkContext}
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -63,32 +65,33 @@ class Launcher {
   def createSparkSession(implicit config: Config): SparkSession = if (!config.hasPath("application.runtime")) {
     SparkSession.builder.getOrCreate()
   } else {
-    var builder: SparkSession.Builder = config.getConfig("application.runtime").entrySet().asScala
+    val sparkConf = config.getConfig("application.runtime").entrySet().asScala
       .filter(_.getKey.startsWith("spark"))
-      .foldLeft(SparkSession.builder)((b, e) => {
-        if (e.getKey.contains("master")) {
-          b.master(e.getValue.unwrapped().toString)
-        } else {
-          b.config(e.getKey, e.getValue.unwrapped().toString)
-        }
+      .foldLeft(new SparkConf())((c, e) => c match {
+        case s if s.contains("app.name") => c.setAppName(e.getValue.unwrapped().toString)
+        case s if s.contains("master") => c.setMaster(e.getValue.unwrapped().toString)
+        case _ => c.set(e.getKey.replace("\"", ""), e.getValue.unwrapped().toString)
       })
 
+    val sparkCtx = SparkContext.getOrCreate(sparkConf)
+    config.getConfig("application.runtime.hadoopConfiguration").entrySet().asScala
+      .foldLeft(sparkCtx)((ctx, e) => {
+        ctx.hadoopConfiguration.set(e.getKey, e.getValue.unwrapped().toString)
+        ctx
+      })
+
+    var builder = SparkSession.builder
     if (Try(config.getBoolean("application.runtime.hiveSupport")).getOrElse(false)) {
       builder = builder.enableHiveSupport()
     }
-
     val session = builder.getOrCreate()
     if (Try(config.getBoolean("application.runtime.filesystem.skip.write.checksum")).getOrElse(false)) {
       FileSystem.get(session.sparkContext.hadoopConfiguration).setWriteChecksum(false)
     }
-    config.getConfig("application.runtime.hadoopConfiguration").entrySet().asScala
-      .foldLeft(session)((s, e) => {
-        s.sparkContext.hadoopConfiguration.set(e.getKey, e.getValue.unwrapped().toString)
-        s
-      })
+    session
   }
 
-  def recycleSparkSession(implicit session: SparkSession): Unit = {
+  private def recycleSparkSession(implicit session: SparkSession): Unit = {
     if (!sys.env.contains("DATABRICKS_RUNTIME_VERSION")) {
       session.stop();
     }

@@ -23,16 +23,15 @@ object UdfRegister {
    */
   def register(implicit session: SparkSession): Unit = {
     import session.implicits._
-    val registeredUDFs = session.catalog.listFunctions().map(func => func.name).collect()
-    if (!registeredUDFs.contains("bytes_to_hex"))
+    if (!session.catalog.functionExists("bytes_to_hex"))
       session.udf.register("bytes_to_hex", (bytes: Array[Byte], charset: String) => bytes_2_hex(bytes, charset))
-    if (!registeredUDFs.contains("bytes_to_string"))
+    if (!session.catalog.functionExists("bytes_to_string"))
       session.udf.register("bytes_to_string", (bytes: Array[Byte], charset: String) => bytes_2_string(bytes, charset))
-    if (!registeredUDFs.contains("com3_to_int"))
+    if (!session.catalog.functionExists("com3_to_int"))
       session.udf.register("com3_to_int", (bytes: Array[Byte]) => com3_2_int(bytes))
-    if (!registeredUDFs.contains("com3_to_double"))
+    if (!session.catalog.functionExists("com3_to_double"))
       session.udf.register("com3_to_double", (bytes: Array[Byte], scale: Int) => com3_2_double(bytes, scale))
-    if (!registeredUDFs.contains("binary_split"))
+    if (!session.catalog.functionExists("binary_split"))
       session.udf.register("binary_split", (input: Array[Byte], delimiter: Array[Byte]) => bytes_split(input, delimiter))
   }
 }
