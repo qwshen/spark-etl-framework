@@ -72,15 +72,10 @@ class Launcher {
         case s if s.contains("master") => c.setMaster(e.getValue.unwrapped().toString)
         case _ => c.set(e.getKey.replace("\"", ""), e.getValue.unwrapped().toString)
       })
-
-    val sparkCtx = SparkContext.getOrCreate(sparkConf)
     config.getConfig("application.runtime.hadoopConfiguration").entrySet().asScala
-      .foldLeft(sparkCtx)((ctx, e) => {
-        ctx.hadoopConfiguration.set(e.getKey, e.getValue.unwrapped().toString)
-        ctx
-      })
+      .foreach(e => sparkConf.set(s"spark.hadoop.${e.getKey}", e.getValue.unwrapped().toString))
 
-    var builder = SparkSession.builder
+    var builder = SparkSession.builder.config(sparkConf)
     if (Try(config.getBoolean("application.runtime.hiveSupport")).getOrElse(false)) {
       builder = builder.enableHiveSupport()
     }
