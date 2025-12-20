@@ -37,17 +37,17 @@ class FileWriter extends FileWriteActor[FileWriter] {
       }
       df.count > 0
     }
-    val goWrite: Boolean = this._emptyWrite match {
-      case Some(ew) if ew.equalsIgnoreCase("no") || ew.equalsIgnoreCase("disabled") => hasData()
-      case Some(ew) if ew.equalsIgnoreCase("smart") || ew.equalsIgnoreCase("default") => hasData() || !FileChannel.exists(uri)
-      case _ => true
+    val (goWrite: Boolean, writeMode: String) = this._emptyWrite match {
+      case Some(ew) if ew.equalsIgnoreCase("no") || ew.equalsIgnoreCase("disabled") => (hasData(), mode)
+      case Some(ew) if ew.equalsIgnoreCase("smart") || ew.equalsIgnoreCase("default") => (hasData(), "append")
+      case _ => (true, mode)
     }
     if (goWrite) {
       val initWriter = this._options.foldLeft(df.write.format(fmt))((s, o) => s.option(o._1, o._2))
       //with partitionBy
       val partitionWriter = this._partitionBy.foldLeft(initWriter)((w, cs) => w.partitionBy(cs.split(",").map(_.trim): _*))
       //write
-      partitionWriter.mode(mode).save(uri)
+      partitionWriter.mode(writeMode).save(uri)
     }
   } match {
     case Success(_) => df
