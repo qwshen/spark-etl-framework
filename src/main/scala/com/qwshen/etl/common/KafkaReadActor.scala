@@ -37,7 +37,7 @@ private[etl] abstract class KafkaReadActor[T]  extends KafkaActor[T] { self: T =
     //load the data from kafka
     val dfResult = df
       .withColumn("key", this._keySchema match {
-        case Some(s) if (s.sType == "avro" || s.sType == "Json") => s.sType match {
+        case Some(s) if (s.sType == "avro" || s.sType == "json") => s.sType match {
           case "avro" =>
             //For Spark 3.*
             import org.apache.spark.sql.avro.functions.from_avro

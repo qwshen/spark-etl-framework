@@ -31,6 +31,9 @@ class RedisStreamReader extends RedisActor[RedisStreamReader] {
   //water-mark delay duration
   @PropertyKey("watermark.delayThreshold", false)
   protected var _wmDelayThreshold: Option[String] = None
+  //drop duplicates based on watermark
+  @PropertyKey("watermark.dropDuplicatesBy", false)
+  protected var _wmDropDuplicatesBy: Option[String] = None
 
   /**
    * Initialize the file reader
@@ -76,7 +79,11 @@ class RedisStreamReader extends RedisActor[RedisStreamReader] {
     val dfResult = if (this._addTimestamp) df.withColumn("__timestamp", current_timestamp) else df
     //enable water-mark if required
     (this._wmTimeField, this._wmDelayThreshold) match {
-      case (Some(m), Some(t)) => dfResult.withWatermark(m, t)
+      case (Some(m), Some(t)) => this._wmDropDuplicatesBy match {
+        case Some(d) if d.equals("*") =>  dfResult.withWatermark(m, t).dropDuplicatesWithinWatermark()
+        case Some(d) if d.trim.nonEmpty => dfResult.withWatermark(m, t).dropDuplicatesWithinWatermark(d.split(",").map(_.trim).toSeq)
+        case _ => dfResult.withWatermark(m, t)
+      }
       case _ => dfResult
     }
   } match {

@@ -48,7 +48,7 @@ class FileStreamWriter extends FileWriteActor[FileStreamWriter] {
     val triggerWriter = (this._triggerMode, this._triggerInterval) match {
       case (Some(m), Some(t)) if (m == "continuous") => partitionWriter.trigger(Trigger.Continuous(t))
       case (Some(m), Some(t)) if (m == "processingTime") => partitionWriter.trigger(Trigger.ProcessingTime(t))
-      case (Some(m), _) if (m == "once") => partitionWriter.trigger(Trigger.Once())
+      case (Some(m), _) if (m == "once" || m == "availableNow") => partitionWriter.trigger(Trigger.AvailableNow())
       case _ => partitionWriter
     }
     this._waittimeInMs match {

@@ -14,6 +14,7 @@ class KafkaReader extends KafkaReadActor[KafkaReader] {
   } yield {
     //load the data from kafka
     this._options.foldLeft(session.read.format("kafka"))((r, o) => r.option(o._1, o._2))
-      .option("kafka.bootstrap.servers", servers).option("subscribe", topic).load()
+      .option("kafka.bootstrap.servers", servers)
+      .option(if (topic.contains("*")) "subscribePattern" else "subscribe", topic).load()
   }
 }

@@ -3,6 +3,10 @@ package com.qwshen.common
 import com.qwshen.etl.configuration.ConfigurationManager
 import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.analysis.UnresolvedFunction
+import org.apache.spark.sql.catalyst.expressions.{CallMethodViaReflection, Expression, ScalaUDF}
+import org.apache.spark.sql.functions.expr
+
 import scala.util.{Success, Try}
 import scala.util.matching.Regex
 
@@ -20,14 +24,15 @@ trait VariableResolver {
    * @return - the result of the call
    */
   def evaluate(value: String)(implicit session: SparkSession): String = {
-    def callFun = (v: String) => VariableResolver.collectFunctions(session).exists(fun => v.contains(fun))
+    def isFun = (v: String) => VariableResolver.collectFunctions(session).exists(fun => v.contains(fun))
+    def isFunCall = (v: String) => (v.contains("(") && v.contains(")")) || !v.contains(" ")
     Try {
-      if (!callFun(value.toLowerCase)) {
-        value
-      } else {
+      if (isFun(value.toLowerCase) && isFunCall(value)) {
         session.sql(String.format("set %s = %s", this._sys_var, ConfigurationManager.unquote(value)))
         import session.implicits._
         ConfigurationManager.quote(session.sql(String.format("select ${%s}", this._sys_var)).as[String].first())
+      } else {
+        value
       }
     }.toOption.getOrElse(value)
   }
