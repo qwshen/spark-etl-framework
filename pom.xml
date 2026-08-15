@@ -25,7 +25,7 @@
 
         <gson.version>2.11.0</gson.version>
         <typesafe.config.version>1.4.3</typesafe.config.version>
-        <fasterxml.jackson.version>2.15.2</fasterxml.jackson.version>
+        <fasterxml.jackson.version>2.18.9</fasterxml.jackson.version>
 
         <maven.compiler.plugin>3.13.0</maven.compiler.plugin>
         <maven.scala.plugin>2.15.2</maven.scala.plugin>
@@ -40,6 +40,10 @@
     <packaging>jar</packaging>
 
     <repositories>
+        <repository>
+            <id>maven2-release-repository</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
         <repository>
             <id>confluent.io</id>
             <url>https://packages.confluent.io/maven/</url>
